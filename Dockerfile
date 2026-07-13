@@ -10,9 +10,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && python -m playwright install --with-deps chromium
+COPY requirements-telegram.txt .
+RUN pip install --no-cache-dir -r requirements-telegram.txt
 
 COPY . .
 
