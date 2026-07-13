@@ -69,6 +69,7 @@ Telegram inbox sync for Railway handoff:
 
 - `TELEGRAM_QUEUE_PATH=.codex/inbox/telegram_jobs.json`
 - `TELEGRAM_INBOX_GIT_SYNC=true`
+- `TELEGRAM_INBOX_GIT_REMOTE_URL` with an authenticated GitHub remote URL when Railway must push queue updates
 - `TELEGRAM_INBOX_GIT_BRANCH=main`
 
 ## Railway

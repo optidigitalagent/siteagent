@@ -90,11 +90,13 @@ class TelegramJobQueue:
     def pull(self) -> None:
         if not self.git_sync:
             return
+        self._configure_remote()
         self._git("pull", "--rebase", settings.telegram_inbox_git_remote, settings.telegram_inbox_git_branch)
 
     def push(self, message: str) -> None:
         if not self.git_sync:
             return
+        self._configure_remote()
         self._git("config", "user.name", settings.telegram_inbox_git_user_name)
         self._git("config", "user.email", settings.telegram_inbox_git_user_email)
         self._git("add", str(self.path))
@@ -130,6 +132,15 @@ class TelegramJobQueue:
         if check and result.returncode != 0:
             raise RuntimeError(f"git {' '.join(args)} failed: {result.stderr or result.stdout}")
         return result
+
+    def _configure_remote(self) -> None:
+        if settings.telegram_inbox_git_remote_url:
+            self._git(
+                "remote",
+                "set-url",
+                settings.telegram_inbox_git_remote,
+                settings.telegram_inbox_git_remote_url,
+            )
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()

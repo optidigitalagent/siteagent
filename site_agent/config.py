@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     )
     telegram_inbox_git_sync: bool = Field(default=False, alias="TELEGRAM_INBOX_GIT_SYNC")
     telegram_inbox_git_remote: str = Field(default="origin", alias="TELEGRAM_INBOX_GIT_REMOTE")
+    telegram_inbox_git_remote_url: str = Field(default="", alias="TELEGRAM_INBOX_GIT_REMOTE_URL")
     telegram_inbox_git_branch: str = Field(default="main", alias="TELEGRAM_INBOX_GIT_BRANCH")
     telegram_inbox_git_user_name: str = Field(
         default="website-agent-bot",
