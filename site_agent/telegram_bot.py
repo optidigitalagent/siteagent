@@ -15,6 +15,12 @@ LOG = logging.getLogger(__name__)
 INSTAGRAM_RE = re.compile(r"https?://(www\.)?instagram\.com/[^\s]+", re.IGNORECASE)
 
 
+def configure_logging() -> None:
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.message.text or not update.effective_chat:
         return
@@ -43,7 +49,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    configure_logging()
     if not settings.telegram_bot_token:
         raise RuntimeError("TELEGRAM_BOT_TOKEN is required.")
     app = ApplicationBuilder().token(settings.telegram_bot_token).build()
