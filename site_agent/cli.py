@@ -1,7 +1,10 @@
 ﻿from __future__ import annotations
 
 import argparse
+import subprocess
+from pathlib import Path
 
+from site_agent.config import settings
 from site_agent.job_queue import TelegramJobQueue
 from site_agent.orchestrator import SiteAgentOrchestrator
 from site_agent.telegram_notify import TelegramNotifier
@@ -18,8 +21,16 @@ def run_instagram_url(instagram_url: str) -> None:
 
 
 def run_pending_job() -> None:
-    queue = TelegramJobQueue()
-    job = queue.claim_next()
+    queue = _pending_job_queue()
+    try:
+        job = queue.claim_next()
+    except RuntimeError as exc:
+        if queue.git_sync and not settings.telegram_inbox_git_sync:
+            raise RuntimeError(
+                "Не удалось автоматически синхронизировать Telegram inbox через git. "
+                "Проверьте git remote/push-доступ или задайте TELEGRAM_INBOX_GIT_SYNC=true."
+            ) from exc
+        raise
     if job is None:
         print("Нет pending-задач из Telegram.")
         return
@@ -41,6 +52,27 @@ def run_pending_job() -> None:
     print("Готово:")
     print(result.publish.site_url)
     print(f"Репозиторий: {result.publish.repo_url}")
+
+
+def _pending_job_queue() -> TelegramJobQueue:
+    if settings.telegram_inbox_git_sync:
+        return TelegramJobQueue()
+
+    if _has_git_remote():
+        return TelegramJobQueue(git_sync=True)
+
+    return TelegramJobQueue(git_sync=False)
+
+
+def _has_git_remote() -> bool:
+    result = subprocess.run(
+        ["git", "remote", "get-url", settings.telegram_inbox_git_remote],
+        cwd=Path.cwd(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def main() -> None:

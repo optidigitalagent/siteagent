@@ -28,7 +28,7 @@ python -m site_agent.cli go
 Репозиторий: [repo url]
 ```
 
-For local-only development the queue is a file. For Railway + Codex handoff, set `TELEGRAM_INBOX_GIT_SYNC=true` in both Railway and the Codex environment so the bot commits the inbox file and `go` pulls it before claiming a job.
+For local-only development the queue is a file. For Railway + Codex handoff, the bot commits the inbox file and `go` pulls it before claiming a job. In this repository `go` automatically uses git sync when a git remote is configured; set `TELEGRAM_INBOX_GIT_SYNC=true` explicitly in nonstandard environments.
 
 ## Quality Contract
 
@@ -69,7 +69,7 @@ Publishing generated site repository:
 Telegram inbox sync for local Codex handoff:
 
 - `TELEGRAM_QUEUE_PATH=.codex/inbox/telegram_jobs.json`
-- `TELEGRAM_INBOX_GIT_SYNC=true`
+- `TELEGRAM_INBOX_GIT_SYNC=true` to force git sync; `go` auto-enables it when this repo has a git remote
 - `TELEGRAM_INBOX_GIT_REMOTE_URL` with an authenticated GitHub remote URL when Railway must push queue updates
 - `TELEGRAM_INBOX_GIT_BRANCH=main`
 

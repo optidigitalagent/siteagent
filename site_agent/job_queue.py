@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -130,7 +131,9 @@ class TelegramJobQueue:
             check=False,
         )
         if check and result.returncode != 0:
-            raise RuntimeError(f"git {' '.join(args)} failed: {result.stderr or result.stdout}")
+            command = self._redact("git " + " ".join(args))
+            output = self._redact(result.stderr or result.stdout or "")
+            raise RuntimeError(f"{command} failed: {output}")
         return result
 
     def _configure_remote(self) -> None:
@@ -144,3 +147,8 @@ class TelegramJobQueue:
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    def _redact(self, value: str) -> str:
+        if settings.telegram_inbox_git_remote_url:
+            value = value.replace(settings.telegram_inbox_git_remote_url, "[REMOTE_URL]")
+        return re.sub(r"x-access-token:[^@\s]+@", "x-access-token:[REDACTED]@", value)
