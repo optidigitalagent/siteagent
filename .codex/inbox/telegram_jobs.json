@@ -4,11 +4,11 @@
     "instagram_url": "https://www.instagram.com/eliz_de_fleur",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "running",
+    "status": "failed",
     "received_at": "2026-07-13T05:44:46.913104+00:00",
-    "updated_at": "2026-07-13T05:51:01.694086+00:00",
+    "updated_at": "2026-07-13T05:51:15.676280+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": ""
+    "error": "OPENAI_API_KEY is required for generation."
   }
 ]
