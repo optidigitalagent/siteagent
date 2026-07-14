@@ -1,8 +1,7 @@
-﻿# Next Action
+# Next Action
 
-First make the Git worktree clean enough for the configured inbox `git pull --rebase`
-(without discarding unrelated changes), then send a new real Instagram URL to the Telegram
-bot so it creates a `pending` queue item. Run `python -m site_agent.cli go`, inspect the
-resulting business URL with the remote Playwright gate, confirm its Telegram success
-message and `done` queue state, then republish the same generated site to prove the Pages
-project and stable production URL are reused.
+For recovery job `d8176c55f451439cacf0e8a892ca97e7`, configure a valid
+`TELEGRAM_BOT_TOKEN` in the local execution environment, then obtain a new explicit manual
+resend authorization before retrying `manual-resend`. The first authorized resend did not
+reach the Telegram API because the token was absent; the Pages site, artifacts, and deployment
+remain valid and must be reused unchanged.

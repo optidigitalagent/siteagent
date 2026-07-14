@@ -90,3 +90,37 @@ Live end-to-end verification requires local runtime credentials:
   to pull over the pre-existing uncommitted worktree changes. No queue state changed and no
   Telegram message was sent. Do not stash, discard, or commit those user-owned changes as
   part of verification.
+
+## Interrupted Telegram Job Recovery Audit (2026-07-14)
+
+- Audited queue job `d8176c55f451439cacf0e8a892ca97e7` for
+  `https://www.instagram.com/jet_yacht_rest_kyiv?igsh=OGw2cGpsZHZjeHh1` without running
+  `go`, claiming another job, regenerating the site, or uploading a replacement deployment.
+- Reused the latest matching run
+  `runs/20260714-074208-jet_yacht_rest_kyiv-igsh-OGw2cGpsZHZjeHh` and verified its valid
+  research, strategy, SiteSpec, single critic/technical gate (91), acceptance audit, and
+  Cloudflare deployment metadata. Local and remote Playwright gates passed at 1440x1100 and
+  390x844 with no console/network errors, failed assets, broken links, small controls, or
+  horizontal overflow. The stable Pages URL returned HTTPS 200 and the expected Instagram
+  marker with no local URLs or paths.
+- The only unrecoverable legacy boundary is Telegram receipt state: the prior CLI marked the
+  queue `done` before invoking `send_done`, and it stored no message id/notification receipt.
+  Therefore the legacy job's final Telegram success delivery is `unknown`; no resend was made
+  because it could duplicate a customer message. Full evidence is in the run's
+  `recovery_audit.json`.
+- Added durable queue checkpoints, persisted run directories, interrupted-job selection ahead
+  of pending jobs, legacy run discovery, safe artifact reuse, and an at-most-once Telegram
+  notification state. A crash during Telegram delivery now leaves the job non-complete and
+  explicitly blocks automatic resend rather than silently duplicating delivery.
+
+## Authorized Legacy Telegram Resend Attempt (2026-07-14)
+
+- The user confirmed that the legacy final Telegram message was not received and explicitly
+  authorized one resend for `d8176c55f451439cacf0e8a892ca97e7`.
+- The manual recovery command performed a fresh HTTPS 200 + expected business-marker check on
+  `https://siteagent-jet-yacht-rest-kyiv-8e3e8f93c6.pages.dev` without running research,
+  generation, critic, acceptance, or Cloudflare deployment.
+- Before a Telegram API request could be made, the notifier failed with the exact controlled
+  error `Telegram success requires TELEGRAM_BOT_TOKEN.` The queue is `retryable` with
+  notification state `unknown`, no receipt, and the recorded manual authorization timestamp.
+  No Telegram success message was sent and the deployed site was not changed.

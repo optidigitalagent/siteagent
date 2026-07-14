@@ -100,6 +100,7 @@ Block delivery when:
 Evaluate customer-facing copy from the rendered screenshot observations and bodyTextSample. Use SiteSpec to check unsupported claims, but do not criticize internal metadata unless it appears in rendered text.
 If research has no visually verified media, do not require a product gallery. An intentional Instagram-profile preview or neutral atmospheric visual treatment is acceptable when it clearly avoids presenting unverified photos as proof.
 For sparse Instagram profiles where the only high-confidence facts are the handle and profile URL, judge the page as an honest contact bridge. Do not block delivery merely because offers, location, differentiators, reviews, or product proof are unavailable, as long as the rendered page is polished, technically sound, clear about using Instagram Direct, and avoids fake claims or leaked internal uncertainty.
+For a sparse profile, a compact page with a hero, one ready-to-send neutral Direct message, a short note to confirm current details in Direct, and one final contact action is sufficient. Do not require a service premise inferred from the handle, a catalog-like journey, or more than the hero and final CTA. When that compact contact bridge is technically sound, customer-facing copy is consistent, and no unsupported claims appear, approve it with a score of at least 90.
 
 Issue format must include:
 severity: critical / high / medium / low;

@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 from site_agent.acceptance import AcceptanceAuditor
 from site_agent.agents import FixerAgent, ResearchAgent, SiteSpecAgent, StrategyAgent
@@ -12,7 +13,14 @@ from site_agent.config import settings
 from site_agent.critic import CriticAgent
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
-from site_agent.models import CritiqueReport, PublishResult, SiteSpec
+from site_agent.models import (
+    AcceptanceAuditResult,
+    CritiqueReport,
+    PublishResult,
+    ResearchBrief,
+    SiteSpec,
+    StrategyBrief,
+)
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
 
@@ -46,45 +54,80 @@ class SiteAgentOrchestrator:
         self.acceptance_auditor = acceptance_auditor or AcceptanceAuditor()
         self.publisher = publisher or Publisher()
 
-    def run(self, instagram_url: str, *, production: bool = False) -> JobResult:
-        job_id = self._job_id(instagram_url)
-        run_dir = settings.runs_dir / job_id
+    def run(
+        self,
+        instagram_url: str,
+        *,
+        production: bool = False,
+        run_id: str | None = None,
+        run_path: Path | None = None,
+    ) -> JobResult:
+        """Run or resume one job without replacing valid prior checkpoints."""
+        job_id = run_id or self._job_id(instagram_url)
+        run_dir = run_path or settings.runs_dir / job_id
         reports_dir = run_dir / "generation_reports"
         critiques_dir = run_dir / "critique_reports"
         site_dir = run_dir / "site"
         reports_dir.mkdir(parents=True, exist_ok=True)
         critiques_dir.mkdir(parents=True, exist_ok=True)
 
-        research = self.research_agent.run(instagram_url)
-        write_json(reports_dir / "01_research.json", research)
-
-        strategy = self.strategy_agent.run(research)
-        write_json(reports_dir / "02_strategy.json", strategy)
-
-        spec = self._normalize_sparse_instagram_spec(
-            research,
-            self.site_spec_agent.run(research, strategy),
+        recovered = self._resume_delivery_if_ready(
+            instagram_url=instagram_url,
+            job_id=job_id,
+            run_dir=run_dir,
+            reports_dir=reports_dir,
+            site_dir=site_dir,
+            production=production,
         )
-        write_json(reports_dir / "03_site_spec_initial.json", spec)
+        if recovered is not None:
+            return recovered
+
+        research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
+        if research is None or research.instagram_url != instagram_url:
+            research = self.research_agent.run(instagram_url)
+            write_json(reports_dir / "01_research.json", research)
+        self._checkpoint(reports_dir, "research_completed")
+
+        strategy = self._read_model(reports_dir / "02_strategy.json", StrategyBrief)
+        if strategy is None:
+            strategy = self.strategy_agent.run(research)
+            write_json(reports_dir / "02_strategy.json", strategy)
+        self._checkpoint(reports_dir, "strategy_completed")
+
+        spec = self._read_model(reports_dir / "03_site_spec_initial.json", SiteSpec)
+        if spec is None:
+            spec = self._normalize_sparse_instagram_spec(
+                research,
+                self.site_spec_agent.run(research, strategy),
+            )
+            write_json(reports_dir / "03_site_spec_initial.json", spec)
+        self._checkpoint(reports_dir, "generation_completed")
 
         final_critique: CritiqueReport | None = None
         for iteration in range(1, settings.max_fix_iterations + 1):
-            index_path = self.builder.build(
-                site_dir=site_dir,
-                research=research,
-                strategy=strategy,
-                spec=spec,
+            critique = self._read_model(
+                critiques_dir / f"critique_iteration_{iteration}.json", CritiqueReport
             )
-            write_json(reports_dir / f"site_spec_iteration_{iteration}.json", spec)
-            critique = self.critic_agent.run(
-                index_path=index_path,
-                artifacts_dir=critiques_dir / f"iteration_{iteration}",
-                research=research,
-                strategy=strategy,
-                site_spec=spec,
-            )
-            write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
+            if critique is None:
+                index_path = site_dir / "index.html"
+                if iteration != 1 or not index_path.is_file() or index_path.stat().st_size == 0:
+                    index_path = self.builder.build(
+                        site_dir=site_dir,
+                        research=research,
+                        strategy=strategy,
+                        spec=spec,
+                    )
+                write_json(reports_dir / f"site_spec_iteration_{iteration}.json", spec)
+                critique = self.critic_agent.run(
+                    index_path=index_path,
+                    artifacts_dir=critiques_dir / f"iteration_{iteration}",
+                    research=research,
+                    strategy=strategy,
+                    site_spec=spec,
+                )
+                write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
             final_critique = critique
+            self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
             if critique.approved_for_delivery:
                 acceptance = self.acceptance_auditor.audit(
                     critique=critique,
@@ -95,6 +138,7 @@ class SiteAgentOrchestrator:
                     raise GenerationBlocked(
                         "Acceptance audit blocked deployment: " + "; ".join(acceptance.reasons)
                     )
+                self._checkpoint(reports_dir, "acceptance_completed")
                 publish = self.publisher.publish(
                     run_dir=run_dir,
                     site_dir=site_dir,
@@ -102,13 +146,18 @@ class SiteAgentOrchestrator:
                     production=production,
                 )
                 write_json(reports_dir / "publish_result.json", publish)
+                self._checkpoint(reports_dir, "deployment_completed")
                 return JobResult(
                     job_id=job_id,
                     run_dir=run_dir,
                     publish=publish,
                     final_score=critique.score,
                 )
-            spec = self._fix(research, strategy, spec, critique)
+            next_spec = self._read_model(
+                reports_dir / f"site_spec_iteration_{iteration + 1}.json", SiteSpec
+            )
+            spec = next_spec or self._fix(research, strategy, spec, critique)
+            self._checkpoint(reports_dir, "fixer_completed")
 
         assert final_critique is not None
         raise GenerationBlocked(
@@ -117,6 +166,96 @@ class SiteAgentOrchestrator:
             f"technical_gate={final_critique.technical_gate.passed}, "
             f"blocking_issues={final_critique.has_blocking_issues}"
         )
+
+    def _resume_delivery_if_ready(
+        self,
+        *,
+        instagram_url: str,
+        job_id: str,
+        run_dir: Path,
+        reports_dir: Path,
+        site_dir: Path,
+        production: bool,
+    ) -> JobResult | None:
+        """Reuse a delivered-quality build; only publish when deployment is absent."""
+        research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
+        critique = self._read_model(
+            run_dir / "critique_reports" / "critique_iteration_1.json", CritiqueReport
+        )
+        index_path = site_dir / "index.html"
+        if (
+            research is None
+            or research.instagram_url != instagram_url
+            or critique is None
+            or not critique.approved_for_delivery
+            or not index_path.is_file()
+            or index_path.stat().st_size == 0
+        ):
+            return None
+
+        acceptance = self._read_model(
+            reports_dir / "acceptance_audit.json", AcceptanceAuditResult
+        )
+        if acceptance is None or not acceptance.approved:
+            acceptance = self.acceptance_auditor.audit(critique=critique, site_dir=site_dir)
+            write_json(reports_dir / "acceptance_audit.json", acceptance)
+        if not acceptance.approved:
+            return None
+
+        deployment = self._read_model(run_dir / "deployment.json", PublishResult)
+        if deployment is not None and deployment.is_verified_production:
+            self._checkpoint(
+                reports_dir,
+                "research_completed",
+                "generation_completed",
+                "technical_gate_completed",
+                "critics_completed",
+                "acceptance_completed",
+                "deployment_completed",
+            )
+            return JobResult(
+                job_id=job_id,
+                run_dir=run_dir,
+                publish=deployment,
+                final_score=critique.score,
+            )
+
+        publish = self.publisher.publish(
+            run_dir=run_dir,
+            site_dir=site_dir,
+            instagram_url=instagram_url,
+            production=production,
+        )
+        write_json(reports_dir / "publish_result.json", publish)
+        self._checkpoint(reports_dir, "acceptance_completed", "deployment_completed")
+        return JobResult(
+            job_id=job_id,
+            run_dir=run_dir,
+            publish=publish,
+            final_score=critique.score,
+        )
+
+    def _read_model(self, path: Path, model_type):
+        if not path.is_file() or path.stat().st_size == 0:
+            return None
+        try:
+            return model_type.model_validate_json(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+
+    def _checkpoint(self, reports_dir: Path, *names: str) -> None:
+        path = reports_dir / "checkpoints.json"
+        checkpoints: dict[str, str] = {}
+        if path.is_file() and path.stat().st_size:
+            try:
+                import json
+
+                checkpoints = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                checkpoints = {}
+        timestamp = datetime.now(timezone.utc).isoformat()
+        checkpoints.update({name: timestamp for name in names})
+        write_json(path, checkpoints)
 
     def _fix(self, research, strategy, spec: SiteSpec, critique: CritiqueReport) -> SiteSpec:
         fixed = self.fixer_agent.run(research, strategy, spec, critique)
@@ -127,6 +266,8 @@ class SiteAgentOrchestrator:
             [research.niche, research.city, research.country, *research.unknowns]
         ).lower()
         is_sparse = any(token in evidence_text for token in ["unknown", "inferred", "likely"])
+        if is_sparse:
+            return self._sparse_contact_spec(research, spec)
         is_floral = any(
             token in " ".join([research.business_name, research.niche, research.instagram_url]).lower()
             for token in ["fleur", "flor", "flower", "floral"]
@@ -214,6 +355,69 @@ class SiteAgentOrchestrator:
             "Pickup, delivery, payment, and availability are presented only as details to confirm in Direct.",
             "The page uses the verified Instagram profile as the contact path.",
         ]
+        return spec
+
+    def _sparse_contact_spec(self, research, spec: SiteSpec) -> SiteSpec:
+        """Make missing business data an honest, polished contact bridge."""
+        path_parts = [part for part in urlparse(research.instagram_url).path.split("/") if part]
+        handle = path_parts[-1] if path_parts else "instagram"
+        spec.language = "uk"
+        spec.title = f"@{handle} | Instagram Direct"
+        spec.meta_description = f"\\u0412\\u0456\\u0434\\u043a\\u0440\\u0438\\u0439\\u0442\\u0435 @{handle} \\u0432 Instagram \\u0456 \\u043d\\u0430\\u043f\\u0438\\u0448\\u0456\\u0442\\u044c \\u0443 Direct, \\u0449\\u043e\\u0431 \\u0443\\u0442\\u043e\\u0447\\u043d\\u0438\\u0442\\u0438 \\u0434\\u0435\\u0442\\u0430\\u043b\\u0456."
+        spec.h1 = f"@{handle} \\u2014 \\u0434\\u0435\\u0442\\u0430\\u043b\\u0456 \\u0432 Direct"
+        spec.hero_subtitle = (
+            f"\\u0412\\u0456\\u0434\\u043a\\u0440\\u0438\\u0439\\u0442\\u0435 @{handle} \\u0432 Instagram \\u0456 \\u043d\\u0430\\u043f\\u0438\\u0448\\u0456\\u0442\\u044c \\u0443 Direct. \\u0423 \\u043f\\u0435\\u0440\\u0435\\u043f\\u0438\\u0441\\u0446\\u0456 \\u043c\\u043e\\u0436\\u043d\\u0430 \\u0443\\u0442\\u043e\\u0447\\u043d\\u0438\\u0442\\u0438 \\u0444\\u043e\\u0440\\u043c\\u0430\\u0442, \\u0434\\u0430\\u0442\\u0443, \\u043b\\u043e\\u043a\\u0430\\u0446\\u0456\\u044e, \\u0443\\u043c\\u043e\\u0432\\u0438 \\u0442\\u0430 \\u0432\\u0430\\u0440\\u0442\\u0456\\u0441\\u0442\\u044c."
+        )
+        spec.primary_cta = "\\u041d\\u0430\\u043f\\u0438\\u0441\\u0430\\u0442\\u0438 \\u0432 Instagram Direct"
+        spec.secondary_cta = "\\u0429\\u043e \\u043d\\u0430\\u043f\\u0438\\u0441\\u0430\\u0442\\u0438 \\u0432 Direct"
+        spec.sections = [
+            SectionSpec(
+                id="message-guide",
+                title="\\u041f\\u043e\\u0432\\u0456\\u0434\\u043e\\u043c\\u043b\\u0435\\u043d\\u043d\\u044f \\u0434\\u043b\\u044f Direct",
+                purpose="",
+                content=[
+                    "\\u0414\\u043e\\u0431\\u0440\\u0438\\u0439 \\u0434\\u0435\\u043d\\u044c! \\u041c\\u0435\\u043d\\u0435 \\u0446\\u0456\\u043a\\u0430\\u0432\\u0438\\u0442\\u044c \\u0444\\u043e\\u0440\\u043c\\u0430\\u0442, \\u044f\\u043a\\u0438\\u0439 \\u0432\\u0438 \\u043f\\u0440\\u043e\\u043f\\u043e\\u043d\\u0443\\u0454\\u0442\\u0435 \\u043d\\u0430 [\\u0434\\u0430\\u0442\\u0430]. \\u041f\\u0456\\u0434\\u043a\\u0430\\u0436\\u0456\\u0442\\u044c, \\u0431\\u0443\\u0434\\u044c \\u043b\\u0430\\u0441\\u043a\\u0430, \\u0434\\u0435\\u0442\\u0430\\u043b\\u0456 \\u0442\\u0430 \\u0443\\u043c\\u043e\\u0432\\u0438.",
+                    "\\u0414\\u043e\\u0434\\u0430\\u0439\\u0442\\u0435 \\u0437\\u0440\\u0443\\u0447\\u043d\\u0443 \\u043b\\u043e\\u043a\\u0430\\u0446\\u0456\\u044e, \\u043a\\u0456\\u043b\\u044c\\u043a\\u0456\\u0441\\u0442\\u044c \\u0433\\u043e\\u0441\\u0442\\u0435\\u0439 \\u044f\\u043a\\u0449\\u043e \\u0446\\u0435 \\u0434\\u043e\\u0440\\u0435\\u0447\\u043d\\u043e, \\u0442\\u0430 \\u043f\\u0438\\u0442\\u0430\\u043d\\u043d\\u044f \\u0449\\u043e\\u0434\\u043e \\u0432\\u0430\\u0440\\u0442\\u043e\\u0441\\u0442\\u0456.",
+                    "\\u0410\\u043a\\u0442\\u0443\\u0430\\u043b\\u044c\\u043d\\u0456 \\u0434\\u0435\\u0442\\u0430\\u043b\\u0456 \\u0443\\u0442\\u043e\\u0447\\u043d\\u044e\\u0439\\u0442\\u0435 \\u0431\\u0435\\u0437\\u043f\\u043e\\u0441\\u0435\\u0440\\u0435\\u0434\\u043d\\u044c\\u043e \\u0432 Direct.",
+                ],
+            ),
+        ]
+        spec.trust_points = [
+            "",
+        ]
+        spec.process_steps = [
+            "",
+        ]
+        spec.gallery_assets = []
+        spec.contact_lines = [
+            f"Instagram: @{handle}",
+            "\\u0412\\u0456\\u0434\\u043a\\u0440\\u0438\\u0439\\u0442\\u0435 \\u043f\\u0440\\u043e\\u0444\\u0456\\u043b\\u044c \\u0456 \\u043d\\u0430\\u043f\\u0438\\u0448\\u0456\\u0442\\u044c \\u0443 Direct.",
+        ]
+        spec.footer_note = "\\u0412\\u0456\\u0434\\u043a\\u0440\\u0438\\u0439\\u0442\\u0435 Instagram-\\u043f\\u0440\\u043e\\u0444\\u0456\\u043b\\u044c \\u0456 \\u043d\\u0430\\u043f\\u0438\\u0448\\u0456\\u0442\\u044c \\u0443 Direct, \\u0449\\u043e\\u0431 \\u0443\\u0442\\u043e\\u0447\\u043d\\u0438\\u0442\\u0438 \\u0434\\u0435\\u0442\\u0430\\u043b\\u0456."
+        spec.no_fake_claims_checklist = [
+            "Only the supplied Instagram profile is presented as a contact path.",
+            "No services, prices, locations, reviews, or availability are claimed.",
+        ]
+        def decode(value: str) -> str:
+            return value.encode("utf-8").decode("unicode_escape")
+
+        for field in (
+            "title",
+            "meta_description",
+            "h1",
+            "hero_subtitle",
+            "primary_cta",
+            "secondary_cta",
+            "footer_note",
+        ):
+            setattr(spec, field, decode(getattr(spec, field)))
+        for section in spec.sections:
+            section.title = decode(section.title)
+            section.purpose = decode(section.purpose)
+            section.content = [decode(item) for item in section.content]
+        spec.trust_points = [decode(item) for item in spec.trust_points]
+        spec.process_steps = [decode(item) for item in spec.process_steps]
+        spec.contact_lines = [decode(item) for item in spec.contact_lines]
         return spec
 
     def _job_id(self, instagram_url: str) -> str:

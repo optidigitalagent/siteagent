@@ -6,6 +6,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -23,6 +24,13 @@ class TelegramJob(BaseModel):
     site_url: str = ""
     repo_url: str = ""
     error: str = ""
+    # Stored checkpoints make recovery independent of volatile process memory.
+    run_dir: str = ""
+    checkpoints: dict[str, str] = Field(default_factory=dict)
+    telegram_notification_status: Literal["not_started", "sending", "sent", "unknown"] = "not_started"
+    telegram_receipt: dict[str, str | int] = Field(default_factory=dict)
+    manual_resend_authorization: dict[str, str] = Field(default_factory=dict)
+    recovery_events: list[str] = Field(default_factory=list)
 
 
 class TelegramJobQueue:
@@ -52,6 +60,29 @@ class TelegramJobQueue:
                 return job
         return None
 
+    def next_interrupted(self) -> TelegramJob | None:
+        """Return a resumable running job before any pending work.
+
+        A job with a ``sending`` notification is intentionally not resumed:
+        Telegram may already have accepted its success message before a crash.
+        Repeating it would violate the no-duplicate-delivery guarantee.
+        """
+        self.pull()
+        running = [job for job in self._read() if job.status == "running"]
+        resumable = [
+            job for job in running if job.telegram_notification_status == "not_started"
+        ]
+        if resumable:
+            return max(resumable, key=lambda job: job.updated_at)
+        uncertain = [
+            job
+            for job in running
+            if job.telegram_notification_status in {"sending", "unknown"}
+        ]
+        if uncertain:
+            raise InterruptedDeliveryUncertain(max(uncertain, key=lambda job: job.updated_at).id)
+        return None
+
     def next_pending(self) -> TelegramJob | None:
         self.pull()
         for job in self._read():
@@ -66,7 +97,87 @@ class TelegramJobQueue:
             site_url=site_url,
             repo_url=repo_url,
             error="",
+            telegram_notification_status="sent",
             commit_message=f"Complete Telegram site job {job_id}",
+        )
+
+    def get(self, job_id: str) -> TelegramJob:
+        for job in self._read_with_pull():
+            if job.id == job_id:
+                return job
+        raise KeyError(f"Telegram job not found: {job_id}")
+
+    def authorize_manual_resend(self, job_id: str, *, reason: str) -> TelegramJob:
+        """Record explicit human authority before a delivery-uncertain resend.
+
+        This is deliberately separate from normal recovery: unknown Telegram
+        delivery is never retried automatically.
+        """
+        jobs = self._read_with_pull()
+        for index, job in enumerate(jobs):
+            if job.id != job_id:
+                continue
+            if job.telegram_notification_status == "sent":
+                raise InterruptedDeliveryUncertain(job_id)
+            timestamp = self._now()
+            job.status = "running"
+            job.error = ""
+            job.telegram_notification_status = "sending"
+            job.manual_resend_authorization = {
+                "authorized_at": timestamp,
+                "reason": reason[:500],
+            }
+            job.recovery_events.append(f"manual_resend_authorized:{timestamp}")
+            job.updated_at = timestamp
+            jobs[index] = job
+            self._write(jobs)
+            self.push(f"Authorize manual Telegram resend {job_id}")
+            return job
+        raise KeyError(f"Telegram job not found: {job_id}")
+
+    def record_notification_sent(
+        self, job_id: str, receipt: dict[str, str | int]
+    ) -> TelegramJob:
+        return self._update(
+            job_id,
+            telegram_notification_status="sent",
+            telegram_receipt=receipt,
+            commit_message=f"Record Telegram success receipt {job_id}",
+        )
+
+    def set_run_dir(self, job_id: str, run_dir: str) -> TelegramJob:
+        return self._update(
+            job_id,
+            run_dir=run_dir,
+            commit_message=f"Set Telegram site job run directory {job_id}",
+        )
+
+    def record_checkpoints(self, job_id: str, **checkpoints: str) -> TelegramJob:
+        jobs = self._read_with_pull()
+        for index, job in enumerate(jobs):
+            if job.id == job_id:
+                job.checkpoints.update({key: value for key, value in checkpoints.items() if value})
+                job.updated_at = self._now()
+                jobs[index] = job
+                self._write(jobs)
+                self.push(f"Checkpoint Telegram site job {job_id}")
+                return job
+        raise KeyError(f"Telegram job not found: {job_id}")
+
+    def mark_notification_sending(self, job_id: str) -> TelegramJob:
+        return self._update(
+            job_id,
+            telegram_notification_status="sending",
+            commit_message=f"Start Telegram success notification {job_id}",
+        )
+
+    def mark_notification_unknown(self, job_id: str, error: str) -> TelegramJob:
+        return self._update(
+            job_id,
+            status="retryable",
+            telegram_notification_status="unknown",
+            error=error[:2000],
+            commit_message=f"Uncertain Telegram success notification {job_id}",
         )
 
     def fail(self, job_id: str, error: str) -> TelegramJob:
@@ -82,8 +193,7 @@ class TelegramJobQueue:
         return sum(1 for job in self._read() if job.status == "pending")
 
     def _update(self, job_id: str, *, commit_message: str, **changes: str) -> TelegramJob:
-        self.pull()
-        jobs = self._read()
+        jobs = self._read_with_pull()
         for index, job in enumerate(jobs):
             if job.id == job_id:
                 for key, value in changes.items():
@@ -94,6 +204,10 @@ class TelegramJobQueue:
                 self.push(commit_message)
                 return job
         raise KeyError(f"Telegram job not found: {job_id}")
+
+    def _read_with_pull(self) -> list[TelegramJob]:
+        self.pull()
+        return self._read()
 
     def pull(self) -> None:
         if not self.git_sync:
@@ -159,3 +273,13 @@ class TelegramJobQueue:
         if settings.telegram_inbox_git_remote_url:
             value = value.replace(settings.telegram_inbox_git_remote_url, "[REMOTE_URL]")
         return re.sub(r"x-access-token:[^@\s]+@", "x-access-token:[REDACTED]@", value)
+
+
+class InterruptedDeliveryUncertain(RuntimeError):
+    """A process stopped while the Telegram success delivery was in flight."""
+
+    def __init__(self, job_id: str) -> None:
+        self.job_id = job_id
+        super().__init__(
+            f"Telegram delivery for interrupted job {job_id} is uncertain; refusing a duplicate send."
+        )

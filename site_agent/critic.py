@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error, sync_playwright
 
 from site_agent.models import CritiqueReport, ResearchBrief, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent import prompts
@@ -36,7 +36,7 @@ class TechnicalInspector:
                 desktop.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
                 self._watch_network(desktop, failed_network_requests)
                 desktop.goto(url, wait_until="networkidle")
-                desktop.screenshot(path=artifacts_dir / "desktop.png", full_page=True)
+                self._take_screenshot(desktop, artifacts_dir / "desktop.png")
                 desktop_metrics = self._collect_metrics(desktop)
                 observations["desktop"] = json.dumps(desktop_metrics, ensure_ascii=False, indent=2)
 
@@ -44,7 +44,7 @@ class TechnicalInspector:
                 mobile.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
                 self._watch_network(mobile, failed_network_requests)
                 mobile.goto(url, wait_until="networkidle")
-                mobile.screenshot(path=artifacts_dir / "mobile.png", full_page=True)
+                self._take_screenshot(mobile, artifacts_dir / "mobile.png")
                 mobile_metrics = self._collect_metrics(mobile)
                 observations["mobile"] = json.dumps(mobile_metrics, ensure_ascii=False, indent=2)
             finally:
@@ -86,6 +86,21 @@ class TechnicalInspector:
             json.dumps({"url": url, **observations}, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         return gate, observations
+
+    def _take_screenshot(self, page, path: Path) -> None:
+        """Retry a transient Chromium capture failure before failing the quality gate."""
+        last_error: Error | None = None
+        for attempt in range(3):
+            try:
+                page.screenshot(path=path, full_page=True)
+                return
+            except Error as exc:
+                last_error = exc
+                if attempt == 2:
+                    break
+                page.wait_for_timeout(250 * (attempt + 1))
+        assert last_error is not None
+        raise last_error
 
     def _watch_network(self, page, failures: list[str]) -> None:
         page.on(

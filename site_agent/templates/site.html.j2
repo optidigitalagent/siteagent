@@ -63,6 +63,7 @@
       font-weight: 760;
       line-height: 1.1;
       max-width: 42ch;
+      overflow-wrap: anywhere;
     }
     .nav-actions {
       display: flex;
@@ -128,12 +129,14 @@
       line-height: 0.96;
       letter-spacing: 0;
       max-width: 11ch;
+      overflow-wrap: anywhere;
     }
     .hero-copy {
       margin: 24px 0 0;
       max-width: 62ch;
       color: #343835;
       font-size: clamp(1.04rem, 2vw, 1.28rem);
+      overflow-wrap: anywhere;
     }
     .hero-actions {
       display: flex;
@@ -241,6 +244,7 @@
       border-radius: var(--radius);
       padding: 18px 18px;
       font-size: 1rem;
+      overflow-wrap: anywhere;
     }
     .plain-list {
       display: grid;
@@ -252,6 +256,7 @@
     .plain-list li {
       padding-left: 18px;
       border-left: 3px solid var(--accent);
+      overflow-wrap: anywhere;
     }
     .gallery-grid {
       display: grid;
@@ -333,11 +338,13 @@
   <a class="skip-link" href="#content">{{ labels.skip }}</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary">
-      <div class="brand">{{ spec.h1 or spec.title }}</div>
+      <div class="brand">{% if sparse %}Instagram{% else %}{{ spec.h1 or spec.title }}{% endif %}</div>
+      {% if not sparse %}
       <div class="nav-actions">
         <a class="btn secondary" href="#details">{{ spec.secondary_cta }}</a>
         <a class="btn primary" href="{{ research.instagram_url }}">{{ spec.primary_cta }}</a>
       </div>
+      {% endif %}
     </nav>
   </header>
 
@@ -349,7 +356,9 @@
         <p class="hero-copy">{{ spec.hero_subtitle }}</p>
         <div class="hero-actions">
           <a class="btn primary" href="{{ research.instagram_url }}">{{ spec.primary_cta }}</a>
+          {% if not sparse %}
           <a class="btn secondary" href="#details">{{ spec.secondary_cta }}</a>
+          {% endif %}
         </div>
       </div>
       <div class="hero-media" aria-label="Brand visual">
@@ -362,7 +371,7 @@
               <strong>{{ spec.h1 or spec.title }}</strong>
               <p>@{{ instagram_handle }}</p>
               <div class="profile-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-              <p>Current visuals are shown on the live Instagram profile. This page keeps the request path clear without presenting unverified photos as work samples.</p>
+              <p>{{ labels.profile_note | default('Open the Instagram profile and send a Direct message to confirm the details.') }}</p>
             </div>
           </div>
         {% endif %}
@@ -405,6 +414,7 @@
       </section>
     {% endif %}
 
+    {% if not sparse %}
     <section id="trust">
       <div class="section-inner split">
         <div>
@@ -432,6 +442,7 @@
         </ul>
       </div>
     </section>
+    {% endif %}
 
     <section id="details">
       <div class="section-inner split">
@@ -461,8 +472,12 @@
   </main>
 
   <footer class="footer">
-    <span>{{ spec.h1 or spec.title }}</span>
-    <span>{{ spec.footer_note }}</span>
+    {% if sparse %}
+      <span>Instagram</span>
+    {% else %}
+      <span>{{ spec.h1 or spec.title }}</span>
+      <span>{{ spec.footer_note }}</span>
+    {% endif %}
   </footer>
 </body>
 </html>
