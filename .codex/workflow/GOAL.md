@@ -1,3 +1,5 @@
 ﻿# Current Goal
 
-Finish Telegram -> Codex -> generated site -> Telegram final URL workflow and add agentic development workflow files for future website-agent work.
+Replace the implicit local/Git publishing fallback with an acceptance-gated Cloudflare
+Pages Direct Upload deployment performed by local Codex. Telegram production jobs must
+finish only after the stable public HTTPS URL passes live verification.

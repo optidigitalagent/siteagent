@@ -1,4 +1,9 @@
-﻿# acceptance-auditor
+---
+name: acceptance-auditor
+description: "Independently checks every acceptance criterion and demands proof: file, command, test, screenshot, log, deployment URL, or Telegram message."
+---
+
+# acceptance-auditor
 
 Independently checks every acceptance criterion and demands proof: file, command, test, screenshot, log, deployment URL, or Telegram message.
 

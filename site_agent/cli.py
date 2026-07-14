@@ -16,12 +16,25 @@ GO_ALIASES = {"go", "го"}
 def run_instagram_url(instagram_url: str) -> None:
     result = SiteAgentOrchestrator().run(instagram_url)
     print("Готово:")
-    print(result.publish.site_url)
-    print(f"Репозиторий: {result.publish.repo_url}")
+    print(result.publish.production_url)
 
 
 def run_pending_job() -> None:
     queue = _pending_job_queue()
+    try:
+        pending_job = queue.next_pending()
+    except RuntimeError as exc:
+        if queue.git_sync and not settings.telegram_inbox_git_sync:
+            raise RuntimeError(
+                "Не удалось автоматически синхронизировать Telegram inbox через git. "
+                "Проверьте git remote/push-доступ или задайте TELEGRAM_INBOX_GIT_SYNC=true."
+            ) from exc
+        raise
+    if pending_job is None:
+        print("Нет pending-задач из Telegram.")
+        return
+
+    orchestrator = SiteAgentOrchestrator()
     try:
         job = queue.claim_next()
     except RuntimeError as exc:
@@ -37,7 +50,11 @@ def run_pending_job() -> None:
 
     notifier = TelegramNotifier()
     try:
-        result = SiteAgentOrchestrator().run(job.instagram_url)
+        result = orchestrator.run(job.instagram_url, production=True)
+        if not result.publish.is_verified_production:
+            raise RuntimeError(
+                "Production publishing did not return a live-verified HTTPS deployment."
+            )
     except Exception as exc:
         queue.fail(job.id, str(exc))
         notifier.send_failure(job.chat_id)
@@ -45,13 +62,12 @@ def run_pending_job() -> None:
 
     queue.complete(
         job.id,
-        site_url=result.publish.site_url,
+        site_url=result.publish.production_url,
         repo_url=result.publish.repo_url,
     )
     notifier.send_done(job.chat_id, result.publish)
     print("Готово:")
-    print(result.publish.site_url)
-    print(f"Репозиторий: {result.publish.repo_url}")
+    print(result.publish.production_url)
 
 
 def _pending_job_queue() -> TelegramJobQueue:

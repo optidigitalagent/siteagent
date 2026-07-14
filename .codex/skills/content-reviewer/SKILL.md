@@ -1,4 +1,9 @@
-﻿# content-reviewer
+---
+name: content-reviewer
+description: "Removes generic AI phrases, unsupported claims, fake numbers/reviews/prices/staff, weak CTAs, and unclear customer journeys."
+---
+
+# content-reviewer
 
 Removes generic AI phrases, unsupported claims, fake numbers/reviews/prices/staff, weak CTAs, and unclear customer journeys.
 

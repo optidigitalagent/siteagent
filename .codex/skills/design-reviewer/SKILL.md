@@ -1,4 +1,9 @@
-﻿# design-reviewer
+---
+name: design-reviewer
+description: "Reviews visual hierarchy, typography, spacing, rhythm, contrast, CTA consistency, and whether the page looks like a real studio deliverable."
+---
+
+# design-reviewer
 
 Reviews visual hierarchy, typography, spacing, rhythm, contrast, CTA consistency, and whether the page looks like a real studio deliverable.
 

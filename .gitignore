@@ -5,4 +5,5 @@ __pycache__/
 runs/
 .pytest_cache/
 node_modules/
-
+.wrangler/
+.dev.vars

@@ -1,4 +1,9 @@
-﻿# handoff-scribe
+---
+name: handoff-scribe
+description: "Writes compact handoff notes: what changed, what was verified, remaining risks, exact next action, and where artifacts live."
+---
+
+# handoff-scribe
 
 Writes compact handoff notes: what changed, what was verified, remaining risks, exact next action, and where artifacts live.
 

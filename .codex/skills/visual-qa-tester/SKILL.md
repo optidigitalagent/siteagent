@@ -1,4 +1,9 @@
-﻿# visual-qa-tester
+---
+name: visual-qa-tester
+description: "Uses screenshots and browser inspection to verify rendered reality, not only code. Records desktop/mobile evidence and defects."
+---
+
+# visual-qa-tester
 
 Uses screenshots and browser inspection to verify rendered reality, not only code. Records desktop/mobile evidence and defects.
 

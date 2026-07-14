@@ -1,4 +1,9 @@
-﻿# responsive-reviewer
+---
+name: responsive-reviewer
+description: "Checks mobile, tablet, and desktop for overflow, layout shifts, tap targets, text fitting, and CTA reachability."
+---
+
+# responsive-reviewer
 
 Checks mobile, tablet, and desktop for overflow, layout shifts, tap targets, text fitting, and CTA reachability.
 

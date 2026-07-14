@@ -1,3 +1,8 @@
 ﻿# Next Action
 
-Set missing Railway/Codex secrets (`OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `PUBLISH_REMOTE_URL`, `PUBLIC_REPO_URL`), push this repository, then run `railway up --service website-agent --detach` and a real Telegram -> Codex `go` end-to-end test.
+First make the Git worktree clean enough for the configured inbox `git pull --rebase`
+(without discarding unrelated changes), then send a new real Instagram URL to the Telegram
+bot so it creates a `pending` queue item. Run `python -m site_agent.cli go`, inspect the
+resulting business URL with the remote Playwright gate, confirm its Telegram success
+message and `done` queue state, then republish the same generated site to prove the Pages
+project and stable production URL are reused.

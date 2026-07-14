@@ -11,10 +11,38 @@ load_dotenv()
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    llm_provider: str = Field(default="codex", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4.1", alias="OPENAI_MODEL")
+    codex_command: str = Field(default="codex", alias="CODEX_COMMAND")
+    codex_model: str = Field(default="", alias="CODEX_MODEL")
     telegram_bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
 
+    hosting_provider: str = Field(default="cloudflare_pages", alias="HOSTING_PROVIDER")
+    publish_required: bool = Field(default=True, alias="PUBLISH_REQUIRED")
+    cloudflare_account_id: str = Field(default="", alias="CLOUDFLARE_ACCOUNT_ID")
+    cloudflare_api_token: str = Field(default="", alias="CLOUDFLARE_API_TOKEN")
+    cloudflare_pages_production_branch: str = Field(
+        default="main",
+        alias="CLOUDFLARE_PAGES_PRODUCTION_BRANCH",
+    )
+    cloudflare_project_prefix: str = Field(default="siteagent", alias="CLOUDFLARE_PROJECT_PREFIX")
+    cloudflare_wrangler_package: str = Field(default="wrangler@4", alias="CLOUDFLARE_WRANGLER_PACKAGE")
+    cloudflare_command_timeout_seconds: int = Field(
+        default=300,
+        alias="CLOUDFLARE_COMMAND_TIMEOUT_SECONDS",
+    )
+    cloudflare_live_retries: int = Field(default=5, alias="CLOUDFLARE_LIVE_RETRIES")
+    cloudflare_live_backoff_seconds: float = Field(
+        default=2.0,
+        alias="CLOUDFLARE_LIVE_BACKOFF_SECONDS",
+    )
+    cloudflare_live_timeout_seconds: float = Field(
+        default=15.0,
+        alias="CLOUDFLARE_LIVE_TIMEOUT_SECONDS",
+    )
+
+    # Deprecated Git publisher settings. Use only with HOSTING_PROVIDER=git.
     publish_remote_url: str = Field(default="", alias="PUBLISH_REMOTE_URL")
     public_repo_url: str = Field(default="", alias="PUBLIC_REPO_URL")
     publish_branch: str = Field(default="gh-pages", alias="PUBLISH_BRANCH")

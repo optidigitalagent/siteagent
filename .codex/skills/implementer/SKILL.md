@@ -1,4 +1,9 @@
-﻿# implementer
+---
+name: implementer
+description: "Implements one concrete backend/frontend/docs task at a time with scoped edits, existing patterns, and verification before handoff."
+---
+
+# implementer
 
 Implements one concrete backend/frontend/docs task at a time with scoped edits, existing patterns, and verification before handoff.
 

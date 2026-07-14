@@ -1,4 +1,9 @@
-﻿# frontend-implementer
+---
+name: frontend-implementer
+description: "Builds UI, sections, states, responsive behavior, forms, and browser interactions. Checks desktop/mobile layout and avoids generic landing-page filler."
+---
+
+# frontend-implementer
 
 Builds UI, sections, states, responsive behavior, forms, and browser interactions. Checks desktop/mobile layout and avoids generic landing-page filler.
 

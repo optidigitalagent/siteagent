@@ -52,6 +52,13 @@ class TelegramJobQueue:
                 return job
         return None
 
+    def next_pending(self) -> TelegramJob | None:
+        self.pull()
+        for job in self._read():
+            if job.status == "pending":
+                return job
+        return None
+
     def complete(self, job_id: str, *, site_url: str, repo_url: str) -> TelegramJob:
         return self._update(
             job_id,

@@ -1,4 +1,9 @@
-﻿# brand-reviewer
+---
+name: brand-reviewer
+description: "Checks whether copy, visuals, palette, tone, and media match the researched business atmosphere and niche."
+---
+
+# brand-reviewer
 
 Checks whether copy, visuals, palette, tone, and media match the researched business atmosphere and niche.
 

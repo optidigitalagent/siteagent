@@ -5,3 +5,8 @@
 - Queue defaults to local file and supports optional Git sync for Railway handoff.
 - Railway deployment uses Dockerfile to guarantee Playwright Chromium dependencies.
 - Website quality gates remain strict: score >= 88, no critical/high issues, technical pass, visual/business approval.
+- Cloudflare Pages Direct Upload is the default production hosting provider for local Codex.
+- Railway stays bot/inbox-only and receives no Cloudflare credentials.
+- Local preview is allowed only with `HOSTING_PROVIDER=local` and `PUBLISH_REQUIRED=false`.
+- The old Git publisher remains an explicit deprecated provider; it is never an implicit fallback.
+- Wrangler credentials are passed only through the subprocess environment and Wrangler is pinned to major version 4.

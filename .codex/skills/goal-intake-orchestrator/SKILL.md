@@ -1,4 +1,9 @@
-﻿# goal-intake-orchestrator
+---
+name: goal-intake-orchestrator
+description: "Turns a raw user website request into a clear goal: site type, audience, pages/sections, constraints, quality gates, delivery URL, and acceptance criteria."
+---
+
+# goal-intake-orchestrator
 
 Turns a raw user website request into a clear goal: site type, audience, pages/sections, constraints, quality gates, delivery URL, and acceptance criteria.
 

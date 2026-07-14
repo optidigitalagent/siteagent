@@ -1,4 +1,9 @@
-﻿# accessibility-reviewer
+---
+name: accessibility-reviewer
+description: "Checks keyboard paths, focus states, semantic headings, aria only when useful, contrast, labels, and reduced-motion concerns."
+---
+
+# accessibility-reviewer
 
 Checks keyboard paths, focus states, semantic headings, aria only when useful, contrast, labels, and reduced-motion concerns.
 

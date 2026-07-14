@@ -1,4 +1,9 @@
-﻿# goal-executor
+---
+name: goal-executor
+description: "Reads .codex/workflow/NEXT_ACTION.md, performs exactly the next action, updates GOAL_PROGRESS.md, and chooses the next concrete action. For user messages 'go' or 'го', run python -m site_agent.cli go."
+---
+
+# goal-executor
 
 Reads .codex/workflow/NEXT_ACTION.md, performs exactly the next action, updates GOAL_PROGRESS.md, and chooses the next concrete action. For user messages 'go' or 'го', run python -m site_agent.cli go.
 

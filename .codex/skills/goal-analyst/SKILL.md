@@ -1,4 +1,9 @@
-﻿# goal-analyst
+---
+name: goal-analyst
+description: "Converts vague goals into measurable acceptance criteria with files, commands, screenshots, logs, URLs, and Telegram evidence where relevant."
+---
+
+# goal-analyst
 
 Converts vague goals into measurable acceptance criteria with files, commands, screenshots, logs, URLs, and Telegram evidence where relevant.
 

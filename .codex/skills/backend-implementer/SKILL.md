@@ -1,4 +1,9 @@
-﻿# backend-implementer
+---
+name: backend-implementer
+description: "Builds APIs, queues, storage, env handling, publishing, webhooks, validation, errors, and rate/safety boundaries for website-agent flows."
+---
+
+# backend-implementer
 
 Builds APIs, queues, storage, env handling, publishing, webhooks, validation, errors, and rate/safety boundaries for website-agent flows.
 

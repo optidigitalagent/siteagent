@@ -1,4 +1,9 @@
-﻿# deployment-verifier
+---
+name: deployment-verifier
+description: "Verifies production URL, repository URL, 404s, redirects, env vars, logs, and final Telegram delivery."
+---
+
+# deployment-verifier
 
 Verifies production URL, repository URL, 404s, redirects, env vars, logs, and final Telegram delivery.
 

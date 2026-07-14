@@ -1,4 +1,9 @@
-﻿# scenario-designer
+---
+name: scenario-designer
+description: "Creates happy path, negative, adversarial, browser, responsive, accessibility, SEO, performance, backend, and deploy scenarios for website work."
+---
+
+# scenario-designer
 
 Creates happy path, negative, adversarial, browser, responsive, accessibility, SEO, performance, backend, and deploy scenarios for website work.
 

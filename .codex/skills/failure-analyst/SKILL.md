@@ -1,4 +1,9 @@
-﻿# failure-analyst
+---
+name: failure-analyst
+description: "When a test or deploy fails, identifies root cause first, separates symptom from cause, then proposes the smallest durable fix."
+---
+
+# failure-analyst
 
 When a test or deploy fails, identifies root cause first, separates symptom from cause, then proposes the smallest durable fix.
 

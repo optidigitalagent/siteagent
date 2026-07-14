@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ spec.title }}</title>
   <meta name="description" content="{{ spec.meta_description }}">
+  <meta name="siteagent-business-id" content="{{ siteagent_business_id }}">
   <style>
     :root {
       --ink: #151515;
@@ -91,6 +92,17 @@
       background: transparent;
       color: var(--ink);
     }
+    .text-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      margin-top: 18px;
+      padding: 8px 0;
+      color: var(--accent-2);
+      font-weight: 760;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+    }
     .hero {
       width: min(100% - 32px, var(--max));
       margin: 0 auto;
@@ -155,6 +167,41 @@
       font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(2rem, 8vw, 4.6rem);
       line-height: 0.95;
+    }
+    .fallback .profile-card {
+      width: min(100%, 320px);
+      display: grid;
+      gap: 18px;
+      color: var(--ink);
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .profile-grid span {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px solid rgba(21, 21, 21, 0.12);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.76), rgba(142,63,45,0.14)),
+        var(--panel);
+    }
+    .profile-mark {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--white);
+      border: 1px solid var(--line);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 2rem;
+    }
+    .profile-card p {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 650;
     }
     main section {
       border-top: 1px solid var(--line);
@@ -286,7 +333,7 @@
   <a class="skip-link" href="#content">{{ labels.skip }}</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary">
-      <div class="brand">{{ research.business_name or spec.title }}</div>
+      <div class="brand">{{ spec.h1 or spec.title }}</div>
       <div class="nav-actions">
         <a class="btn secondary" href="#details">{{ spec.secondary_cta }}</a>
         <a class="btn primary" href="{{ research.instagram_url }}">{{ spec.primary_cta }}</a>
@@ -297,7 +344,7 @@
   <main id="content">
     <section class="hero" aria-labelledby="hero-title">
       <div>
-        <p class="eyebrow">{{ research.niche }}{% if research.city %} · {{ research.city }}{% endif %}</p>
+        <p class="eyebrow">{{ hero_eyebrow }}</p>
         <h1 id="hero-title">{{ spec.h1 }}</h1>
         <p class="hero-copy">{{ spec.hero_subtitle }}</p>
         <div class="hero-actions">
@@ -307,9 +354,17 @@
       </div>
       <div class="hero-media" aria-label="Brand visual">
         {% if hero_asset %}
-          <img src="{{ hero_asset }}" alt="{{ research.business_name or spec.title }}">
+          <img src="{{ hero_asset }}" alt="{{ spec.h1 or spec.title }}">
         {% else %}
-          <div class="fallback"><strong>{{ research.business_name or spec.title }}</strong></div>
+          <div class="fallback">
+            <div class="profile-card">
+              <div class="profile-mark" aria-hidden="true">{{ (spec.h1 or spec.title)[:1] }}</div>
+              <strong>{{ spec.h1 or spec.title }}</strong>
+              <p>@{{ instagram_handle }}</p>
+              <div class="profile-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <p>Current visuals are shown on the live Instagram profile. This page keeps the request path clear without presenting unverified photos as work samples.</p>
+            </div>
+          </div>
         {% endif %}
       </div>
     </section>
@@ -319,7 +374,6 @@
         <div class="section-inner split">
           <div>
             <h2>{{ section.title }}</h2>
-            <p class="section-purpose">{{ section.purpose }}</p>
           </div>
           <div>
             <ul class="content-list">
@@ -328,7 +382,7 @@
               {% endfor %}
             </ul>
             {% if section.cta %}
-              <p><a class="btn secondary" href="{{ research.instagram_url }}">{{ section.cta }}</a></p>
+              <p><a class="text-link" href="{{ research.instagram_url }}">{{ section.cta }}</a></p>
             {% endif %}
           </div>
         </div>
@@ -344,7 +398,7 @@
           </div>
           <div class="gallery-grid">
             {% for image in gallery %}
-              <img src="{{ image }}" alt="{{ research.business_name or spec.title }} visual {{ loop.index }}" loading="lazy">
+              <img src="{{ image }}" alt="{{ spec.h1 or spec.title }} visual {{ loop.index }}" loading="lazy">
             {% endfor %}
           </div>
         </div>
@@ -407,7 +461,7 @@
   </main>
 
   <footer class="footer">
-    <span>{{ research.business_name or spec.title }}</span>
+    <span>{{ spec.h1 or spec.title }}</span>
     <span>{{ spec.footer_note }}</span>
   </footer>
 </body>

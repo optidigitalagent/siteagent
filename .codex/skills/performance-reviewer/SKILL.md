@@ -1,4 +1,9 @@
-﻿# performance-reviewer
+---
+name: performance-reviewer
+description: "Checks image size/loading, blocking assets, bundle/runtime weight, Lighthouse-style risks, and slow-network behavior."
+---
+
+# performance-reviewer
 
 Checks image size/loading, blocking assets, bundle/runtime weight, Lighthouse-style risks, and slow-network behavior.
 

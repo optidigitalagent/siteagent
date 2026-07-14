@@ -1,4 +1,9 @@
-﻿# product-context-researcher
+---
+name: product-context-researcher
+description: "Inspects the current repository before planning. Reports stack, entrypoints, env vars, deployment shape, tests, design system, and existing conventions."
+---
+
+# product-context-researcher
 
 Inspects the current repository before planning. Reports stack, entrypoints, env vars, deployment shape, tests, design system, and existing conventions.
 

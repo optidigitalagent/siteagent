@@ -71,11 +71,12 @@ Final response:
 
 ```text
 Готово:
-[site url]
-Репозиторий: [repo url]
+
+Сайт:
+[public https site url]
 ```
 
-No progress logs, reports, HTML files, ZIPs, or explanations are sent to the user unless verbose mode is explicitly enabled.
+No repository URL, local path, `file://` URL, progress log, report, HTML file, ZIP, or explanation is sent to the user unless verbose mode is explicitly enabled. The final response is sent only after production deployment and live verification succeed.
 
 ## Development Agent Workflow
 

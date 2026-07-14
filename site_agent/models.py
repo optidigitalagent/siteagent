@@ -110,6 +110,7 @@ class TechnicalGate(BaseModel):
     horizontal_scroll: bool = False
     missing_images: list[str] = Field(default_factory=list)
     console_errors: list[str] = Field(default_factory=list)
+    failed_network_requests: list[str] = Field(default_factory=list)
     broken_links: list[str] = Field(default_factory=list)
     small_tap_targets: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
@@ -138,8 +139,44 @@ class CritiqueReport(BaseModel):
         )
 
 
-class PublishResult(BaseModel):
-    site_url: str
-    repo_url: str
-    deployed: bool
+class AcceptanceAuditResult(BaseModel):
+    approved: bool
+    technical_gate_passed: bool
+    visual_director_approved: bool
+    business_approved: bool
+    score: int
+    no_blocking_issues: bool
+    index_present: bool
+    reasons: list[str] = Field(default_factory=list)
+    audited_at: str
 
+
+class DeploymentResult(BaseModel):
+    provider: Literal["cloudflare_pages", "git", "local"]
+    project_name: str = ""
+    production_url: str
+    deployment_url: str
+    deployment_id: str = ""
+    status: Literal["success", "local_preview"]
+    deployed_at: str
+    verification_status: Literal["verified", "not_required"]
+    repo_url: str = ""
+
+    @property
+    def site_url(self) -> str:
+        return self.production_url
+
+    @property
+    def deployed(self) -> bool:
+        return self.status == "success" and self.provider != "local"
+
+    @property
+    def is_verified_production(self) -> bool:
+        return (
+            self.status == "success"
+            and self.verification_status == "verified"
+            and self.production_url.startswith("https://")
+        )
+
+
+PublishResult = DeploymentResult

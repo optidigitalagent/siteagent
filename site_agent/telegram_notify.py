@@ -13,6 +13,8 @@ class TelegramNotifier:
         self.token = token or settings.telegram_bot_token
 
     def send_done(self, chat_id: int, publish: PublishResult) -> None:
+        if not publish.is_verified_production:
+            raise ValueError("Telegram success requires a live-verified HTTPS deployment.")
         if not self.token:
             return
         asyncio.run(self._send_done(chat_id, publish))
@@ -26,7 +28,7 @@ class TelegramNotifier:
         bot = Bot(self.token)
         await bot.send_message(
             chat_id=chat_id,
-            text=f"Готово:\n{publish.site_url}\nРепозиторий: {publish.repo_url}",
+            text=f"Готово:\n\nСайт:\n{publish.production_url}",
             disable_web_page_preview=True,
         )
 

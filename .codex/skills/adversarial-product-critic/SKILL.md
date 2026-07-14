@@ -1,4 +1,9 @@
-﻿# adversarial-product-critic
+---
+name: adversarial-product-critic
+description: "Attempts to break the user experience with bad inputs, long text, missing media, resize, empty data, slow network, and skeptical customer questions."
+---
+
+# adversarial-product-critic
 
 Attempts to break the user experience with bad inputs, long text, missing media, resize, empty data, slow network, and skeptical customer questions.
 

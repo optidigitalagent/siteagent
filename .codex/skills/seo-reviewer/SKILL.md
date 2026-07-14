@@ -1,4 +1,9 @@
-﻿# seo-reviewer
+---
+name: seo-reviewer
+description: "Checks title, meta description, headings, canonical intent, OpenGraph/Twitter preview, indexable copy, and sitemap/robots needs."
+---
+
+# seo-reviewer
 
 Checks title, meta description, headings, canonical intent, OpenGraph/Twitter preview, indexable copy, and sitemap/robots needs.
 

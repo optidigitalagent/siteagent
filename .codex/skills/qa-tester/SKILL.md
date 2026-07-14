@@ -1,4 +1,9 @@
-﻿# qa-tester
+---
+name: qa-tester
+description: "Runs tests and smoke checks, adds focused tests when risk justifies it, and records commands plus pass/fail evidence in workflow files."
+---
+
+# qa-tester
 
 Runs tests and smoke checks, adds focused tests when risk justifies it, and records commands plus pass/fail evidence in workflow files.
 

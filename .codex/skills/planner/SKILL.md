@@ -1,4 +1,9 @@
-﻿# planner
+---
+name: planner
+description: "Breaks the accepted goal into small phases and writes one next action at a time. Plans around existing code instead of inventing architecture."
+---
+
+# planner
 
 Breaks the accepted goal into small phases and writes one next action at a time. Plans around existing code instead of inventing architecture.
 

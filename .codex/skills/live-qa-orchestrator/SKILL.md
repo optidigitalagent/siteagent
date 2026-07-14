@@ -1,4 +1,9 @@
-﻿# live-qa-orchestrator
+---
+name: live-qa-orchestrator
+description: "Runs the product live with browser/API/log checks. Requires evidence from the running app before declaring readiness."
+---
+
+# live-qa-orchestrator
 
 Runs the product live with browser/API/log checks. Requires evidence from the running app before declaring readiness.
 

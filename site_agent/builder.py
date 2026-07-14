@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import requests
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from site_agent.identifiers import stable_business_id
 from site_agent.models import MediaAsset, ResearchBrief, SiteSpec, StrategyBrief
 
 
@@ -42,8 +43,14 @@ class SiteBuilder:
             spec=spec,
             gallery=local_gallery,
             hero_asset=hero_asset,
-            niche_class=self._slug(research.niche or "business"),
-            labels=self._labels(spec.language or research.primary_language),
+            hero_eyebrow=self._hero_eyebrow(research, strategy),
+            instagram_handle=research.instagram_url.rstrip("/").split("/")[-1],
+            niche_class=self._slug(self._hero_eyebrow(research, strategy)),
+            labels=self._labels(
+                spec.language or research.primary_language,
+                sparse=self._has_sparse_evidence(research),
+            ),
+            siteagent_business_id=stable_business_id(research.instagram_url),
         )
         index_path = site_dir / "index.html"
         index_path.write_text(html, encoding="utf-8")
@@ -74,7 +81,40 @@ class SiteBuilder:
     def _slug(self, value: str) -> str:
         return "".join(ch.lower() if ch.isalnum() else "-" for ch in value).strip("-") or "business"
 
-    def _labels(self, language: str) -> dict[str, str]:
+    def _hero_eyebrow(self, research: ResearchBrief, strategy: StrategyBrief) -> str:
+        if self._has_sparse_evidence(research):
+            base = "Instagram enquiries"
+            location = (research.city or "").strip()
+            if location and location.lower() not in {"unknown", "n/a", "none"}:
+                return f"{base} · {location}"
+            return base
+
+        combined = " ".join(
+            [
+                research.business_name,
+                research.niche,
+                " ".join(research.sells),
+                " ".join(research.services_or_products),
+                strategy.primary_cta,
+            ]
+        ).lower()
+        if any(token in combined for token in ["fleur", "flor", "flower", "floral"]):
+            base = "Floral enquiries via Instagram"
+        else:
+            base = "Instagram enquiries"
+
+        location = (research.city or "").strip()
+        if location and location.lower() not in {"unknown", "n/a", "none"}:
+            return f"{base} · {location}"
+        return base
+
+    def _has_sparse_evidence(self, research: ResearchBrief) -> bool:
+        evidence_text = " ".join(
+            research.unknowns + [research.niche, research.city, research.country]
+        ).lower()
+        return "unknown" in evidence_text or "inferred" in evidence_text or "likely" in evidence_text
+
+    def _labels(self, language: str, *, sparse: bool = False) -> dict[str, str]:
         normalized = language.lower()
         if any(token in normalized for token in ["ru", "russian", "рус"]):
             return {
@@ -89,7 +129,7 @@ class SiteBuilder:
                 "contacts_purpose": "Только проверенные контактные данные.",
                 "contact_fallback": "Актуальные детали, свободное время и цены лучше уточнить через Instagram.",
             }
-        return {
+        labels = {
             "skip": "Skip to content",
             "gallery": "Gallery",
             "gallery_purpose": "Real visual material selected from available Instagram assets.",
@@ -101,3 +141,8 @@ class SiteBuilder:
             "contacts_purpose": "Use verified contact details only.",
             "contact_fallback": "For current details, availability, and prices, contact the business through Instagram.",
         }
+        if sparse:
+            labels["trust"] = "Before You Message"
+            labels["trust_purpose"] = "Useful details to confirm in Direct before placing a request."
+            labels["contacts_purpose"] = "Start from the live Instagram profile and confirm current details there."
+        return labels

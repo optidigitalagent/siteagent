@@ -51,6 +51,14 @@ Quality bar:
 - CTA labels must be meaningful actions.
 - Use real Instagram media if available.
 - Do not invent testimonials, ratings, staff, exact prices, medical claims, guarantees, or fake numbers.
+- Unknowns belong in internal safeguards, not in polished customer-facing copy.
+- Do not put words like "unknown", "likely", "inferred", "not verified", "forbidden", or "does not invent" in the hero, headings, section titles, CTA labels, trust points, process steps, or normal body copy.
+- Do not show raw URLs in normal copy. Use labeled text such as "Instagram profile" or "Instagram Direct".
+- If the Instagram evidence is sparse, build an honest Instagram-first inquiry page: one concise transparency note at most, then focus on what the visitor should send in Direct.
+- For sparse florist/floral evidence, guide the buyer through occasion, mood/colors, timing, budget question, pickup/delivery confirmation, and reference photos without claiming those services are guaranteed.
+- Use at most three CTAs: hero, one useful mid-page decision point, and final CTA.
+- The SectionSpec.purpose field may be rendered on the page. Write it as a short customer-facing deck, never as an implementation note or strategy note.
+- Use empty gallery_assets unless the asset URL is a real http/https media URL from the scrape. Never invent placeholder URLs such as "provided_instagram_asset_1".
 - Avoid generic AI phrases like "professional services for your needs", "high quality services", "individual approach" unless supported by real evidence and made specific.
 - Structure must fit the niche:
   restaurant/cafe: menu, atmosphere, booking/order, location;
@@ -88,6 +96,10 @@ Block delivery when:
 - mobile has broken layout, bad spacing, small tap targets, or horizontal scroll;
 - niche-specific customer journey is missing;
 - score is below 88.
+
+Evaluate customer-facing copy from the rendered screenshot observations and bodyTextSample. Use SiteSpec to check unsupported claims, but do not criticize internal metadata unless it appears in rendered text.
+If research has no visually verified media, do not require a product gallery. An intentional Instagram-profile preview or neutral atmospheric visual treatment is acceptable when it clearly avoids presenting unverified photos as proof.
+For sparse Instagram profiles where the only high-confidence facts are the handle and profile URL, judge the page as an honest contact bridge. Do not block delivery merely because offers, location, differentiators, reviews, or product proof are unavailable, as long as the rendered page is polished, technically sound, clear about using Instagram Direct, and avoids fake claims or leaked internal uncertainty.
 
 Issue format must include:
 severity: critical / high / medium / low;
@@ -132,6 +144,13 @@ Rules:
 - Improve niche fit and customer journey.
 - Improve mobile readability through shorter labels and clearer section structure.
 - Keep the site honest when data is missing.
+- Keep uncertainty out of polished customer-facing copy. Avoid "unknown", "likely", "inferred", "not verified", "forbidden", and "does not invent" except in the no_fake_claims_checklist.
+- Replace disclaimer-heavy sections with useful inquiry guidance. Keep only one short transparency note in contacts or footer.
+- Replace raw URLs with labeled Instagram profile/Direct wording.
+- Rename hollow "why choose" style content into practical confirmation guidance when real differentiators are unavailable.
+- Reduce repeated CTAs to clear decision points only.
+- Rewrite SectionSpec.purpose values as customer-facing supporting text, not internal strategy or implementation instructions.
+- Remove placeholder gallery assets unless they are real http/https media URLs from the research.
 - Preserve verified business facts.
 
 Return an updated SiteSpec JSON only.
@@ -152,4 +171,3 @@ CritiqueReport:
 
 Return the fixed SiteSpec JSON.
 """
-
