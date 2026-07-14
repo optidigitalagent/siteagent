@@ -16,11 +16,11 @@
     "instagram_url": "https://www.instagram.com/jet_yacht_rest_kyiv?igsh=OGw2cGpsZHZjeHh1",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "running",
+    "status": "failed",
     "received_at": "2026-07-14T07:08:23.781729+00:00",
-    "updated_at": "2026-07-14T07:09:39.333880+00:00",
+    "updated_at": "2026-07-14T07:14:24.062402+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": ""
+    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
   }
 ]
