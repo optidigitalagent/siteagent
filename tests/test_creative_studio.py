@@ -46,6 +46,38 @@ class StubInspector:
 
 
 class CreativeStudioTests(unittest.TestCase):
+    def test_relative_accepts_a_workspace_relative_path_for_resume_prompts(self) -> None:
+        runner = CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())
+        self.assertEqual(
+            runner._relative(Path("runs") / "creative-studio-e2e" / "night_yacht" / "studio" / "art_director_report.json"),
+            "runs/creative-studio-e2e/night_yacht/studio/art_director_report.json",
+        )
+
+    def test_fixer_rejects_a_noop_source_change(self) -> None:
+        research, strategy, spec = fixtures()
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp) / "run"
+            source = run_dir / "studio" / "selected" / "source"
+            source.mkdir(parents=True)
+            (source / "index.html").write_text("<html><body>" + "x" * 200 + "</body></html>", encoding="utf-8")
+            runner = CodexStudioRunner(project_root=Path.cwd(), command_runner=lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""), inspector=StubInspector())
+            with self.assertRaisesRegex(StudioError, "without changing"):
+                runner.revise(run_dir=run_dir, site_dir=run_dir / "site", critique_path=Path("runs/report.json"), checkpoints=lambda *names: None, iteration=1)
+
+    def test_fixed_source_is_not_replaced_by_staging_on_resume(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            runner = CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())
+            studio = root / "studio"
+            source = studio / "selected" / "source"
+            staging = studio / "selected" / "staging"
+            for folder, label in ((source, "fixed"), (staging, "staging")):
+                folder.mkdir(parents=True)
+                (folder / "index.html").write_text(f"<html><body>{label}" + "x" * 200 + "</body></html>", encoding="utf-8")
+            runner._mark_task(studio, "creative_fixer", "completed")
+            self.assertTrue(runner._task_completed(studio, "creative_fixer"))
+            self.assertIn("fixed", (source / "index.html").read_text(encoding="utf-8"))
+
     def test_workspace_has_concepts_screenshots_selection_and_atomic_site_promotion(self) -> None:
         calls = []
 
@@ -65,13 +97,20 @@ class CreativeStudioTests(unittest.TestCase):
             elif "Art Director" in prompt:
                 run = next(Path("runs").glob("studio-test"))
                 report = run / "studio" / "art_director_report.json"
-                report.write_text(json.dumps({"approved": True, "summary": "reviewed screenshots", "findings": []}), encoding="utf-8")
-            else:
+                report.write_text(json.dumps({"approved": True, "score": 90, "summary": "reviewed screenshots", "unresolved_issues": [], "findings": []}), encoding="utf-8")
+            elif "act as Creative Director" in prompt:
                 run = next(Path("runs").glob("studio-test"))
                 selected = run / "studio" / "concept_reviews" / "selected_concept.json"
                 selected.parent.mkdir(parents=True, exist_ok=True)
-                selected.write_text(json.dumps({"selected_concept": "concept_b", "reasons": ["strong hierarchy"], "rejected_concepts": ["concept_a", "concept_c"], "screenshot_evidence": ["concept_b/desktop.png"], "mandatory_improvements": [], "risks": []}), encoding="utf-8")
-                source = run / "studio" / "selected" / "source"
+                checksum = __import__("hashlib").sha256((run / "studio" / "concepts" / "concept_b" / "index.html").read_bytes()).hexdigest()
+                selected.write_text(json.dumps({"selected_concept": "concept_b", "reasons": ["strong hierarchy"], "rejected_concepts": ["concept_a", "concept_c"], "screenshot_evidence": ["concept_b/desktop.png"], "selected_weaknesses": ["one"], "mandatory_improvements": ["one"], "elements_to_preserve": ["one"], "source_concept_checksum": checksum}), encoding="utf-8")
+                comparison = run / "studio" / "concept_reviews" / "comparison.json"
+                structural = json.loads(comparison.read_text(encoding="utf-8"))
+                structural["concept_reviews"] = {name: {key: [] for key in ("strengths", "weaknesses", "technical_risks", "visual_risks", "business_risks", "desktop_observations", "mobile_observations", "anti_template_observations")} for name in ("concept_a", "concept_b", "concept_c")}
+                comparison.write_text(json.dumps(structural), encoding="utf-8")
+            else:
+                run = next(Path("runs").glob("studio-test"))
+                source = run / "studio" / "selected" / "staging"
                 source.mkdir(parents=True, exist_ok=True)
                 (source / "index.html").write_text("<html><body><main class='case-file'><h1>Selected</h1><a href='https://instagram.com'>Message</a></main></body></html>" + " " * 160, encoding="utf-8")
             return SimpleNamespace(returncode=0, stdout="", stderr="")

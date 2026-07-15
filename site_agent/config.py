@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     openai_model: str = Field(default="gpt-4.1", alias="OPENAI_MODEL")
     codex_command: str = Field(default="codex", alias="CODEX_COMMAND")
     codex_model: str = Field(default="", alias="CODEX_MODEL")
+    # Studio phases have independent budgets. A timeout leaves its artifacts in a
+    # retryable state so resume never needs to redo the concept pass.
+    codex_concept_generation_timeout_seconds: int = Field(default=900, alias="CODEX_CONCEPT_GENERATION_TIMEOUT_SECONDS")
+    codex_concept_selection_timeout_seconds: int = Field(default=900, alias="CODEX_CONCEPT_SELECTION_TIMEOUT_SECONDS")
+    codex_full_creative_build_timeout_seconds: int = Field(default=2700, alias="CODEX_FULL_CREATIVE_BUILD_TIMEOUT_SECONDS")
+    codex_art_director_timeout_seconds: int = Field(default=900, alias="CODEX_ART_DIRECTOR_TIMEOUT_SECONDS")
+    codex_creative_fixer_timeout_seconds: int = Field(default=1800, alias="CODEX_CREATIVE_FIXER_TIMEOUT_SECONDS")
     telegram_bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
 
     hosting_provider: str = Field(default="cloudflare_pages", alias="HOSTING_PROVIDER")
