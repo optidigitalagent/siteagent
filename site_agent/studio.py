@@ -18,6 +18,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable
 
+from site_agent.commercial_usefulness import (
+    commercial_usefulness_report,
+    language_fit_report,
+    semantic_repetition_report,
+)
 from site_agent.critic import TechnicalInspector
 from site_agent.config import settings
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
@@ -140,6 +145,7 @@ class CodexStudioRunner:
         if not (final_dir / "desktop.png").is_file():
             self.inspector.inspect(selected_source, final_dir)
         self._require_screenshots(final_dir, tablet=True)
+        self._write_commercial_reports(studio, research, spec, selected_source)
         art_report = studio / "art_director_report.json"
         if not self._art_director_is_valid(art_report):
             self._run_task(
@@ -151,6 +157,7 @@ class CodexStudioRunner:
         art = self._read_json(art_report)
         if not self._art_director_is_valid(art_report):
             raise StudioError("Art Director report lacks findings or approval decision.")
+        art = self._apply_art_director_calibration(studio, art)
         self._mark_task(studio, "art_director", "completed")
         checkpoints("full_build_visuals_completed")
         checkpoints("art_director_review_completed")
@@ -189,6 +196,10 @@ class CodexStudioRunner:
         studio = run_dir / "studio"
         final_dir = studio / "final_reviews"
         self.inspector.inspect(studio / "selected" / "source" / "index.html", final_dir)
+        business = self._read_json(studio / "input" / "business_brief.json")
+        research = ResearchBrief.model_validate(business["research"])
+        spec = SiteSpec.model_validate(business["site_spec"])
+        self._write_commercial_reports(studio, research, spec, studio / "selected" / "source" / "index.html")
         self._run_task(
             studio,
             "art_director",
@@ -198,6 +209,7 @@ class CodexStudioRunner:
         report_path = studio / "art_director_report.json"
         if not self._art_director_is_valid(report_path):
             raise StudioError("Art Director report lacks required screenshot evidence after fixer.")
+        self._apply_art_director_calibration(studio, self._read_json(report_path))
         self._mark_task(studio, "art_director", "completed")
         checkpoints("full_build_visuals_completed", "art_director_review_completed")
         return self._read_json(report_path)
@@ -265,10 +277,69 @@ class CodexStudioRunner:
         return (
             "Use $siteagent-web-studio and act as an independent Art Director. Inspect the desktop, tablet and "
             f"mobile screenshots in {self._relative(run_dir / 'studio' / 'final_reviews')} against the bounded "
-            "business input and selected concept. Write studio/art_director_report.json with approved (boolean), score, "
+            "business input, selected concept, and the mandatory studio/commercial_usefulness_report.json, "
+            "studio/language_fit_report.json, and studio/semantic_repetition_report.json. Write studio/art_director_report.json with approved (boolean), score, "
             "summary, unresolved_issues and findings. Every finding needs severity, screenshot, screenshot_region, selector, "
-            "description, reason and desired_outcome. Score and approval must cite screenshot evidence. Do not change the build."
+            "description, reason and desired_outcome. Score and approval must cite screenshot evidence. You must not approve if commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."
         )
+
+    @staticmethod
+    def _write_commercial_reports(studio: Path, research: ResearchBrief, spec: SiteSpec, index_path: Path) -> None:
+        """Persist deterministic commercial gates before visual approval."""
+        from site_agent.design_quality import build_context
+
+        context = build_context(research, StrategyBrief.model_validate(json.loads((studio / "input" / "business_brief.json").read_text(encoding="utf-8"))["strategy"]), spec)
+        html_text = index_path.read_text(encoding="utf-8")
+        semantic = semantic_repetition_report(spec, context, html_text=html_text)
+        commercial = commercial_usefulness_report(spec, context, semantic=semantic, html_text=html_text)
+        language = language_fit_report(spec, research)
+        CodexStudioRunner._write_json(studio / "commercial_usefulness_report.json", commercial.model_dump())
+        CodexStudioRunner._write_json(studio / "language_fit_report.json", language.model_dump())
+        CodexStudioRunner._write_json(studio / "semantic_repetition_report.json", semantic.model_dump())
+
+    @staticmethod
+    def _apply_art_director_calibration(studio: Path, report: dict[str, Any]) -> dict[str, Any]:
+        """Hard-stop an aesthetic approval that fails commercial calibration."""
+        commercial = CodexStudioRunner._read_json(studio / "commercial_usefulness_report.json")
+        language = CodexStudioRunner._read_json(studio / "language_fit_report.json")
+        semantic = CodexStudioRunner._read_json(studio / "semantic_repetition_report.json")
+        checks = commercial.get("checks", {})
+        category_scores = {
+            "commercial_usefulness": int(commercial.get("score", 0)),
+            "business_clarity": 100 if checks.get("offer_clear_within_five_seconds") else 60,
+            "copy_quality": 55 if not semantic.get("approved", False) else 85,
+            "ux": 100 if checks.get("primary_cta_in_first_meaningful_viewport") else 60,
+            "brand_fit": 100 if language.get("approved") and checks.get("reads_as_commercial_site") else 60,
+        }
+        blocked = (
+            category_scores["commercial_usefulness"] < 85
+            or category_scores["business_clarity"] < 85
+            or category_scores["copy_quality"] < 80
+            or category_scores["ux"] < 85
+            or any(item.get("severity") in {"critical", "high"} for item in report.get("findings", []))
+        )
+        report["calibration"] = {
+            "commercial_usefulness": commercial,
+            "language_fit": language,
+            "semantic_repetition": semantic,
+            "category_scores": category_scores,
+            "hard_gate_passed": not blocked,
+        }
+        if blocked:
+            report["approved"] = False
+            report["score"] = min(int(report.get("score", 0)), category_scores["commercial_usefulness"])
+            report["unresolved_issues"] = list(report.get("unresolved_issues", [])) + [{
+                "severity": "high", "description": "Commercial calibration gate failed.",
+                "reason": "Commercial, clarity, copy, or UX thresholds were not met.",
+            }]
+            report["findings"] = list(report.get("findings", [])) + [{
+                "severity": "high", "screenshot": "desktop.png, mobile.png", "screenshot_region": "first meaningful viewport and repeated narrative sections",
+                "selector": "main", "description": "Commercial calibration gate failed.",
+                "reason": "The build cannot receive visual approval until the required commercial thresholds pass.",
+                "desired_outcome": "Make the offer and CTA clear early, remove semantic duplication, and rerun review.",
+            }]
+        CodexStudioRunner._write_json(studio / "art_director_report.json", report)
+        return report
 
     def _run_task(self, studio: Path, task: str, prompt: str, *, images: list[Path] | None = None) -> None:
         self._mark_task(studio, task, "running")

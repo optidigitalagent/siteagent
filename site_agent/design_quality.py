@@ -14,11 +14,21 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from site_agent.commercial_usefulness import (
+    commercial_usefulness_report,
+    language_fit_report,
+    semantic_repetition_report,
+)
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
 from site_agent.skill_lock import directory_checksum, load_fingerprint_history, record_fingerprint, validate_skill_lock
 
-PIPELINE_SCHEMA_VERSION = 3
-QUALITY_FLOORS = {"business": 82, "ux": 80, "story": 78, "copy": 82, "brand_fit": 80, "design": 80, "responsive": 80, "accessibility": 80, "technical": 88, "anti_template": 80}
+PIPELINE_SCHEMA_VERSION = 4
+QUALITY_FLOORS = {
+    "business": 82, "business_clarity": 85, "commercial_usefulness": 85,
+    "ux": 80, "story": 78, "storytelling": 78, "copy": 82, "copy_quality": 80,
+    "brand_fit": 80, "media_direction": 80, "design": 80, "responsive": 80,
+    "accessibility": 80, "technical": 88, "anti_template": 80,
+}
 
 
 class EvidenceLevel(str, Enum):
@@ -162,6 +172,8 @@ class BuilderContext(BaseModel):
     prohibited_claims: list[str]
     anti_template_constraints: list[str]
     skill_executions: list[dict] = Field(default_factory=list)
+    language_fit_approved: bool = True
+    language_rationale: str = ""
 
 
 class QualityIssue(BaseModel):
@@ -212,7 +224,7 @@ def assess_evidence(research: ResearchBrief) -> EvidenceAssessment:
         "media_or_text_led": bool(research.best_media) or (meaningful_identity(research.business_name) and meaningful_identity(research.niche)),
         "no_critical_contradiction": not any(token in " ".join(research.unknowns).lower() for token in ("contradict", "conflict", "different business")),
     }
-    level = EvidenceLevel.C if not (checks["business_identified"] and checks["business_type"] and checks["contact_path"] and checks["no_critical_contradiction"]) else (EvidenceLevel.A if checks["offering"] and checks["brand_signals"] else EvidenceLevel.B)
+    level = EvidenceLevel.C if not (checks["business_identified"] and checks["business_type"] and checks["offering"] and checks["contact_path"] and checks["no_critical_contradiction"]) else (EvidenceLevel.A if checks["brand_signals"] else EvidenceLevel.B)
     return EvidenceAssessment(level=level, score=min(sum(checks.values()) * 14, 100), checks=checks, reasons=[key.replace("_", " ") for key, value in checks.items() if not value], unresolved_questions=research.unknowns)
 
 
@@ -306,7 +318,8 @@ def build_context(research: ResearchBrief, strategy: StrategyBrief, spec: SiteSp
     narrative = NarrativeStrategy(thesis=spec.h1, emotional_curve=[section.visual_role for section in composition.ordered_sections], section_storyboard=[{"id": section.id, "purpose": section.purpose, "message": section.required_message, "source": section.content_source} for section in composition.ordered_sections])
     tokens = {"ink": selected.palette["ink"], "paper": selected.palette["paper"], "accent": selected.palette["accent"], "accent_2": selected.palette["accent_2"], "display_font": selected.typography["display"], "body_font": selected.typography["body"], "radius": "0px" if "folio" in composition.navigation_type else ("18px" if pattern == "experience-led" else "8px")}
     media = [MediaManifestItem(source=m.url, quality_score=70 if m.url.startswith("http") else 0, use_cases=[m.recommended_use or "gallery"], alt_text=m.alt, verified_description=m.alt, selected=m.url.startswith("http")) for m in research.best_media]
-    return BuilderContext(evidence=evidence, business_brief=brief, ux_architecture=ux, narrative=narrative, visual_directions=directions, selected_visual_direction=selected, design_system=DesignSystem(selected_direction=selected.name, tokens=tokens, responsive_notes=["390px primary CTA remains reachable", "No horizontal overflow", "Respect reduced motion"]), media_manifest=media, page_composition=composition, prohibited_claims=research.forbidden_claims, anti_template_constraints=["Do not reuse a full page composition across unrelated business decisions", "Reuse primitives but not an unchanged hero/CTA/closure sequence", "Every page needs its direction signature element"], skill_executions=skill_executions or [])
+    language = language_fit_report(spec, research)
+    return BuilderContext(evidence=evidence, business_brief=brief, ux_architecture=ux, narrative=narrative, visual_directions=directions, selected_visual_direction=selected, design_system=DesignSystem(selected_direction=selected.name, tokens=tokens, responsive_notes=["390px primary CTA remains reachable", "No horizontal overflow", "Respect reduced motion"]), media_manifest=media, page_composition=composition, prohibited_claims=research.forbidden_claims, anti_template_constraints=["Do not reuse a full page composition across unrelated business decisions", "Reuse primitives but not an unchanged hero/CTA/closure sequence", "Every page needs its direction signature element"], skill_executions=skill_executions or [], language_fit_approved=language.approved, language_rationale=language.rationale)
 
 
 def fingerprint_breakdown(spec: SiteSpec, context: BuilderContext) -> dict[str, Any]:
@@ -348,7 +361,7 @@ def composition_similarity(left: dict[str, Any], right: dict[str, Any], *, dom_s
     return groups
 
 
-def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: bool, historical_fingerprints: list[str] | None = None, guideline_findings: list[dict] | None = None, category_score_overrides: dict[str, int] | None = None, comparison: dict[str, float] | None = None) -> QualityReport:
+def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: bool, historical_fingerprints: list[str] | None = None, guideline_findings: list[dict] | None = None, category_score_overrides: dict[str, int] | None = None, comparison: dict[str, float] | None = None, html_text: str = "", hero_cta_present: bool | None = None, visual_signals: dict[str, bool] | None = None) -> QualityReport:
     text = " ".join([spec.h1, spec.hero_subtitle, *spec.trust_points, *[x for s in spec.sections for x in [s.title, *s.content]]]).lower()
     issues: list[QualityIssue] = []
     generic = ("high quality services", "individual approach", "lorem ipsum", "placeholder", "best service")
@@ -369,6 +382,19 @@ def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: 
         issues.append(QualityIssue(category="anti_template", severity="high", evidence="composition reuses sequence, hero, and closing pattern", violated_contract="anti-template", acceptance_condition="change purpose-driven composition"))
     for finding in guideline_findings or []:
         issues.append(QualityIssue(category="accessibility", severity=finding.get("severity", "medium"), evidence=f"{finding.get('file')}:{finding.get('selector')}: {finding.get('message')}", violated_contract="web-design-guidelines", acceptance_condition="resolve local guideline finding"))
+    semantic = semantic_repetition_report(spec, context, html_text=html_text)
+    commercial = commercial_usefulness_report(spec, context, semantic=semantic, html_text=html_text, hero_cta_present=hero_cta_present)
+    if not commercial.approved:
+        issues.append(QualityIssue(category="commercial_usefulness", severity="high", evidence=f"commercial usefulness score {commercial.score} below 85", violated_contract="commercial usefulness", acceptance_condition="make the offer, value, and primary action clear in the first meaningful viewport"))
+    if semantic.items:
+        evidence_text = "semantic duplicate sections: " + ", ".join(semantic.items[0].sections)
+        for category in ("copy", "copy_quality", "story", "storytelling"):
+            issues.append(QualityIssue(category=category, severity="high", evidence=evidence_text, violated_contract="semantic repetition", acceptance_condition="merge repeated sections and restore offer-desire-proof-action progression"))
+    if not context.language_fit_approved:
+        issues.append(QualityIssue(category="brand_fit", severity="high", evidence="unverified language choice", violated_contract="language fit", acceptance_condition="use evidence-backed language or record the input-contract fallback"))
+    signals = visual_signals or {}
+    if signals.get("media_blackout") or signals.get("dead_space") or signals.get("media_does_not_support_offer"):
+        issues.append(QualityIssue(category="media_direction", severity="high", evidence="media blackout/dead-space issue", violated_contract="media direction", acceptance_condition="use media to clarify or make the offer desirable without consuming functional space"))
     evidence = fingerprint_breakdown(spec, context)
     score_breakdown: dict[str, ScoreBreakdown] = {}
     for category, floor in QUALITY_FLOORS.items():
@@ -380,23 +406,42 @@ def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: 
             else: deductions.append({"rule":"technical gate failed", "points":100})
         else:
             # Scores reflect composition evidence, not a blanket approved value.
-            structural_margin = {"business": 4, "ux": 7, "story": 8, "copy": 6, "brand_fit": 9, "design": 11, "responsive": 7, "accessibility": 5, "anti_template": 10}[category]
+            structural_margin = {"business": 4, "business_clarity": 4, "commercial_usefulness": 0, "ux": 7, "story": 8, "storytelling": 8, "copy": 6, "copy_quality": 6, "brand_fit": 9, "media_direction": 9, "design": 11, "responsive": 7, "accessibility": 5, "anti_template": 10}[category]
             deductions.append({"rule":"remaining evidence margin", "points":structural_margin})
             section_count = len(context.page_composition.ordered_sections)
-            if category in {"ux", "story", "responsive"} and section_count < 5:
+            if category in {"ux", "story", "storytelling", "responsive"} and section_count < 5:
                 deductions.append({"rule":"shorter journey has less decision coverage", "points": 2})
             requires_media = any(section.media_requirements in {"hero", "gallery"} for section in context.page_composition.ordered_sections)
-            if category in {"brand_fit", "design"} and requires_media and not context.media_manifest:
+            if category in {"brand_fit", "design", "media_direction"} and requires_media and not context.media_manifest:
                 deductions.append({"rule":"required media composition uses verified text-led fallback", "points": 4})
-            if category == "business" and len(context.business_brief.verified_offerings) < 2:
+            if category in {"business", "business_clarity"} and len(context.business_brief.verified_offerings) < 2:
                 deductions.append({"rule":"single verified offering narrows decision evidence", "points": 2})
-            if category == "copy" and len(meaningful_phrases(text)) < 8:
+            if category in {"copy", "copy_quality"} and len(meaningful_phrases(text)) < 8:
                 deductions.append({"rule":"limited meaningful copy evidence", "points": 4})
         for issue in issues:
             if issue.category == category:
                 deductions.append({"rule":issue.evidence, "points":50 if issue.severity in {"high", "critical"} else 18})
         value = max(0, base - sum(item["points"] for item in deductions))
         score_breakdown[category] = ScoreBreakdown(base=base, passed_rules=passed, failed_rules=[issue.evidence for issue in issues if issue.category == category], deductions=deductions, evidence=[json.dumps(evidence, ensure_ascii=False)[:500]], final_value=value)
+    # Score caps stop visual or technical strength from compensating for a commercial failure.
+    caps: dict[str, tuple[int, str]] = {}
+    if not commercial.checks["offer_clear_within_five_seconds"]:
+        caps["business_clarity"] = (60, "offer is not identifiable in the first meaningful viewport")
+    if semantic.items or not commercial.checks["missing_information_is_not_primary_narrative"] or "copy this question" in text:
+        caps["copy_quality"] = (55, "missing information or one semantic instruction dominates the copy")
+    if semantic.items:
+        caps["storytelling"] = (55, "three sections repeat one meaning without offer-desire-proof-action progression")
+    if not commercial.checks["primary_cta_in_first_meaningful_viewport"]:
+        caps["ux"] = (60, "primary CTA is missing from the first meaningful viewport")
+    if not context.language_fit_approved or not commercial.checks["reads_as_commercial_site"]:
+        caps["brand_fit"] = (60, "language is unverified or the creative concept obscures the business")
+    if signals.get("media_blackout") or signals.get("dead_space") or signals.get("media_does_not_support_offer"):
+        caps["media_direction"] = (65, "media blackout or dead space weakens offer comprehension")
+    for category, (maximum, rule) in caps.items():
+        current = score_breakdown[category].final_value
+        if current > maximum:
+            score_breakdown[category].deductions.append({"rule": f"score cap: {rule}", "points": current - maximum})
+            score_breakdown[category].final_value = maximum
     for category, value in (category_score_overrides or {}).items():
         if category in score_breakdown:
             score_breakdown[category].deductions.append({"rule":"controlled override", "points":max(0, score_breakdown[category].final_value - value)})

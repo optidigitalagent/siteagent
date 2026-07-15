@@ -11,7 +11,7 @@ FIXTURES = {
     "dental": ("North Dental", "dental clinic", ["consultations"], "Request an appointment"),
     "decorator": ("Atelier Moss", "decorator portfolio", ["interior projects"], "Discuss a project"),
     "school": ("Language Room", "online school", ["live classes"], "Ask about a course"),
-    "sparse": ("Studio Onda", "independent studio", [], "Message on Instagram"),
+    "sparse": ("Studio Onda", "independent studio", ["editorial art prints"], "Message on Instagram"),
 }
 
 

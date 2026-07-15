@@ -43,6 +43,9 @@ class AcceptanceAuditor:
                 studio_dir / "full_build_visuals" / "desktop.png",
                 studio_dir / "full_build_visuals" / "mobile.png",
                 studio_dir / "art_director_report.json",
+                studio_dir / "commercial_usefulness_report.json",
+                studio_dir / "language_fit_report.json",
+                studio_dir / "semantic_repetition_report.json",
             )
             missing = [str(item.relative_to(studio_dir)) for item in required if not item.is_file()]
             if missing:
@@ -52,9 +55,12 @@ class AcceptanceAuditor:
                     art_director = json.loads((studio_dir / "art_director_report.json").read_text(encoding="utf-8"))
                     if art_director.get("approved") is not True:
                         reasons.append("Art Director did not approve the screenshot-led Studio build.")
+                    commercial = json.loads((studio_dir / "commercial_usefulness_report.json").read_text(encoding="utf-8"))
+                    if commercial.get("approved") is not True or commercial.get("score", 0) < 85:
+                        reasons.append("Commercial usefulness did not pass the mandatory 85-point gate.")
                 except (OSError, ValueError, AttributeError):
-                    reasons.append("Art Director report is unreadable.")
-                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots"])
+                    reasons.append("Studio approval or commercial report is unreadable.")
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition"])
 
         return AcceptanceAuditResult(
             approved=not reasons,

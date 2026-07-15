@@ -38,7 +38,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(assessment.build_allowed)
 
     def test_sparse_but_identified_business_is_level_b(self) -> None:
-        assessment = assess_evidence(complete_research(sells=[], brand_atmosphere="", colors=[]))
+        assessment = assess_evidence(complete_research(brand_atmosphere="", colors=[]))
         self.assertEqual(assessment.level, EvidenceLevel.B)
         self.assertTrue(assessment.build_allowed)
 
