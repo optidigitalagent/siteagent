@@ -21,6 +21,7 @@ from site_agent.design_quality import (
     load_fingerprint_history,
     record_fingerprint,
 )
+from site_agent.external_skills import LocalSkillRuntime
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
 from site_agent.models import (
@@ -63,6 +64,7 @@ class SiteAgentOrchestrator:
         self.builder = SiteBuilder()
         self.acceptance_auditor = acceptance_auditor or AcceptanceAuditor()
         self.publisher = publisher or Publisher()
+        self.skill_runtime = LocalSkillRuntime() if settings.external_skills_enabled else None
 
     def run(
         self,
@@ -112,18 +114,40 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "02_strategy.json", strategy)
         self._checkpoint(reports_dir, "strategy_completed")
 
+        skill_executions = self._read_json(reports_dir / "03_external_skill_executions.json")
+        if skill_executions is None:
+            skill_executions = []
+            if self.skill_runtime is not None:
+                frontend = self.skill_runtime.frontend_design_brief(
+                    category=research.niche, audience=strategy.target_customer,
+                    goal=strategy.business_logic, atmosphere=research.brand_atmosphere,
+                )
+                system = self.skill_runtime.design_system(
+                    category=research.niche, audience=strategy.target_customer,
+                    offer=" ".join(research.sells or research.services_or_products),
+                    atmosphere=research.brand_atmosphere, project_name=research.business_name,
+                )
+                skill_executions = [frontend.as_dict(), system.as_dict()]
+            write_json(reports_dir / "03_external_skill_executions.json", {"executions": skill_executions})
+        elif isinstance(skill_executions, dict):
+            skill_executions = skill_executions.get("executions", [])
+        self._checkpoint(reports_dir, "external_skills_completed")
+
         spec = self._read_model(reports_dir / "03_site_spec_initial.json", SiteSpec)
         if spec is None:
             spec = self._normalize_sparse_instagram_spec(
                 research,
-                self.site_spec_agent.run(research, strategy),
+                self.site_spec_agent.run(
+                    research, strategy,
+                    next((entry.get("output", {}).get("prompt_guidance", "") for entry in skill_executions if entry.get("name") == "frontend-design"), ""),
+                ),
             )
             write_json(reports_dir / "03_site_spec_initial.json", spec)
         self._checkpoint(reports_dir, "generation_completed")
 
         context = self._read_model(reports_dir / "04_builder_context.json", BuilderContext)
         if context is None:
-            context = build_context(research, strategy, spec)
+            context = build_context(research, strategy, spec, skill_executions)
             write_json(reports_dir / "04_builder_context.json", context)
             write_json(reports_dir / "04_business_brief.json", context.business_brief)
             write_json(reports_dir / "04_ux_architecture.json", context.ux_architecture)
@@ -162,7 +186,10 @@ class SiteAgentOrchestrator:
             quality = self._read_model(reports_dir / f"quality_report_iteration_{iteration}.json", QualityReport)
             if quality is None:
                 history = load_fingerprint_history(settings.runs_dir / "design_fingerprint_history.json", limit=settings.quality_history_limit) if settings.anti_template_enabled else []
-                quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history)
+                guideline = self.skill_runtime.web_guidelines(site_dir / "index.html") if self.skill_runtime is not None else None
+                if guideline is not None:
+                    write_json(reports_dir / f"web_guidelines_iteration_{iteration}.json", guideline.as_dict())
+                quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []))
                 write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
             if critique.approved_for_delivery and quality.approved:
                 acceptance = self.acceptance_auditor.audit(
@@ -195,7 +222,7 @@ class SiteAgentOrchestrator:
                 reports_dir / f"site_spec_iteration_{iteration + 1}.json", SiteSpec
             )
             spec = next_spec or self._fix(research, strategy, spec, critique)
-            context = build_context(research, strategy, spec)
+            context = build_context(research, strategy, spec, skill_executions)
             write_json(reports_dir / "04_builder_context.json", context)
             self._checkpoint(reports_dir, "fixer_completed")
 
@@ -277,6 +304,15 @@ class SiteAgentOrchestrator:
 
     def _read_model(self, path: Path, model_type):
         if not path.is_file() or path.stat().st_size == 0:
+            return None
+
+    def _read_json(self, path: Path):
+        if not path.is_file() or not path.stat().st_size:
+            return None
+        try:
+            import json
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
             return None
         try:
             return model_type.model_validate_json(path.read_text(encoding="utf-8"))

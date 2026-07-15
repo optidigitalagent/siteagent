@@ -22,6 +22,7 @@
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
     body {
       margin: 0;
       background: var(--paper);
@@ -166,6 +167,17 @@
         linear-gradient(135deg, rgba(142,63,45,0.12), rgba(49,92,85,0.14)),
         var(--panel);
     }
+    .journey-trust-journey .hero { grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1fr); }
+    .journey-portfolio-proof .hero { grid-template-columns: minmax(0, 0.88fr) minmax(360px, 1.12fr); }
+    .journey-expert-authority .hero { align-items: start; padding-top: clamp(72px, 11vw, 150px); }
+    .journey-trust-journey .hero-media { border-radius: 50% 50% var(--radius) var(--radius); }
+    .journey-portfolio-proof .hero-media { border-radius: 0; transform: rotate(1deg); }
+    .journey-expert-authority .hero-media { border-radius: 999px 999px var(--radius) var(--radius); }
+    .journey-local-destination .hero-media { border-radius: var(--radius) 72px var(--radius) 72px; }
+    .journey-portfolio-proof .content-list li { border-radius: 0; }
+    .journey-expert-authority .content-list li { border-left: 5px solid var(--accent); }
+    .journey-trust-journey .content-list li { border-color: var(--accent-2); }
+    .journey-briefing { margin: -18px auto 0; width: min(100% - 32px, var(--max)); padding: 18px; border: 1px solid var(--line); background: var(--white); }
     .fallback strong {
       font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(2rem, 8vw, 4.6rem);
@@ -299,6 +311,10 @@
       flex-wrap: wrap;
     }
     @media (max-width: 820px) {
+      .journey-trust-journey .hero,
+      .journey-portfolio-proof .hero,
+      .journey-expert-authority .hero { grid-template-columns: 1fr; }
+      .journey-portfolio-proof .hero-media { transform: none; }
       .nav {
         align-items: flex-start;
         flex-direction: column;
@@ -334,7 +350,7 @@
     }
   </style>
 </head>
-<body class="{{ niche_class }}">
+<body class="{{ niche_class }} journey-{{ journey_pattern | replace(' ', '-') }}">
   <a class="skip-link" href="#content">{{ labels.skip }}</a>
   <header class="site-header">
     <nav class="nav" aria-label="Primary">
@@ -349,6 +365,15 @@
   </header>
 
   <main id="content">
+    {% if journey_pattern == 'trust journey' %}
+      <aside class="journey-briefing" aria-label="Visit planning">Bring the questions that matter to your first visit.</aside>
+    {% elif journey_pattern == 'portfolio proof' %}
+      <aside class="journey-briefing" aria-label="Project lens">Start with a material, room, or project question.</aside>
+    {% elif journey_pattern == 'expert authority' %}
+      <aside class="journey-briefing" aria-label="Learning path">Choose the learning question before choosing a course.</aside>
+    {% elif journey_pattern == 'local destination' %}
+      <aside class="journey-briefing" aria-label="Today's visit">Plan the next lunch around what is on the table.</aside>
+    {% endif %}
     <section class="hero" aria-labelledby="hero-title">
       <div>
         <p class="eyebrow">{{ hero_eyebrow }}</p>

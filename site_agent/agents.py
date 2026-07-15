@@ -45,12 +45,13 @@ class SiteSpecAgent:
     def __init__(self, llm: LLMClient) -> None:
         self.llm = llm
 
-    def run(self, research: ResearchBrief, strategy: StrategyBrief) -> SiteSpec:
+    def run(self, research: ResearchBrief, strategy: StrategyBrief, design_guidance: str = "") -> SiteSpec:
         return self.llm.structured(
             system=prompts.SITE_SPEC_SYSTEM,
             user=prompts.SITE_SPEC_USER.format(
                 research_json=research.model_dump_json(indent=2),
                 strategy_json=strategy.model_dump_json(indent=2),
+                design_guidance=design_guidance,
             ),
             schema=SiteSpec,
         )

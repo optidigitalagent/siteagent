@@ -1,0 +1,10 @@
+{
+  "source_commit": "f8a72b9603728bb92a217a879b7e62e43ad76c81",
+  "source": "vendored local review snapshot",
+  "rules": [
+    {"id":"viewport","kind":"required","needle":"name=\"viewport\"","selector":"head meta[name=viewport]","severity":"high","message":"missing responsive viewport meta"},
+    {"id":"main","kind":"required","needle":"<main","selector":"main","severity":"high","message":"missing main landmark"},
+    {"id":"focus","kind":"required","needle":":focus","selector":":focus","severity":"medium","message":"no visible focus style"},
+    {"id":"reduced-motion","kind":"required","needle":"prefers-reduced-motion","selector":"@media (prefers-reduced-motion)","severity":"medium","message":"no reduced-motion contract"}
+  ]
+}

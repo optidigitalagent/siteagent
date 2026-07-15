@@ -78,6 +78,10 @@ ResearchBrief:
 StrategyBrief:
 {strategy_json}
 
+Pinned frontend-design guidance. Apply it to choose a distinctive, evidence-grounded
+visual thesis; do not repeat this guidance in customer-facing copy:
+{design_guidance}
+
 Return a SiteSpec JSON.
 """
 

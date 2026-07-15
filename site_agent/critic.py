@@ -40,6 +40,14 @@ class TechnicalInspector:
                 desktop_metrics = self._collect_metrics(desktop)
                 observations["desktop"] = json.dumps(desktop_metrics, ensure_ascii=False, indent=2)
 
+                tablet = browser.new_page(viewport={"width": 768, "height": 1024}, is_mobile=True)
+                tablet.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+                self._watch_network(tablet, failed_network_requests)
+                tablet.goto(url, wait_until="networkidle")
+                self._take_screenshot(tablet, artifacts_dir / "tablet.png")
+                tablet_metrics = self._collect_metrics(tablet)
+                observations["tablet"] = json.dumps(tablet_metrics, ensure_ascii=False, indent=2)
+
                 mobile = browser.new_page(viewport={"width": 390, "height": 844}, is_mobile=True)
                 mobile.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
                 self._watch_network(mobile, failed_network_requests)
@@ -51,13 +59,13 @@ class TechnicalInspector:
                 browser.close()
 
         missing_images = list(
-            dict.fromkeys(desktop_metrics["missingImages"] + mobile_metrics["missingImages"])
+            dict.fromkeys(desktop_metrics["missingImages"] + tablet_metrics["missingImages"] + mobile_metrics["missingImages"])
         )
-        broken_links = list(dict.fromkeys(desktop_metrics["brokenLinks"] + mobile_metrics["brokenLinks"]))
+        broken_links = list(dict.fromkeys(desktop_metrics["brokenLinks"] + tablet_metrics["brokenLinks"] + mobile_metrics["brokenLinks"]))
         small_tap_targets = list(
-            dict.fromkeys(desktop_metrics["smallTapTargets"] + mobile_metrics["smallTapTargets"])
+            dict.fromkeys(desktop_metrics["smallTapTargets"] + tablet_metrics["smallTapTargets"] + mobile_metrics["smallTapTargets"])
         )
-        horizontal_scroll = bool(desktop_metrics["horizontalScroll"] or mobile_metrics["horizontalScroll"])
+        horizontal_scroll = bool(desktop_metrics["horizontalScroll"] or tablet_metrics["horizontalScroll"] or mobile_metrics["horizontalScroll"])
         failed_network_requests = list(dict.fromkeys(failed_network_requests))
         gate = TechnicalGate(
             passed=not (
@@ -76,6 +84,7 @@ class TechnicalInspector:
             small_tap_targets=small_tap_targets,
             notes=[
                 f"Desktop viewport: {desktop_metrics['viewport']}",
+                f"Tablet viewport: {tablet_metrics['viewport']}",
                 f"Mobile viewport: {mobile_metrics['viewport']}",
             ],
         )
