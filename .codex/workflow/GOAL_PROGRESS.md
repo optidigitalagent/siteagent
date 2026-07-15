@@ -1,5 +1,14 @@
 ﻿# Goal Progress
 
+## Structural Composition Remediation (2026-07-15)
+
+- Replaced the fixed renderer content sequence with validated `PageComposition` and typed `SectionPlan` artifacts.
+- Added purpose-driven journey compositions for experience, trust/service, portfolio, learning/outcome, and intentional sparse editorial pages.
+- Persisted `design/page_composition.json` and `generation_reports/build_manifest.json`; legacy builder callers receive an inferred validated composition.
+- Rebuilt fixture E2E evidence, structural audit, similarity breakdowns, score breakdowns, and local fixture comparison page/screenshot.
+- Confirmed restaurant, dental, decorator, and school have different section sequences, hero types, closing patterns, and journey patterns; Level B passes, Level C does not start builder, and the yacht placeholder remains blocked.
+- Verified full unittest discovery (57 passed, 1 opt-in Cloudflare smoke skipped), fixture E2E, compileall, pip check, smoke build, and diff check. No Telegram job, Cloudflare publish, live production verification, or Telegram delivery was performed.
+
 - Added Telegram queue design for URL handoff.
 - Added CLI `go` / `го` command contract.
 - Added Railway/Docker deployment files.

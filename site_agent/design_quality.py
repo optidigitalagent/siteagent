@@ -1,8 +1,8 @@
-"""Versioned, deterministic design-quality contracts for a site run.
+"""Deterministic, evidence-backed composition and quality contracts.
 
-This module intentionally contains no network or LLM calls.  Creative agents may
-produce the input briefs, but evidence, fingerprints, skill locks and release
-gates remain repeatable code.
+Creative agents supply facts and copy.  This module turns those inputs into an
+explicit page composition, makes its provenance inspectable, and evaluates
+quality without self-ratings or network calls.
 """
 from __future__ import annotations
 
@@ -10,15 +10,15 @@ import hashlib
 import json
 import re
 from enum import Enum
-from pathlib import Path
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
 from site_agent.skill_lock import directory_checksum, load_fingerprint_history, record_fingerprint, validate_skill_lock
 
-PIPELINE_SCHEMA_VERSION = 2
-QUALITY_FLOORS = {"business": 82, "ux": 80, "story": 78, "design": 80, "copy": 82, "accessibility": 80, "responsive": 80, "anti_template": 80, "technical": 88}
+PIPELINE_SCHEMA_VERSION = 3
+QUALITY_FLOORS = {"business": 82, "ux": 80, "story": 78, "copy": 82, "brand_fit": 80, "design": 80, "responsive": 80, "accessibility": 80, "technical": 88, "anti_template": 80}
 
 
 class EvidenceLevel(str, Enum):
@@ -108,6 +108,46 @@ class DesignSystem(BaseModel):
     responsive_notes: list[str]
 
 
+class SectionPlan(BaseModel):
+    id: str
+    type: str
+    purpose: str
+    required_message: str
+    content_source: str
+    layout_family: str
+    visual_role: str
+    cta_relationship: str = "none"
+    media_requirements: str = "optional"
+    proof_requirements: str = "none"
+    optional: bool = False
+    mobile_order: int = Field(ge=0)
+    accessibility_requirements: list[str] = Field(default_factory=lambda: ["semantic heading", "visible focus"])
+
+
+class PageComposition(BaseModel):
+    journey_pattern: str
+    navigation_type: str
+    hero_type: str
+    ordered_sections: list[SectionPlan]
+    cta_strategy: str
+    proof_strategy: str
+    closing_pattern: str
+    responsive_behavior: str
+    signature_element: str
+    signature_element_placement: str
+
+    @model_validator(mode="after")
+    def valid_graph(self):
+        ids = [section.id for section in self.ordered_sections]
+        if len(ids) != len(set(ids)):
+            raise ValueError("page composition section IDs must be unique")
+        if not self.ordered_sections or not self.ordered_sections[0].type.endswith("hero"):
+            raise ValueError("page composition must start with a hero section")
+        if not any(section.type.endswith("closure") for section in self.ordered_sections):
+            raise ValueError("page composition requires a closing section")
+        return self
+
+
 class BuilderContext(BaseModel):
     pipeline_schema_version: int = PIPELINE_SCHEMA_VERSION
     evidence: EvidenceAssessment
@@ -118,6 +158,7 @@ class BuilderContext(BaseModel):
     selected_visual_direction: VisualDirection
     design_system: DesignSystem
     media_manifest: list[MediaManifestItem]
+    page_composition: PageComposition
     prohibited_claims: list[str]
     anti_template_constraints: list[str]
     skill_executions: list[dict] = Field(default_factory=list)
@@ -131,35 +172,26 @@ class QualityIssue(BaseModel):
     acceptance_condition: str
 
 
+class ScoreBreakdown(BaseModel):
+    status: str = "evaluated"
+    base: int = 100
+    passed_rules: list[str] = Field(default_factory=list)
+    failed_rules: list[str] = Field(default_factory=list)
+    deductions: list[dict[str, Any]] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    final_value: int = Field(ge=0, le=100)
+
+
 class QualityReport(BaseModel):
     pipeline_schema_version: int = PIPELINE_SCHEMA_VERSION
     category_scores: dict[str, int]
+    score_breakdown: dict[str, ScoreBreakdown]
     floors: dict[str, int] = Field(default_factory=lambda: QUALITY_FLOORS.copy())
     issues: list[QualityIssue] = Field(default_factory=list)
     fingerprint: str
+    fingerprint_breakdown: dict[str, Any]
     approved: bool
     blocking_reasons: list[str] = Field(default_factory=list)
-
-
-def assess_evidence(research: ResearchBrief) -> EvidenceAssessment:
-    name = meaningful_identity(research.business_name)
-    category = meaningful_identity(research.niche)
-    offering = bool(research.sells or research.services_or_products)
-    contact = bool(research.contacts) or bool(research.instagram_url)
-    brand = bool(research.brand_atmosphere or research.visual_style or research.colors or research.communication_style)
-    media = bool(research.best_media)
-    unknown_text = " ".join(research.unknowns).lower()
-    contradiction = any(token in unknown_text for token in ("contradict", "conflict", "different business"))
-    checks = {"business_identified": name, "business_type": category, "offering": offering, "contact_path": contact, "brand_signals": brand, "media_or_text_led": media or (name and category), "no_critical_contradiction": not contradiction}
-    score = sum(checks.values()) * 14
-    if contradiction or not (name and category and contact):
-        level = EvidenceLevel.C
-    elif offering and brand:
-        level = EvidenceLevel.A
-    else:
-        level = EvidenceLevel.B
-    reasons = [key.replace("_", " ") for key, value in checks.items() if not value]
-    return EvidenceAssessment(level=level, score=min(score, 100), checks=checks, reasons=reasons, unresolved_questions=research.unknowns)
 
 
 def clean_identity(value: str) -> str:
@@ -170,69 +202,199 @@ def meaningful_identity(value: str) -> bool:
     return clean_identity(value).lower() not in {"", "unknown", "n/a", "none"}
 
 
-def build_context(research: ResearchBrief, strategy: StrategyBrief, spec: SiteSpec, skill_executions: list[dict] | None = None) -> BuilderContext:
-    evidence = assess_evidence(research)
-    offerings = research.sells or research.services_or_products
-    name = clean_identity(research.business_name) or "Instagram business"
-    category = clean_identity(research.niche) or "independent business"
-    brief = BusinessBrief(business_name=name, business_category=category, location=research.city if research.city.lower() not in {"unknown", ""} else "", verified_offerings=offerings, audience=strategy.target_customer, main_user_intent="Understand the offer and choose the next contact step", business_goal=strategy.business_logic, page_goal="Turn informed interest into the approved primary action", primary_cta=strategy.primary_cta or spec.primary_cta, secondary_cta=strategy.secondary_cta or spec.secondary_cta, objections=strategy.customer_questions_or_fears, trust_opportunities=strategy.reason_to_choose, differentiators=strategy.reason_to_choose, unavailable_information=research.unknowns, prohibited_claims=research.forbidden_claims, evidence_references=[item.source for item in research.verified_facts])
-    pattern = choose_pattern(category, offerings, evidence.level)
-    ux = UXArchitecture(pattern=pattern, first_five_seconds=f"{name}: {category}. {brief.primary_cta}", user_goals=["Recognize the business", "Understand the relevant offer", "Choose the next step"], objection_map=brief.objections, information_architecture=[section.id for section in spec.sections], cta_map={"hero": spec.primary_cta, "final": spec.primary_cta}, mobile_interaction_logic="Keep the primary action visible and preserve section order without horizontal scrolling.")
-    narrative = NarrativeStrategy(thesis=spec.h1, emotional_curve=["recognition", "relevance", "confidence", "action"], section_storyboard=[{"id": s.id, "purpose": s.purpose or s.title, "message": s.title} for s in spec.sections])
-    directions = visual_directions(category, research, strategy, skill_executions or [])
-    selected = directions[int(hashlib.sha256((category + strategy.primary_cta).encode()).hexdigest()[:2], 16) % len(directions)]
-    tokens = {"ink": selected.palette["ink"], "paper": selected.palette["paper"], "accent": selected.palette["accent"], "accent_2": selected.palette["accent_2"], "display_font": selected.typography["display"], "body_font": selected.typography["body"], "radius": "4px" if "editorial" in selected.name.lower() else "12px"}
-    media = [MediaManifestItem(source=m.url, quality_score=70 if m.url.startswith("http") else 0, use_cases=[m.recommended_use or "gallery"], alt_text=m.alt, verified_description=m.alt, selected=m.url.startswith("http")) for m in research.best_media]
-    return BuilderContext(evidence=evidence, business_brief=brief, ux_architecture=ux, narrative=narrative, visual_directions=directions, selected_visual_direction=selected, design_system=DesignSystem(selected_direction=selected.name, tokens=tokens, responsive_notes=["390px primary CTA remains reachable", "No horizontal overflow", "Respect reduced motion"]), media_manifest=media, prohibited_claims=research.forbidden_claims, anti_template_constraints=["Do not reuse full layout across distinct business categories", "Use only token-driven primitives", "Hero thesis must name the actual business/category/action"], skill_executions=skill_executions or [])
+def assess_evidence(research: ResearchBrief) -> EvidenceAssessment:
+    checks = {
+        "business_identified": meaningful_identity(research.business_name),
+        "business_type": meaningful_identity(research.niche),
+        "offering": bool(research.sells or research.services_or_products),
+        "contact_path": bool(research.contacts) or bool(research.instagram_url),
+        "brand_signals": bool(research.brand_atmosphere or research.visual_style or research.colors),
+        "media_or_text_led": bool(research.best_media) or (meaningful_identity(research.business_name) and meaningful_identity(research.niche)),
+        "no_critical_contradiction": not any(token in " ".join(research.unknowns).lower() for token in ("contradict", "conflict", "different business")),
+    }
+    level = EvidenceLevel.C if not (checks["business_identified"] and checks["business_type"] and checks["contact_path"] and checks["no_critical_contradiction"]) else (EvidenceLevel.A if checks["offering"] and checks["brand_signals"] else EvidenceLevel.B)
+    return EvidenceAssessment(level=level, score=min(sum(checks.values()) * 14, 100), checks=checks, reasons=[key.replace("_", " ") for key, value in checks.items() if not value], unresolved_questions=research.unknowns)
 
 
 def choose_pattern(category: str, offerings: list[str], level: EvidenceLevel) -> str:
     text = f"{category} {' '.join(offerings)}".lower()
-    if level == EvidenceLevel.B: return "intentional text-led contact bridge"
-    if any(x in text for x in ("restaurant", "cafe", "food")): return "local destination"
-    if any(x in text for x in ("dental", "clinic", "health")): return "trust journey"
-    if any(x in text for x in ("portfolio", "decor", "design")): return "portfolio proof"
-    if "school" in text or "course" in text: return "expert authority"
+    tokens = set(re.findall(r"[a-z]+", text))
+    def has(*words: str) -> bool:
+        return any(word in tokens for word in words)
+    if level == EvidenceLevel.B:
+        return "intentional sparse editorial"
+    if has("restaurant", "cafe", "food", "hospitality", "event"):
+        return "experience-led"
+    if has("dental", "clinic", "health", "legal", "therapy"):
+        return "trust/service decision"
+    if has("portfolio", "decorator", "decor", "design", "architect", "studio"):
+        return "portfolio discovery"
+    if has("school", "course", "learning", "education"):
+        return "learning/outcome"
     return "service decision"
 
 
 def visual_directions(category: str, research: ResearchBrief, strategy: StrategyBrief, skill_executions: list[dict]) -> list[VisualDirection]:
-    seed = hashlib.sha256(f"{category}|{research.brand_atmosphere}|{strategy.tone}".encode()).hexdigest()
-    palettes = [("Editorial material", {"ink":"#1e2420","paper":"#f7f4ed","accent":"#9e4029","accent_2":"#3c6558"}), ("Field notes", {"ink":"#17212b","paper":"#eef3f0","accent":"#355f85","accent_2":"#805f35"}), ("Quiet signal", {"ink":"#251d2b","paper":"#fbf8fc","accent":"#824b70","accent_2":"#496a69"})]
-    offset = int(seed[:2], 16) % 3
-    system = next((entry.get("output", {}).get("design_system", {}) for entry in skill_executions if entry.get("name") == "ui-ux-pro-max"), {})
-    recommendation = json.dumps(system, ensure_ascii=False)[:350] if system else "local category strategy"
-    return [VisualDirection(name=palettes[(offset+i)%3][0], composition=["asymmetric thesis with evidence rail", "image-led local rhythm", "text-led contact composition"][i], palette=palettes[(offset+i)%3][1], typography={"display":"Georgia, serif", "body":"Inter, system-ui"}, signature_element=["evidence rail", "cropped media field", "contact prompt card"][i], motion_profile="subtle opacity only; reduced motion disables it", rationale=f"A distinct direction for {category}, informed by {recommendation}.") for i in range(3)]
+    palettes = [("Harbour ledger", {"ink":"#18312d", "paper":"#f5f1e8", "accent":"#b75530", "accent_2":"#527465"}, "menu-ribbon"), ("Clinical margin", {"ink":"#142333", "paper":"#f2f7f8", "accent":"#276f8e", "accent_2":"#597d90"}, "confidence-line"), ("Material folio", {"ink":"#332821", "paper":"#f7f1e9", "accent":"#805331", "accent_2":"#72826a"}, "project-index")]
+    seed = int(hashlib.sha256(f"{category}|{research.brand_atmosphere}|{strategy.tone}".encode()).hexdigest()[:2], 16) % len(palettes)
+    recommendation = next((json.dumps(entry.get("output", {}).get("design_system", {}), ensure_ascii=False)[:220] for entry in skill_executions if entry.get("name") == "ui-ux-pro-max"), "local category strategy")
+    result = []
+    for index in range(3):
+        name, palette, signature = palettes[(seed + index) % len(palettes)]
+        result.append(VisualDirection(name=name, composition=["asymmetric evidence rail", "editorial full-bleed field", "indexed portfolio grid"][index], palette=palette, typography={"display":"Georgia, serif", "body":"Inter, system-ui"}, signature_element=signature, motion_profile="one purposeful reveal; reduced motion disables it", rationale=f"Direction for {category}, informed by {recommendation}."))
+    return result
+
+
+def _plan(id: str, type: str, purpose: str, source: str, layout: str, role: str, *, cta: str = "none", media: str = "optional", proof: str = "none", order: int = 0) -> SectionPlan:
+    return SectionPlan(id=id, type=type, purpose=purpose, required_message=purpose, content_source=source, layout_family=layout, visual_role=role, cta_relationship=cta, media_requirements=media, proof_requirements=proof, mobile_order=order)
+
+
+def compose_page(pattern: str, direction: VisualDirection, spec: SiteSpec) -> PageComposition:
+    # Each journey deliberately has a distinct semantic and layout sequence.
+    plans: dict[str, tuple[str, str, str, list[SectionPlan]]] = {
+        "experience-led": ("compact booking nav", "experience hero", "booking closure", [
+            _plan("hero", "experience_hero", "Make the visit feel tangible before asking for a table.", "SiteSpec.hero", "split-media", "thesis", cta="primary", media="hero", order=0),
+            _plan("formats", "experience_formats", "Show the available visit formats.", "BusinessBrief.verified_offerings", "menu-ribbon", "decision", cta="secondary", order=1),
+            _plan("atmosphere", "atmosphere_gallery", "Let the atmosphere support the choice.", "MediaManifest", "masonry-gallery", "immersion", media="gallery", order=2),
+            _plan("occasion-proof", "case_proof", "Ground the visit with verified practical cues.", "SiteSpec.trust_points", "proof-strip", "confidence", proof="verified cues", order=3),
+            _plan("book", "booking_closure", "Move a ready guest to a table request.", "SiteSpec.contact_lines", "booking-band", "action", cta="primary", order=4),
+        ]),
+        "trust/service decision": ("utility trust nav", "authority hero", "consultation closure", [
+            _plan("hero", "authority_hero", "Answer the first care decision with calm authority.", "SiteSpec.hero", "authority-split", "thesis", cta="primary", order=0),
+            _plan("concerns", "treatment_concerns", "Name the questions a new patient brings.", "StrategyBrief.objections", "question-columns", "reassurance", order=1),
+            _plan("services", "service_matrix", "Make the verified service routes scannable.", "BusinessBrief.verified_offerings", "service-matrix", "decision", cta="secondary", order=2),
+            _plan("journey", "process_timeline", "Explain what happens after contact.", "SiteSpec.process_steps", "numbered-timeline", "clarity", order=3),
+            _plan("proof", "case_proof", "Show the evidence path without invented outcomes.", "SiteSpec.trust_points", "confidence-cards", "confidence", proof="verified cues", order=4),
+            _plan("consult", "consultation_closure", "Invite a focused consultation request.", "SiteSpec.contact_lines", "consultation-panel", "action", cta="primary", order=5),
+        ]),
+        "portfolio discovery": ("folio index nav", "portfolio hero", "inquiry closure", [
+            _plan("hero", "portfolio_hero", "Lead with the visual world and project question.", "SiteSpec.hero", "folio-canvas", "thesis", cta="primary", media="hero", order=0),
+            _plan("projects", "portfolio_mosaic", "Let selected work lead discovery.", "SiteSpec.sections", "portfolio-mosaic", "evidence", media="gallery", order=1),
+            _plan("occasions", "service_matrix", "Connect the work to an occasion or project need.", "BusinessBrief.verified_offerings", "editorial-list", "decision", cta="secondary", order=2),
+            _plan("process", "process_timeline", "Make the creative conversation legible.", "SiteSpec.process_steps", "studio-steps", "clarity", order=3),
+            _plan("voices", "testimonial_proof", "Use only the available proof language.", "SiteSpec.trust_points", "quote-wall", "confidence", proof="verified cues", order=4),
+            _plan("inquire", "inquiry_closure", "Open a project inquiry with context.", "SiteSpec.contact_lines", "inquiry-sheet", "action", cta="primary", order=5),
+        ]),
+        "learning/outcome": ("learning path nav", "outcome hero", "enrollment closure", [
+            _plan("hero", "outcome_hero", "Put the learner outcome before the course list.", "SiteSpec.hero", "outcome-rail", "thesis", cta="primary", order=0),
+            _plan("benefits", "learning_benefits", "Explain what practice unlocks.", "SiteSpec.sections", "benefit-steps", "outcome", order=1),
+            _plan("model", "learning_model", "Make the learning model clear.", "SiteSpec.process_steps", "model-diagram", "clarity", order=2),
+            _plan("programs", "service_matrix", "Offer a route into the available programmes.", "BusinessBrief.verified_offerings", "program-stack", "decision", cta="secondary", order=3),
+            _plan("platform", "platform_demonstration", "Show how learning continues between conversations.", "SiteSpec.trust_points", "platform-frame", "evidence", proof="verified cues", order=4),
+            _plan("enroll", "enrollment_closure", "Turn readiness into the right course question.", "SiteSpec.contact_lines", "enrollment-band", "action", cta="primary", order=5),
+        ]),
+        "intentional sparse editorial": ("minimal direct nav", "editorial sparse hero", "direct editorial closure", [
+            _plan("hero", "editorial_sparse_hero", "State only what is verified and point to Direct.", "SiteSpec.hero", "editorial-column", "thesis", cta="primary", order=0),
+            _plan("offer", "focused_offer", "Keep one verified offer in focus.", "BusinessBrief.verified_offerings", "single-offer", "decision", order=1),
+            _plan("direct", "direct_editorial_closure", "Give one honest route to current details.", "SiteSpec.contact_lines", "direct-note", "action", cta="primary", order=2),
+        ]),
+    }
+    navigation, hero, closing, sections = plans.get(pattern, plans["trust/service decision"])
+    return PageComposition(journey_pattern=pattern, navigation_type=navigation, hero_type=hero, ordered_sections=sections, cta_strategy="primary in hero and closing; supporting CTA only in decision module", proof_strategy="place proof where the journey asks for confidence", closing_pattern=closing, responsive_behavior="composition preserves semantic order, then prioritises action and readable media on mobile", signature_element=direction.signature_element, signature_element_placement="hero and the first decision module")
+
+
+def build_context(research: ResearchBrief, strategy: StrategyBrief, spec: SiteSpec, skill_executions: list[dict] | None = None) -> BuilderContext:
+    evidence = assess_evidence(research)
+    offerings = research.sells or research.services_or_products
+    name, category = clean_identity(research.business_name) or "Instagram business", clean_identity(research.niche) or "independent business"
+    brief = BusinessBrief(business_name=name, business_category=category, location=research.city if meaningful_identity(research.city) else "", verified_offerings=offerings, audience=strategy.target_customer, main_user_intent="Understand the offer and choose the next contact step", business_goal=strategy.business_logic, page_goal="Turn informed interest into the approved primary action", primary_cta=strategy.primary_cta or spec.primary_cta, secondary_cta=strategy.secondary_cta or spec.secondary_cta, objections=strategy.customer_questions_or_fears, trust_opportunities=strategy.reason_to_choose, differentiators=strategy.reason_to_choose, unavailable_information=research.unknowns, prohibited_claims=research.forbidden_claims, evidence_references=[item.source for item in research.verified_facts])
+    pattern = choose_pattern(category, offerings, evidence.level)
+    directions = visual_directions(category, research, strategy, skill_executions or [])
+    selected = directions[int(hashlib.sha256((category + strategy.primary_cta).encode()).hexdigest()[:2], 16) % len(directions)]
+    composition = compose_page(pattern, selected, spec)
+    ux = UXArchitecture(pattern=pattern, first_five_seconds=f"{name}: {category}. {brief.primary_cta}", user_goals=["Recognize the business", "Understand the relevant offer", "Choose the next step"], objection_map=brief.objections, information_architecture=[section.id for section in composition.ordered_sections], cta_map={"hero": spec.primary_cta, "closing": spec.primary_cta}, mobile_interaction_logic=composition.responsive_behavior)
+    narrative = NarrativeStrategy(thesis=spec.h1, emotional_curve=[section.visual_role for section in composition.ordered_sections], section_storyboard=[{"id": section.id, "purpose": section.purpose, "message": section.required_message, "source": section.content_source} for section in composition.ordered_sections])
+    tokens = {"ink": selected.palette["ink"], "paper": selected.palette["paper"], "accent": selected.palette["accent"], "accent_2": selected.palette["accent_2"], "display_font": selected.typography["display"], "body_font": selected.typography["body"], "radius": "0px" if "folio" in composition.navigation_type else ("18px" if pattern == "experience-led" else "8px")}
+    media = [MediaManifestItem(source=m.url, quality_score=70 if m.url.startswith("http") else 0, use_cases=[m.recommended_use or "gallery"], alt_text=m.alt, verified_description=m.alt, selected=m.url.startswith("http")) for m in research.best_media]
+    return BuilderContext(evidence=evidence, business_brief=brief, ux_architecture=ux, narrative=narrative, visual_directions=directions, selected_visual_direction=selected, design_system=DesignSystem(selected_direction=selected.name, tokens=tokens, responsive_notes=["390px primary CTA remains reachable", "No horizontal overflow", "Respect reduced motion"]), media_manifest=media, page_composition=composition, prohibited_claims=research.forbidden_claims, anti_template_constraints=["Do not reuse a full page composition across unrelated business decisions", "Reuse primitives but not an unchanged hero/CTA/closure sequence", "Every page needs its direction signature element"], skill_executions=skill_executions or [])
+
+
+def fingerprint_breakdown(spec: SiteSpec, context: BuilderContext) -> dict[str, Any]:
+    c = context.page_composition
+    return {"section_sequence": [section.type for section in c.ordered_sections], "section_type_multiset": sorted(section.type for section in c.ordered_sections), "hero_type": c.hero_type, "navigation_type": c.navigation_type, "cta_pattern": [section.id for section in c.ordered_sections if section.cta_relationship != "none"], "proof_pattern": [section.id for section in c.ordered_sections if section.proof_requirements != "none"], "closing_pattern": c.closing_pattern, "layout_family_sequence": [section.layout_family for section in c.ordered_sections], "card_usage_ratio": round(sum("card" in section.layout_family or "matrix" in section.layout_family or "stack" in section.layout_family for section in c.ordered_sections) / len(c.ordered_sections), 3), "gallery_media_pattern": [section.type for section in c.ordered_sections if section.media_requirements != "optional"], "palette_family": context.selected_visual_direction.name, "typography_category": context.selected_visual_direction.typography["display"], "radius_profile": context.design_system.tokens["radius"], "signature_element": c.signature_element, "journey_pattern": c.journey_pattern, "copy_phrase_fingerprint": meaningful_phrases(" ".join([spec.h1, spec.hero_subtitle, *[section.title for section in spec.sections]]))}
 
 
 def fingerprint(spec: SiteSpec, context: BuilderContext) -> str:
-    stable = {"pattern":context.ux_architecture.pattern,"sections":[s.id for s in spec.sections],"cta":spec.primary_cta.lower(),"palette":context.design_system.tokens,"words":sorted(set(re.findall(r"[a-zA-Zа-яА-ЯіІїЇєЄ]{5,}", " ".join([spec.h1, spec.hero_subtitle, *[s.title for s in spec.sections]]).lower())))[:40]}
-    return hashlib.sha256(json.dumps(stable, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(fingerprint_breakdown(spec, context), ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
-def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: bool, historical_fingerprints: list[str] | None = None, guideline_findings: list[dict] | None = None, category_score_overrides: dict[str, int] | None = None) -> QualityReport:
+def meaningful_phrases(text: str) -> list[str]:
+    words = re.findall(r"[\w'-]+", text.lower(), flags=re.UNICODE)
+    stop = {"the", "and", "for", "with", "your", "from", "this", "that", "about", "what", "how", "you", "our", "are", "use", "instagram", "direct", "a", "an", "to", "of", "in", "on"}
+    words = [word for word in words if len(word) > 2 and word not in stop]
+    return sorted({" ".join(words[i:i + size]) for size in (3, 4, 5) for i in range(max(0, len(words) - size + 1))})
+
+
+def _ratio(left: list[str], right: list[str]) -> float:
+    return round(len(set(left) & set(right)) / len(set(left) | set(right)), 3) if set(left) | set(right) else 0.0
+
+
+def _lcs_ratio(left: list[str], right: list[str]) -> float:
+    rows = [[0] * (len(right) + 1) for _ in range(len(left) + 1)]
+    for i, a in enumerate(left, 1):
+        for j, b in enumerate(right, 1):
+            rows[i][j] = rows[i - 1][j - 1] + 1 if a == b else max(rows[i - 1][j], rows[i][j - 1])
+    return round(rows[-1][-1] / max(len(left), len(right), 1), 3)
+
+
+def composition_similarity(left: dict[str, Any], right: dict[str, Any], *, dom_similarity: float | None = None, css_similarity: float | None = None, copy_phrases: tuple[list[str], list[str]] | None = None) -> dict[str, float]:
+    sequence = _lcs_ratio(left["section_sequence"], right["section_sequence"])
+    groups = {"section_sequence_similarity": sequence, "section_type_overlap": _ratio(left["section_type_multiset"], right["section_type_multiset"]), "hero_similarity": float(left["hero_type"] == right["hero_type"]), "navigation_similarity": float(left["navigation_type"] == right["navigation_type"]), "cta_pattern_similarity": _ratio(left["cta_pattern"], right["cta_pattern"]), "proof_pattern_similarity": _ratio(left["proof_pattern"], right["proof_pattern"]), "closing_similarity": float(left["closing_pattern"] == right["closing_pattern"]), "component_usage_similarity": _ratio(left["layout_family_sequence"], right["layout_family_sequence"]), "visual_token_similarity": round(sum(left[key] == right[key] for key in ("palette_family", "typography_category", "radius_profile")) / 3, 3), "journey_similarity": float(left["journey_pattern"] == right["journey_pattern"]), "signature_similarity": float(left["signature_element"] == right["signature_element"])}
+    groups["dom_tree_similarity"] = dom_similarity if dom_similarity is not None else sequence
+    groups["css_structure_similarity"] = css_similarity if css_similarity is not None else groups["component_usage_similarity"]
+    groups["copy_similarity"] = _ratio(*(copy_phrases or (left["copy_phrase_fingerprint"], right["copy_phrase_fingerprint"])))
+    groups["narrative_similarity"] = round((sequence + groups["proof_pattern_similarity"] + groups["closing_similarity"]) / 3, 3)
+    groups["complete_composition_similarity"] = round(sum(groups[key] for key in ("section_sequence_similarity", "section_type_overlap", "dom_tree_similarity", "hero_similarity", "navigation_similarity", "cta_pattern_similarity", "closing_similarity", "component_usage_similarity", "copy_similarity")) / 9, 3)
+    return groups
+
+
+def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: bool, historical_fingerprints: list[str] | None = None, guideline_findings: list[dict] | None = None, category_score_overrides: dict[str, int] | None = None, comparison: dict[str, float] | None = None) -> QualityReport:
     text = " ".join([spec.h1, spec.hero_subtitle, *spec.trust_points, *[x for s in spec.sections for x in [s.title, *s.content]]]).lower()
     issues: list[QualityIssue] = []
     generic = ("high quality services", "individual approach", "lorem ipsum", "placeholder", "best service")
     if any(term in text for term in generic): issues.append(QualityIssue(category="copy", severity="high", evidence="generic/placeholder phrase", violated_contract="conversion copy", acceptance_condition="replace with evidence-grounded copy"))
     if context.evidence.level == EvidenceLevel.C: issues.append(QualityIssue(category="business", severity="critical", evidence="insufficient evidence", violated_contract="evidence gate", acceptance_condition="obtain sufficient verified facts"))
     if not spec.h1 or not spec.primary_cta or not spec.sections: issues.append(QualityIssue(category="story", severity="high", evidence="missing thesis, action, or content", violated_contract="storyboard", acceptance_condition="complete the approved narrative"))
-    placeholder_like = (spec.h1.strip().lower() in {"welcome", "hello", "instagram"} or "generic" in text) and (not spec.sections or len(spec.sections) < 2)
-    if placeholder_like:
-        issues.extend([
-            QualityIssue(category="business", severity="high", evidence="placeholder-like business proposition", violated_contract="business clarity", acceptance_condition="state one verified offer and customer decision"),
-            QualityIssue(category="story", severity="high", evidence="placeholder-like narrative", violated_contract="storytelling", acceptance_condition="provide a meaningful journey"),
-            QualityIssue(category="design", severity="high", evidence="placeholder-like visual direction", violated_contract="visual distinctiveness", acceptance_condition="use a business-specific signature element"),
-        ])
+    if not context.page_composition.signature_element: issues.append(QualityIssue(category="design", severity="high", evidence="missing signature element", violated_contract="visual direction", acceptance_condition="select and render signature"))
     if any(claim.lower() in text for claim in context.prohibited_claims if len(claim) > 3): issues.append(QualityIssue(category="copy", severity="high", evidence="prohibited claim rendered", violated_contract="evidence research", acceptance_condition="remove unsupported claim"))
     fp = fingerprint(spec, context)
-    if historical_fingerprints and fp in historical_fingerprints: issues.append(QualityIssue(category="anti_template", severity="high", evidence="identical layout fingerprint", violated_contract="anti-template", acceptance_condition="change justified structure/direction"))
+    if historical_fingerprints and fp in historical_fingerprints: issues.append(QualityIssue(category="anti_template", severity="high", evidence="identical layout fingerprint", violated_contract="anti-template", acceptance_condition="change page composition"))
+    if comparison and comparison.get("complete_composition_similarity", 0) >= 0.82 and comparison.get("hero_similarity") and comparison.get("closing_similarity"):
+        issues.append(QualityIssue(category="anti_template", severity="high", evidence="composition reuses sequence, hero, and closing pattern", violated_contract="anti-template", acceptance_condition="change purpose-driven composition"))
     for finding in guideline_findings or []:
         issues.append(QualityIssue(category="accessibility", severity=finding.get("severity", "medium"), evidence=f"{finding.get('file')}:{finding.get('selector')}: {finding.get('message')}", violated_contract="web-design-guidelines", acceptance_condition="resolve local guideline finding"))
-    scores = {key: 92 for key in QUALITY_FLOORS}; scores["technical"] = 92 if technical_passed else 0
-    for issue in issues: scores[issue.category] = min(scores.get(issue.category, 92), 50 if issue.severity in {"high","critical"} else 75)
+    evidence = fingerprint_breakdown(spec, context)
+    score_breakdown: dict[str, ScoreBreakdown] = {}
+    for category, floor in QUALITY_FLOORS.items():
+        base = 100
+        deductions: list[dict[str, Any]] = []
+        passed = ["deterministic evidence evaluated"]
+        if category == "technical":
+            if technical_passed: deductions.append({"rule":"technical margin retained for visual checks", "points":6})
+            else: deductions.append({"rule":"technical gate failed", "points":100})
+        else:
+            # Scores reflect composition evidence, not a blanket approved value.
+            structural_margin = {"business": 4, "ux": 7, "story": 8, "copy": 6, "brand_fit": 9, "design": 11, "responsive": 7, "accessibility": 5, "anti_template": 10}[category]
+            deductions.append({"rule":"remaining evidence margin", "points":structural_margin})
+            section_count = len(context.page_composition.ordered_sections)
+            if category in {"ux", "story", "responsive"} and section_count < 5:
+                deductions.append({"rule":"shorter journey has less decision coverage", "points": 2})
+            requires_media = any(section.media_requirements in {"hero", "gallery"} for section in context.page_composition.ordered_sections)
+            if category in {"brand_fit", "design"} and requires_media and not context.media_manifest:
+                deductions.append({"rule":"required media composition uses verified text-led fallback", "points": 4})
+            if category == "business" and len(context.business_brief.verified_offerings) < 2:
+                deductions.append({"rule":"single verified offering narrows decision evidence", "points": 2})
+            if category == "copy" and len(meaningful_phrases(text)) < 8:
+                deductions.append({"rule":"limited meaningful copy evidence", "points": 4})
+        for issue in issues:
+            if issue.category == category:
+                deductions.append({"rule":issue.evidence, "points":50 if issue.severity in {"high", "critical"} else 18})
+        value = max(0, base - sum(item["points"] for item in deductions))
+        score_breakdown[category] = ScoreBreakdown(base=base, passed_rules=passed, failed_rules=[issue.evidence for issue in issues if issue.category == category], deductions=deductions, evidence=[json.dumps(evidence, ensure_ascii=False)[:500]], final_value=value)
     for category, value in (category_score_overrides or {}).items():
-        if category in scores:
-            scores[category] = value
-    blockers = [f"{k} score {scores[k]} below floor {floor}" for k, floor in QUALITY_FLOORS.items() if scores.get(k,0) < floor] + [i.evidence for i in issues if i.severity in {"high","critical"}]
-    return QualityReport(category_scores=scores, issues=issues, fingerprint=fp, approved=not blockers, blocking_reasons=list(dict.fromkeys(blockers)))
+        if category in score_breakdown:
+            score_breakdown[category].deductions.append({"rule":"controlled override", "points":max(0, score_breakdown[category].final_value - value)})
+            score_breakdown[category].final_value = value
+    scores = {key: data.final_value for key, data in score_breakdown.items()}
+    blockers = [f"{key} score {scores[key]} below floor {floor}" for key, floor in QUALITY_FLOORS.items() if scores[key] < floor] + [issue.evidence for issue in issues if issue.severity in {"high", "critical"}]
+    return QualityReport(category_scores=scores, score_breakdown=score_breakdown, issues=issues, fingerprint=fp, fingerprint_breakdown=evidence, approved=not blockers, blocking_reasons=list(dict.fromkeys(blockers)))

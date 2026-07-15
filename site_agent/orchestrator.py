@@ -155,6 +155,9 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "04_visual_directions.json", {"directions": [direction.model_dump() for direction in context.visual_directions], "selected": context.selected_visual_direction.name})
             write_json(reports_dir / "04_design_system.json", context.design_system)
             write_json(reports_dir / "04_media_manifest.json", {"media": [item.model_dump() for item in context.media_manifest]})
+            design_dir = run_dir / "design"
+            design_dir.mkdir(parents=True, exist_ok=True)
+            write_json(design_dir / "page_composition.json", context.page_composition)
         self._checkpoint(reports_dir, "strategy_artifacts_completed", "builder_context_completed")
 
         final_critique: CritiqueReport | None = None
@@ -224,6 +227,9 @@ class SiteAgentOrchestrator:
             spec = next_spec or self._fix(research, strategy, spec, critique)
             context = build_context(research, strategy, spec, skill_executions)
             write_json(reports_dir / "04_builder_context.json", context)
+            design_dir = run_dir / "design"
+            design_dir.mkdir(parents=True, exist_ok=True)
+            write_json(design_dir / "page_composition.json", context.page_composition)
             self._checkpoint(reports_dir, "fixer_completed")
 
         assert final_critique is not None
@@ -305,6 +311,10 @@ class SiteAgentOrchestrator:
     def _read_model(self, path: Path, model_type):
         if not path.is_file() or path.stat().st_size == 0:
             return None
+        try:
+            return model_type.model_validate_json(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
 
     def _read_json(self, path: Path):
         if not path.is_file() or not path.stat().st_size:
@@ -313,10 +323,6 @@ class SiteAgentOrchestrator:
             import json
             return json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            return None
-        try:
-            return model_type.model_validate_json(path.read_text(encoding="utf-8"))
-        except Exception:
             return None
 
     def _checkpoint(self, reports_dir: Path, *names: str) -> None:

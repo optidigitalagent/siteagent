@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import mimetypes
 from pathlib import Path
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from site_agent.identifiers import stable_business_id
 from site_agent.models import MediaAsset, ResearchBrief, SiteSpec, StrategyBrief
-from site_agent.design_quality import BuilderContext
+from site_agent.design_quality import BuilderContext, PageComposition, build_context
 
 
 class SiteBuilder:
@@ -37,6 +38,11 @@ class SiteBuilder:
         assets_dir.mkdir(parents=True, exist_ok=True)
         local_gallery = self._download_assets(spec.gallery_assets or research.best_media, assets_dir)
         hero_asset = local_gallery[0] if local_gallery else ""
+        # Legacy callers still receive a validated composition rather than the
+        # historical fixed template. Production always persists this context.
+        design_context = design_context or build_context(research, strategy, spec)
+        composition = design_context.page_composition
+        planned_sections = self._section_payloads(composition, spec, strategy, research, local_gallery)
 
         template = self.env.get_template("site.html.j2")
         html = template.render(
@@ -57,10 +63,59 @@ class SiteBuilder:
             design_tokens=(design_context.design_system.tokens if design_context else {}),
             visual_direction=(design_context.selected_visual_direction.name if design_context else ""),
             journey_pattern=(design_context.ux_architecture.pattern if design_context else ""),
+            composition=composition,
+            planned_sections=planned_sections,
         )
         index_path = site_dir / "index.html"
         index_path.write_text(html, encoding="utf-8")
+        self._write_manifest(site_dir, composition, planned_sections, design_context, local_gallery)
         return index_path
+
+    def _section_payloads(self, composition: PageComposition, spec: SiteSpec, strategy: StrategyBrief, research: ResearchBrief, gallery: list[str]) -> list[dict]:
+        by_id = {section.id: section for section in spec.sections}
+        fallback_content = [item for section in spec.sections for item in section.content]
+        offerings = research.sells or research.services_or_products or fallback_content
+        payloads = []
+        for plan in composition.ordered_sections:
+            source = by_id.get(plan.id)
+            if plan.id == "hero":
+                content = [spec.hero_subtitle]
+                title = spec.h1
+            elif plan.content_source == "BusinessBrief.verified_offerings":
+                content, title = offerings, self._title(plan.type, plan.purpose)
+            elif plan.content_source == "StrategyBrief.objections":
+                content, title = strategy.customer_questions_or_fears or fallback_content, self._title(plan.type, plan.purpose)
+            elif plan.content_source == "SiteSpec.process_steps":
+                content, title = spec.process_steps or fallback_content, self._title(plan.type, plan.purpose)
+            elif plan.content_source == "SiteSpec.trust_points":
+                content, title = spec.trust_points or fallback_content, self._title(plan.type, plan.purpose)
+            elif plan.content_source == "SiteSpec.contact_lines":
+                content, title = spec.contact_lines or ["Use Instagram Direct for current details."], self._title(plan.type, plan.purpose)
+            elif plan.content_source == "SiteSpec.sections":
+                content, title = ([item for section in spec.sections for item in [section.title, *section.content]] or fallback_content), self._title(plan.type, plan.purpose)
+            elif plan.content_source == "MediaManifest":
+                content, title = [], self._title(plan.type, plan.purpose)
+            else:
+                content, title = (source.content if source else fallback_content), (source.title if source else self._title(plan.type, plan.purpose))
+            payloads.append({"plan": plan, "title": title, "content": [value for value in content if value], "gallery": gallery, "cta": spec.primary_cta if plan.cta_relationship == "primary" else (spec.secondary_cta if plan.cta_relationship == "secondary" else "")})
+        return payloads
+
+    def _title(self, section_type: str, fallback: str) -> str:
+        labels = {
+            "experience_formats": "Ways to visit", "atmosphere_gallery": "The room and the table", "case_proof": "Useful details before you ask", "booking_closure": "Request a table",
+            "treatment_concerns": "Start with your question", "service_matrix": "Choose the relevant route", "process_timeline": "What happens next", "consultation_closure": "Plan a consultation",
+            "portfolio_mosaic": "Selected studies", "testimonial_proof": "What guides the work", "inquiry_closure": "Start a project conversation",
+            "learning_benefits": "What practice makes possible", "learning_model": "How learning works", "platform_demonstration": "Between each session", "enrollment_closure": "Find your learning route",
+            "focused_offer": "One confirmed offer", "direct_editorial_closure": "Ask for current details",
+        }
+        return labels.get(section_type, fallback)
+
+    def _write_manifest(self, site_dir: Path, composition: PageComposition, payloads: list[dict], context: BuilderContext, gallery: list[str]) -> None:
+        reports = site_dir.parent / "generation_reports"
+        if not reports.exists():
+            return
+        manifest = {"page_composition": composition.model_dump(), "sections": [{"id": item["plan"].id, "type": item["plan"].type, "source_storyboard_section": item["plan"].id, "source_business_fact": item["plan"].content_source, "selected_layout_family": item["plan"].layout_family, "text": item["content"], "selected_media": gallery if item["plan"].media_requirements != "optional" else [], "design_tokens": context.design_system.tokens, "responsive_rule": context.page_composition.responsive_behavior} for item in payloads]}
+        (reports / "build_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _download_assets(self, assets: list[MediaAsset], assets_dir: Path) -> list[str]:
         local_paths: list[str] = []
