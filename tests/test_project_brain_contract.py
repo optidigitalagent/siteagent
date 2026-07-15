@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+import json
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class ProjectBrainContractTests(unittest.TestCase):
+    def test_required_project_brain_files_exist(self) -> None:
+        required = [
+            "AGENTS.md",
+            ".codex/project_brain/INDEX.md",
+            ".codex/project_brain/VISION.md",
+            ".codex/project_brain/QUALITY_BAR.md",
+            ".codex/project_brain/HUMAN_FEEDBACK.md",
+            ".codex/project_brain/DIRECTOR_PROTOCOL.md",
+            ".codex/project_brain/REFERENCE_LIBRARY.md",
+            ".agents/skills/siteagent-project-director/SKILL.md",
+            ".agents/skills/siteagent-web-studio/SKILL.md",
+            "references/site_designs/reference.schema.json",
+        ]
+        missing = [path for path in required if not (ROOT / path).is_file()]
+        self.assertEqual([], missing)
+
+    def test_root_contract_loads_director_and_current_builder(self) -> None:
+        agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8-sig")
+        self.assertIn("$siteagent-project-director", agents)
+        self.assertIn("SITE_BUILDER=codex_studio", agents)
+        self.assertNotIn("Uses a deterministic renderer", agents)
+
+    def test_global_goal_does_not_describe_legacy_pipeline_as_current(self) -> None:
+        goal = (ROOT / ".codex/workflow/GLOBAL_GOAL.md").read_text(encoding="utf-8-sig")
+        self.assertIn("Codex Creative Studio", goal)
+        self.assertNotIn("deterministic build", goal)
+
+    def test_reference_schema_is_valid_json(self) -> None:
+        data = json.loads(
+            (ROOT / "references/site_designs/reference.schema.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("object", data["type"])
+        self.assertIn("learn", data["required"])
+        self.assertIn("do_not_copy", data["required"])
+
+
+if __name__ == "__main__":
+    unittest.main()

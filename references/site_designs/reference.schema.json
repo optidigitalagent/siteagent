@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SiteAgent design reference",
+  "type": "object",
+  "required": ["id", "title", "traits", "learn", "do_not_copy"],
+  "properties": {
+    "id": {"type": "string"},
+    "title": {"type": "string"},
+    "source_url": {"type": "string"},
+    "screenshot_paths": {"type": "array", "items": {"type": "string"}},
+    "business_context": {"type": "string"},
+    "audience": {"type": "string"},
+    "conversion_goal": {"type": "string"},
+    "traits": {"type": "array", "items": {"type": "string"}},
+    "composition": {"type": "string"},
+    "narrative": {"type": "string"},
+    "typography": {"type": "string"},
+    "media_treatment": {"type": "string"},
+    "interaction": {"type": "string"},
+    "mobile_behavior": {"type": "string"},
+    "learn": {"type": "array", "items": {"type": "string"}},
+    "do_not_copy": {"type": "array", "items": {"type": "string"}},
+    "applicable_when": {"type": "array", "items": {"type": "string"}},
+    "avoid_when": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

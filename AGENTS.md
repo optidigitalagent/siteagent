@@ -1,95 +1,90 @@
-﻿# Agent Workflow Contract
+# SiteAgent Project Director Contract
 
-## Codex Go Command
+## Mandatory boot sequence
 
-When the user writes only `го` or `go` in this project, run:
+Before planning or changing this repository, read:
+
+1. `.codex/project_brain/INDEX.md`
+2. `.codex/project_brain/VISION.md`
+3. `.codex/project_brain/QUALITY_BAR.md`
+4. `.codex/project_brain/HUMAN_FEEDBACK.md`
+5. `.codex/project_brain/DIRECTOR_PROTOCOL.md`
+6. `.codex/project_brain/REFERENCE_LIBRARY.md`
+7. Current files in `.codex/workflow/`
+
+For product, design, generation, review, or quality work, explicitly apply
+`$siteagent-project-director`. For creative website generation, also apply
+`$siteagent-web-studio`.
+
+## Mission
+
+SiteAgent is an autonomous web studio, not a generic landing-page generator.
+It must turn verified business evidence and real media into a bespoke,
+commercially useful, responsive website, then verify, publish, and deliver it.
+
+A technically valid page is not necessarily a good website.
+
+## Main-agent responsibility
+
+The main Codex agent acts as Project Director:
+
+- preserve the product goal across sessions;
+- delegate independent work to subagents when available;
+- keep creative implementation and independent criticism separate;
+- inspect real artifacts, HTML, screenshots, browser reports, and diffs;
+- reject weak work instead of defending it;
+- update durable project memory after reusable user feedback;
+- never claim completion from self-ratings alone.
+
+## Production architecture
+
+`go` or `го` means:
 
 ```powershell
 python -m site_agent.cli go
 ```
 
-This command must claim the next Telegram inbox job from `.codex/inbox/telegram_jobs.json`, generate the website, publish it, and send the final Telegram response. Do not ask the user to paste the Instagram link again.
+The job comes from `.codex/inbox/telegram_jobs.json`. Do not ask for the
+Instagram URL again.
 
-## Research Agent
+Production flow:
 
-Input: one Instagram URL plus public scrape context.
+Telegram intake → local research/evidence → Codex Creative Studio →
+independent critics/fixer → acceptance → Cloudflare Pages → live verification
+→ Telegram delivery.
 
-Output: `ResearchBrief`.
+Railway remains bot-only. Site generation, browser QA, publishing, and recovery
+run locally.
 
-Must identify verified facts, unknowns, forbidden claims, real media candidates, contacts, niche, language, location signals, offers/prices when visible, and brand atmosphere. Missing data must stay missing; the agent must recommend Instagram/Direct CTAs instead of inventing facts.
+`SITE_BUILDER=codex_studio` is the production default. Legacy template/Jinja
+generation is allowed only through an explicit compatibility mode. Silent
+fallback is forbidden.
 
-## Brand / Strategy Agent
+## Website quality non-negotiables
 
-Input: `ResearchBrief`.
+- Do not select design from a category template.
+- Two businesses in the same niche may need completely different sites.
+- Product identity, page scope, language, claims, and content must come from evidence.
+- Missing information must not become the page narrative.
+- Level B produces a concise intentional micro-site; Level C blocks generation.
+- The first meaningful mobile and desktop viewport must explain the offer and expose a real CTA.
+- Filler sections, generic AI copy, repeated meanings, fake proof, and decorative complexity are failures.
+- Design must use the business's media, atmosphere, audience, and brand signals.
+- References are inspiration and analysis material, never templates to copy.
+- Human calibration stays blocking until explicitly approved.
 
-Output: `StrategyBrief`.
+## Completion protocol
 
-Must define target customer, business reason to choose, customer fears/questions, niche-specific sections, primary/secondary CTA, tone, visual direction, and business logic. One-page is the default unless the business clearly needs more.
+Before saying a task is complete:
 
-## Design + Copy Agent
+1. Validate artifacts and recovery checkpoints.
+2. Run applicable tests and browser checks.
+3. Inspect screenshots, not only scores.
+4. Run an independent review.
+5. Confirm no critical/high issue remains.
+6. Update `.codex/workflow/` state.
+7. Record reusable human feedback in `.codex/project_brain/HUMAN_FEEDBACK.md`.
+8. Report what remains unverified.
 
-Input: `ResearchBrief`, `StrategyBrief`.
-
-Output: `SiteSpec`.
-
-Must create customer-facing copy that is specific, short, and honest. It must include a strong hero, meaningful CTA, niche-fit sections, trust without fake proof, process, contacts, final CTA, and media choices. Generic AI phrases, fake reviews, fake numbers, fake staff, fake prices, and lorem ipsum are forbidden.
-
-## Builder
-
-Input: `SiteSpec`.
-
-Output: `site/index.html`, `site/assets/`.
-
-Uses a deterministic renderer to protect typography, spacing, contrast, mobile layout, and CTA consistency. The renderer may use real Instagram assets when available and must still build an honest site when assets are missing.
-
-## Visual Director / Critic
-
-Input: rendered site, screenshots, technical inspection, briefs.
-
-Output: `CritiqueReport`.
-
-Must inspect desktop and mobile. Delivery is blocked by technical gate failure, score below `88`, missing visual/business approval, or any `critical`/`high` issue.
-
-## Fixer
-
-Input: `CritiqueReport`, current `SiteSpec`.
-
-Output: updated `SiteSpec`.
-
-Must fix the actual problem: weak hero, wrong CTA, generic copy, missing niche logic, bad mobile, fake facts, poor hierarchy, or weak trust. CSS-only tweaks are insufficient for business/design issues.
-
-## Telegram Bot
-
-Start response:
-
-```text
-Окей, работа запущена.
-Напиши в Codex: го
-```
-
-Final response:
-
-```text
-Готово:
-
-Сайт:
-[public https site url]
-```
-
-No repository URL, local path, `file://` URL, progress log, report, HTML file, ZIP, or explanation is sent to the user unless verbose mode is explicitly enabled. The final response is sent only after production deployment and live verification succeed.
-
-## Development Agent Workflow
-
-The development workflow state lives in `.codex/workflow/`. Agents and reviewers pass state through these files, not through user-facing narration:
-
-- `GLOBAL_GOAL.md` - high-level product goal and acceptance criteria.
-- `GOAL.md` - current technical goal.
-- `GOAL_PROGRESS.md` - progress journal.
-- `NEXT_ACTION.md` - exactly one next action.
-- `SCENARIO_MATRIX.md` - happy, negative, adversarial, browser, backend, deployment scenarios.
-- `REVIEW_REPORT.md` - reviewer findings.
-- `RISK_REGISTER.md` - risks and mitigations.
-- `DECISIONS.md` - important decisions.
-- `DEPLOYMENT_CHECKLIST.md` - deploy and verification checklist.
-
-Use `.codex/skills/` roles for website project development: intake, context research, goal analysis, scenario design, planning, implementation, QA, frontend/backend review, design/content/brand/responsive/accessibility/SEO/performance review, live QA, failure analysis, deployment verification, acceptance audit, and handoff.
+Never expose secrets, `.env`, tokens, private run data, or local absolute paths in
+published sites or user-facing Telegram messages.
