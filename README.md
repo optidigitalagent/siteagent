@@ -216,3 +216,19 @@ python -m unittest tests.test_cloudflare_smoke -v
 `.codex/workflow/` is the project memory and dispatcher. `.codex/skills/` contains role instructions for goal intake, planning, implementation, QA, review, live verification, deployment, acceptance audit, and handoff.
 
 When the user says only `го` or `go`, Codex runs `python -m site_agent.cli go` and does not ask for the Instagram URL again.
+# Creative build modes
+
+New local production jobs default to `SITE_BUILDER=codex_studio`. The Python control plane
+prepares bounded evidence, runs the repository-owned `$siteagent-web-studio` workflow, validates
+the rendered output and then uses the existing publisher/Telegram delivery path. The optional IDE
+plugin lives in `plugins/siteagent-web-studio`; its source of truth remains `.agents/skills`, so
+runtime never depends on a manual Codex IDE install.
+
+`SITE_BUILDER=legacy_template` keeps the former Jinja renderer available solely for legacy
+compatibility and controlled tests. It is explicit: Studio failures are retryable and never fall
+back to Jinja. Studio artifacts live in `runs/<job_id>/studio/`, including the input package,
+concepts, screenshots, comparison, selected build and provenance.
+
+The rollout default `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` blocks production publishing
+after creative acceptance until a human has reviewed the real fixture comparison evidence. It does
+not affect the bot-only Railway runtime, which must not receive Codex/browser/Cloudflare settings.

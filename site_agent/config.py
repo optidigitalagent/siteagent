@@ -65,6 +65,12 @@ class Settings(BaseSettings):
         alias="TELEGRAM_INBOX_GIT_USER_EMAIL",
     )
     max_fix_iterations: int = Field(default=5, alias="MAX_FIX_ITERATIONS")
+    # New production jobs use the Codex-owned creative plane.  Jinja remains an
+    # explicit compatibility path only; a Studio failure must not fall back to it.
+    site_builder: str = Field(default="codex_studio", alias="SITE_BUILDER")
+    creative_studio_human_calibration_required: bool = Field(
+        default=True, alias="CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED"
+    )
     send_verbose_telegram_logs: bool = Field(default=False, alias="SEND_VERBOSE_TELEGRAM_LOGS")
     design_quality_pipeline_enabled: bool = Field(default=True, alias="DESIGN_QUALITY_PIPELINE_ENABLED")
     anti_template_enabled: bool = Field(default=True, alias="ANTI_TEMPLATE_ENABLED")

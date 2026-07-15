@@ -34,6 +34,7 @@ from site_agent.models import (
 )
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
+from site_agent.studio import CodexStudioRunner, StudioError
 
 
 class GenerationBlocked(RuntimeError):
@@ -65,6 +66,7 @@ class SiteAgentOrchestrator:
         self.acceptance_auditor = acceptance_auditor or AcceptanceAuditor()
         self.publisher = publisher or Publisher()
         self.skill_runtime = LocalSkillRuntime() if settings.external_skills_enabled else None
+        self.studio_runner = CodexStudioRunner() if settings.site_builder == "codex_studio" else None
 
     def run(
         self,
@@ -145,8 +147,31 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "03_site_spec_initial.json", spec)
         self._checkpoint(reports_dir, "generation_completed")
 
+        builder_mode = settings.site_builder.strip().lower()
+        if builder_mode not in {"codex_studio", "legacy_template"}:
+            raise GenerationBlocked("Unsupported SITE_BUILDER. Use codex_studio or legacy_template explicitly.")
+        studio_dir: Path | None = None
+        if builder_mode == "codex_studio":
+            assert self.studio_runner is not None
+            try:
+                studio_result = self.studio_runner.build(
+                    run_dir=run_dir,
+                    site_dir=site_dir,
+                    job_id=job_id,
+                    research=research,
+                    strategy=strategy,
+                    spec=spec,
+                    evidence=evidence,
+                    checkpoints=lambda *names: self._checkpoint(reports_dir, *names),
+                )
+            except StudioError as exc:
+                raise GenerationBlocked(f"codex_studio_failed_retryable: {exc}") from exc
+            studio_dir = studio_result.studio_dir
+
+        # This compatibility context is extracted for audit artifacts only after a Studio build.
+        # It is never passed to a Studio renderer or allowed to choose its composition.
         context = self._read_model(reports_dir / "04_builder_context.json", BuilderContext)
-        if context is None:
+        if context is None or builder_mode == "codex_studio":
             context = build_context(research, strategy, spec, skill_executions)
             write_json(reports_dir / "04_builder_context.json", context)
             write_json(reports_dir / "04_business_brief.json", context.business_brief)
@@ -168,13 +193,26 @@ class SiteAgentOrchestrator:
             if critique is None:
                 index_path = site_dir / "index.html"
                 if iteration != 1 or not index_path.is_file() or index_path.stat().st_size == 0:
-                    index_path = self.builder.build(
-                        site_dir=site_dir,
-                        research=research,
-                        strategy=strategy,
-                        spec=spec,
-                        design_context=context,
-                    )
+                    if builder_mode == "codex_studio":
+                        assert self.studio_runner is not None
+                        try:
+                            self.studio_runner.revise(
+                                run_dir=run_dir,
+                                site_dir=site_dir,
+                                critique_path=critiques_dir / f"critique_iteration_{iteration - 1}.json",
+                                checkpoints=lambda *names: self._checkpoint(reports_dir, *names),
+                                iteration=iteration,
+                            )
+                        except StudioError as exc:
+                            raise GenerationBlocked(f"codex_studio_fixer_failed_retryable: {exc}") from exc
+                    else:
+                        index_path = self.builder.build(
+                            site_dir=site_dir,
+                            research=research,
+                            strategy=strategy,
+                            spec=spec,
+                            design_context=context,
+                        )
                 write_json(reports_dir / f"site_spec_iteration_{iteration}.json", spec)
                 critique = self.critic_agent.run(
                     index_path=index_path,
@@ -186,6 +224,8 @@ class SiteAgentOrchestrator:
                 write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
             final_critique = critique
             self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
+            if builder_mode == "codex_studio":
+                self._checkpoint(reports_dir, "art_director_review_completed")
             quality = self._read_model(reports_dir / f"quality_report_iteration_{iteration}.json", QualityReport)
             if quality is None:
                 history = load_fingerprint_history(settings.runs_dir / "design_fingerprint_history.json", limit=settings.quality_history_limit) if settings.anti_template_enabled else []
@@ -199,6 +239,7 @@ class SiteAgentOrchestrator:
                     critique=critique,
                     site_dir=site_dir,
                     quality_report=quality,
+                    studio_dir=studio_dir,
                 )
                 write_json(reports_dir / "acceptance_audit.json", acceptance)
                 if not acceptance.approved:
@@ -206,6 +247,12 @@ class SiteAgentOrchestrator:
                         "Acceptance audit blocked deployment: " + "; ".join(acceptance.reasons)
                     )
                 self._checkpoint(reports_dir, "acceptance_completed")
+                if builder_mode == "codex_studio":
+                    self._checkpoint(reports_dir, "creative_acceptance_completed")
+                    if production and settings.creative_studio_human_calibration_required:
+                        raise GenerationBlocked(
+                            "creative_studio_human_calibration_required: fixture evidence must be approved before production rollout."
+                        )
                 publish = self.publisher.publish(
                     run_dir=run_dir,
                     site_dir=site_dir,

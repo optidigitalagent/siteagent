@@ -133,3 +133,16 @@ Live end-to-end verification requires local runtime credentials:
   error `Telegram success requires TELEGRAM_BOT_TOKEN.` The queue is `retryable` with
   notification state `unknown`, no receipt, and the recorded manual authorization timestamp.
   No Telegram success message was sent and the deployed site was not changed.
+
+## Creative Studio Migration (2026-07-15)
+
+- Audited the template boundary: `compose_page()` creates `PageComposition/SectionPlan` before
+  `SiteBuilder` renders `site.html.j2`, so the former path owns composition rather than Codex.
+- Added repository-owned Web Studio and review skills under `.agents/skills/`, plus the optional
+  validated `plugins/siteagent-web-studio` IDE mirror and stale-bundle checksum validation.
+- Added `SITE_BUILDER=codex_studio` default, isolated `runs/<job>/studio` inputs/concepts/reviews,
+  screenshot-first selection, atomic site promotion, Studio provenance, Art Director review and
+  a calibration flag that blocks production rollout. Jinja is explicit `legacy_template` only.
+- Deterministic Studio tests, full unittest discovery, compilation, pip check, skill/plugin
+  validation and the legacy smoke build pass. The real four-business Codex fixture suite is
+  opt-in through `CODEX_CREATIVE_E2E=1` and has not yet been visually approved.

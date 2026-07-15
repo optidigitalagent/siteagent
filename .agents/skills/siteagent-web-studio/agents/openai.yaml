@@ -1,0 +1,4 @@
+interface:
+  display_name: "SiteAgent Web Studio"
+  short_description: "Build bespoke evidence-grounded static websites."
+  default_prompt: "Use $siteagent-web-studio to create a distinctive evidence-grounded static business website."

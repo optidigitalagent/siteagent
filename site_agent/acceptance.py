@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -8,7 +9,14 @@ from site_agent.models import AcceptanceAuditResult, CritiqueReport
 
 
 class AcceptanceAuditor:
-    def audit(self, *, critique: CritiqueReport, site_dir: Path, quality_report: QualityReport | None = None) -> AcceptanceAuditResult:
+    def audit(
+        self,
+        *,
+        critique: CritiqueReport,
+        site_dir: Path,
+        quality_report: QualityReport | None = None,
+        studio_dir: Path | None = None,
+    ) -> AcceptanceAuditResult:
         index_path = site_dir / "index.html"
         index_present = index_path.is_file() and index_path.stat().st_size > 0
         reasons: list[str] = []
@@ -26,6 +34,27 @@ class AcceptanceAuditor:
             reasons.append("Built site/index.html is missing or empty.")
         if quality_report is not None and not quality_report.approved:
             reasons.extend(quality_report.blocking_reasons)
+        artifacts = ["critique", "site/index.html"] + (["quality_report"] if quality_report else [])
+        if studio_dir is not None:
+            required = (
+                studio_dir / "build_provenance.json",
+                studio_dir / "concept_reviews" / "comparison.json",
+                studio_dir / "concept_reviews" / "selected_concept.json",
+                studio_dir / "full_build_visuals" / "desktop.png",
+                studio_dir / "full_build_visuals" / "mobile.png",
+                studio_dir / "art_director_report.json",
+            )
+            missing = [str(item.relative_to(studio_dir)) for item in required if not item.is_file()]
+            if missing:
+                reasons.append("Studio acceptance artifacts are missing: " + ", ".join(missing))
+            else:
+                try:
+                    art_director = json.loads((studio_dir / "art_director_report.json").read_text(encoding="utf-8"))
+                    if art_director.get("approved") is not True:
+                        reasons.append("Art Director did not approve the screenshot-led Studio build.")
+                except (OSError, ValueError, AttributeError):
+                    reasons.append("Art Director report is unreadable.")
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots"])
 
         return AcceptanceAuditResult(
             approved=not reasons,
@@ -40,5 +69,5 @@ class AcceptanceAuditor:
             pipeline_schema_version=quality_report.pipeline_schema_version if quality_report else 1,
             category_scores=quality_report.category_scores if quality_report else {},
             quality_floors=quality_report.floors if quality_report else {},
-            artifacts_reviewed=["critique", "site/index.html"] + (["quality_report"] if quality_report else []),
+            artifacts_reviewed=artifacts,
         )
