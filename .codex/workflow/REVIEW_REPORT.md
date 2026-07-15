@@ -24,3 +24,13 @@ No critical or high implementation findings after local review.
 - The configured Git-backed inbox additionally refuses its pre-claim `git pull --rebase`
   while the current worktree has uncommitted changes. No changes were stashed, committed,
   or discarded during verification.
+
+## Night Yacht Creative Recovery Review (2026-07-15)
+
+The recovered `night_yacht` fixture is technically valid after atomic promotion of the pre-existing
+fixer staging revision. Fresh 1440x1100, 768x1024, and 390x844 TechnicalInspector evidence passes
+with no console errors, failed requests, broken links, missing images, undersized tap targets, or
+horizontal overflow. The follow-up Art Director report approves the `Evening field notes` build at
+90/100 and records no critical/high issue. A medium issue remains: the sole supplied image retains
+a daylit first read despite the darker crop/treatment. This does not clear the required human
+calibration gate; no deployment or Telegram action is authorized by this fixture evidence.

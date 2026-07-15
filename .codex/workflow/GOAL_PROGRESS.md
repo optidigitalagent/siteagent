@@ -146,3 +146,25 @@ Live end-to-end verification requires local runtime credentials:
 - Deterministic Studio tests, full unittest discovery, compilation, pip check, skill/plugin
   validation and the legacy smoke build pass. The real four-business Codex fixture suite is
   opt-in through `CODEX_CREATIVE_E2E=1` and has not yet been visually approved.
+
+## Night Yacht Crash Recovery (2026-07-15)
+
+- Recovered the existing `runs/creative-studio-e2e/night_yacht` workspace without running
+  Telegram, Cloudflare, other fixtures, the legacy Jinja renderer, or a new concept generation.
+- Confirmed Concept B, `Evening field notes`, was the recorded selection and reused the existing
+  A/B/C screenshots, comparison, selection rationale, selected source and initial final evidence.
+- The only interrupted stage was the existing creative-fixer promotion: its revised static files
+  were intact in `studio/selected/staging`, while the old history recorded an ACL blocker. The
+  source was readable after restart, so the staged revision was atomically promoted to both
+  `studio/selected/source` and `site`; metadata is in `studio/atomic_promotion.json`.
+- Re-rendered desktop (1440x1100), tablet (768x1024), and mobile (390x844); the technical gate
+  passed without console/network errors, broken links, missing images, small tap targets, or
+  horizontal overflow. The follow-up Art Director review approved the fixed output at 90/100 with
+  no critical/high findings. The sole unresolved medium issue is the supplied daylit yacht image's
+  residual daylight read.
+- Refreshed genuine fixer before/after evidence, the human calibration HTML/PNG package, and ran
+  `python -m site_agent.creative_fixture_e2e --resume night_yacht`; it returned
+  `completed_human_calibration_required` without another fixer iteration.
+- Verified `python -m unittest discover -s tests -v` (64 passed, 1 opt-in Cloudflare smoke
+  skipped), `python -m compileall -q site_agent scripts tests`, `python -m pip check`,
+  `python scripts/smoke_build.py`, and `git diff --check`.
