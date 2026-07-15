@@ -11,6 +11,16 @@ from site_agent.agents import FixerAgent, ResearchAgent, SiteSpecAgent, Strategy
 from site_agent.builder import SiteBuilder
 from site_agent.config import settings
 from site_agent.critic import CriticAgent
+from site_agent.design_quality import (
+    BuilderContext,
+    EvidenceAssessment,
+    QualityReport,
+    assess_evidence,
+    audit_quality,
+    build_context,
+    load_fingerprint_history,
+    record_fingerprint,
+)
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
 from site_agent.models import (
@@ -88,6 +98,14 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "01_research.json", research)
         self._checkpoint(reports_dir, "research_completed")
 
+        evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
+        if evidence is None:
+            evidence = assess_evidence(research)
+            write_json(reports_dir / "01_evidence_assessment.json", evidence)
+        self._checkpoint(reports_dir, "evidence_completed", "media_analysis_completed")
+        if settings.design_quality_pipeline_enabled and not evidence.build_allowed:
+            raise GenerationBlocked("insufficient_evidence: " + "; ".join(evidence.reasons))
+
         strategy = self._read_model(reports_dir / "02_strategy.json", StrategyBrief)
         if strategy is None:
             strategy = self.strategy_agent.run(research)
@@ -103,6 +121,18 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "03_site_spec_initial.json", spec)
         self._checkpoint(reports_dir, "generation_completed")
 
+        context = self._read_model(reports_dir / "04_builder_context.json", BuilderContext)
+        if context is None:
+            context = build_context(research, strategy, spec)
+            write_json(reports_dir / "04_builder_context.json", context)
+            write_json(reports_dir / "04_business_brief.json", context.business_brief)
+            write_json(reports_dir / "04_ux_architecture.json", context.ux_architecture)
+            write_json(reports_dir / "04_narrative_strategy.json", context.narrative)
+            write_json(reports_dir / "04_visual_directions.json", {"directions": [direction.model_dump() for direction in context.visual_directions], "selected": context.selected_visual_direction.name})
+            write_json(reports_dir / "04_design_system.json", context.design_system)
+            write_json(reports_dir / "04_media_manifest.json", {"media": [item.model_dump() for item in context.media_manifest]})
+        self._checkpoint(reports_dir, "strategy_artifacts_completed", "builder_context_completed")
+
         final_critique: CritiqueReport | None = None
         for iteration in range(1, settings.max_fix_iterations + 1):
             critique = self._read_model(
@@ -116,6 +146,7 @@ class SiteAgentOrchestrator:
                         research=research,
                         strategy=strategy,
                         spec=spec,
+                        design_context=context,
                     )
                 write_json(reports_dir / f"site_spec_iteration_{iteration}.json", spec)
                 critique = self.critic_agent.run(
@@ -128,10 +159,16 @@ class SiteAgentOrchestrator:
                 write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
             final_critique = critique
             self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
-            if critique.approved_for_delivery:
+            quality = self._read_model(reports_dir / f"quality_report_iteration_{iteration}.json", QualityReport)
+            if quality is None:
+                history = load_fingerprint_history(settings.runs_dir / "design_fingerprint_history.json", limit=settings.quality_history_limit) if settings.anti_template_enabled else []
+                quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history)
+                write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
+            if critique.approved_for_delivery and quality.approved:
                 acceptance = self.acceptance_auditor.audit(
                     critique=critique,
                     site_dir=site_dir,
+                    quality_report=quality,
                 )
                 write_json(reports_dir / "acceptance_audit.json", acceptance)
                 if not acceptance.approved:
@@ -146,6 +183,7 @@ class SiteAgentOrchestrator:
                     production=production,
                 )
                 write_json(reports_dir / "publish_result.json", publish)
+                record_fingerprint(settings.runs_dir / "design_fingerprint_history.json", quality.fingerprint, limit=settings.quality_history_limit)
                 self._checkpoint(reports_dir, "deployment_completed")
                 return JobResult(
                     job_id=job_id,
@@ -157,6 +195,8 @@ class SiteAgentOrchestrator:
                 reports_dir / f"site_spec_iteration_{iteration + 1}.json", SiteSpec
             )
             spec = next_spec or self._fix(research, strategy, spec, critique)
+            context = build_context(research, strategy, spec)
+            write_json(reports_dir / "04_builder_context.json", context)
             self._checkpoint(reports_dir, "fixer_completed")
 
         assert final_critique is not None

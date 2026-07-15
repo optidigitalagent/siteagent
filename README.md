@@ -1,5 +1,45 @@
 # site-agent / website-agent
 
+## Design-quality pipeline
+
+New runs use pipeline schema v2 before the existing publisher: research →
+evidence/media assessment → business brief and UX/story contracts → three visual
+directions → selected token system and responsive contract → deterministic build
+→ browser technical inspection + critic council → acceptance audit → the existing
+Cloudflare and Telegram delivery sequence. The pipeline never silently falls
+back to a generic generator: Level C evidence is recorded as
+`insufficient_evidence` and cannot publish; Level B is an intentionally
+text-led, honest contact path rather than an empty multi-section page.
+
+Artifacts are written beneath `runs/<job>/generation_reports/`, notably
+`01_evidence_assessment.json`, `04_business_brief.json`,
+`04_ux_architecture.json`, `04_narrative_strategy.json`,
+`04_visual_directions.json`, `04_design_system.json`,
+`04_media_manifest.json`, `04_builder_context.json`, and a quality report per
+iteration. Schema v1 artifacts remain valid for completed legacy jobs.
+
+Quality is category-gated: business, UX, story, design, copy, accessibility,
+responsive, anti-template, and technical floors must all pass. A high/critical
+issue, unsupported claim, placeholder phrase, or repeated full-layout
+fingerprint blocks deployment even if the technical score is high.
+
+### Pinned design skills
+
+The reviewed, vendored sources live in `.agents/skills/`; production reads only
+those local copies and never remote `main`. Their sources, SHA commits, checksums
+and review date are in `.agents/skills/skills.lock.json`: `frontend-design`
+(Anthropic), `ui-ux-pro-max` (NextLevelBuilder), and
+`web-design-guidelines` (Vercel Labs). To update one, review the pinned source,
+vendor it locally, recalculate its checksum, update the lock, validate the
+ui-ux data script, and run the complete test suite. These skills are guidance;
+they do not supply runtime credentials or execute remote scripts during a job.
+
+Internal contracts are under `.codex/skills/siteagent-*`. Add a critic by
+recording its inputs, deterministic evidence, failure conditions and acceptance
+condition, then add its floor in `site_agent/design_quality.py` and a focused
+test. Add a fixture by using only deterministic evidence and assert its
+fingerprint, CTA, structure and gate outcome.
+
 Autonomous website agent for turning one Instagram business link into a published commercial website.
 
 ## Telegram + Codex Flow

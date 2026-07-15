@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     )
     max_fix_iterations: int = Field(default=5, alias="MAX_FIX_ITERATIONS")
     send_verbose_telegram_logs: bool = Field(default=False, alias="SEND_VERBOSE_TELEGRAM_LOGS")
+    design_quality_pipeline_enabled: bool = Field(default=True, alias="DESIGN_QUALITY_PIPELINE_ENABLED")
+    anti_template_enabled: bool = Field(default=True, alias="ANTI_TEMPLATE_ENABLED")
+    evidence_gate_enabled: bool = Field(default=True, alias="EVIDENCE_GATE_ENABLED")
+    external_skills_enabled: bool = Field(default=True, alias="EXTERNAL_SKILLS_ENABLED")
+    design_directions_count: int = Field(default=3, alias="DESIGN_DIRECTIONS_COUNT")
+    quality_history_limit: int = Field(default=10, alias="QUALITY_HISTORY_LIMIT")
+    accessibility_standard: str = Field(default="WCAG_2_2_AA", alias="ACCESSIBILITY_STANDARD")
 
 
 settings = Settings()

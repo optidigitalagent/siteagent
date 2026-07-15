@@ -1,0 +1,37 @@
+{
+  "lock_schema_version": 1,
+  "reviewed_at": "2026-07-15",
+  "checksum_algorithm": "sha256(concatenated sorted file sha256 values)",
+  "skills": [
+    {
+      "name": "frontend-design",
+      "source_repository": "https://github.com/anthropics/skills",
+      "source_commit": "9d2f1ae187231d8199c64b5b762e1bdf2244733d",
+      "installed_path": ".agents/skills/frontend-design",
+      "checksum": "645d81f4a33e30a64576c2503a810f9f10efdd12df76282766f067a6c0d38996",
+      "reviewed_at": "2026-07-15",
+      "enabled": true,
+      "runtime": "local-vendored-only"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source_repository": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "f8ac5e1266dba8354ea96e19994d9f4345e7ec31",
+      "installed_path": ".agents/skills/ui-ux-pro-max",
+      "checksum": "546cfe0c6fe1e93a6ea374dbc97293c1610d03d7678fc903b844515e31b1260a",
+      "reviewed_at": "2026-07-15",
+      "enabled": true,
+      "runtime": "local-vendored-only"
+    },
+    {
+      "name": "web-design-guidelines",
+      "source_repository": "https://github.com/vercel-labs/agent-skills",
+      "source_commit": "f8a72b9603728bb92a217a879b7e62e43ad76c81",
+      "installed_path": ".agents/skills/web-design-guidelines",
+      "checksum": "138f7aeae6c3f68a20138a22146e6f4730a1fffd4b86f3c69743bfe5ef071cd3",
+      "reviewed_at": "2026-07-15",
+      "enabled": true,
+      "runtime": "local-vendored-only"
+    }
+  ]
+}

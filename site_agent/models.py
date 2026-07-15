@@ -149,6 +149,10 @@ class AcceptanceAuditResult(BaseModel):
     index_present: bool
     reasons: list[str] = Field(default_factory=list)
     audited_at: str
+    pipeline_schema_version: int = 1
+    category_scores: dict[str, int] = Field(default_factory=dict)
+    quality_floors: dict[str, int] = Field(default_factory=dict)
+    artifacts_reviewed: list[str] = Field(default_factory=list)
 
 
 class DeploymentResult(BaseModel):

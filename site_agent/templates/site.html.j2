@@ -8,15 +8,15 @@
   <meta name="siteagent-business-id" content="{{ siteagent_business_id }}">
   <style>
     :root {
-      --ink: #151515;
+      --ink: {{ design_tokens.get('ink', '#151515') }};
       --muted: #5d625f;
       --line: #dedbd4;
-      --paper: #fbfaf7;
+      --paper: {{ design_tokens.get('paper', '#fbfaf7') }};
       --panel: #f1eee7;
-      --accent: #8e3f2d;
-      --accent-2: #315c55;
+      --accent: {{ design_tokens.get('accent', '#8e3f2d') }};
+      --accent-2: {{ design_tokens.get('accent_2', '#315c55') }};
       --white: #ffffff;
-      --radius: 8px;
+      --radius: {{ design_tokens.get('radius', '8px') }};
       --max: 1120px;
       color-scheme: light;
     }

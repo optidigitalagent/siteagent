@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from site_agent.identifiers import stable_business_id
 from site_agent.models import MediaAsset, ResearchBrief, SiteSpec, StrategyBrief
+from site_agent.design_quality import BuilderContext
 
 
 class SiteBuilder:
@@ -29,6 +30,7 @@ class SiteBuilder:
         research: ResearchBrief,
         strategy: StrategyBrief,
         spec: SiteSpec,
+        design_context: BuilderContext | None = None,
     ) -> Path:
         site_dir.mkdir(parents=True, exist_ok=True)
         assets_dir = site_dir / "assets"
@@ -52,6 +54,9 @@ class SiteBuilder:
             ),
             sparse=self._has_sparse_evidence(research),
             siteagent_business_id=stable_business_id(research.instagram_url),
+            design_tokens=(design_context.design_system.tokens if design_context else {}),
+            visual_direction=(design_context.selected_visual_direction.name if design_context else ""),
+            journey_pattern=(design_context.ux_architecture.pattern if design_context else ""),
         )
         index_path = site_dir / "index.html"
         index_path.write_text(html, encoding="utf-8")
