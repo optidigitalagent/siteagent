@@ -355,6 +355,12 @@ def audit_quality(spec: SiteSpec, context: BuilderContext, *, technical_passed: 
     if any(term in text for term in generic): issues.append(QualityIssue(category="copy", severity="high", evidence="generic/placeholder phrase", violated_contract="conversion copy", acceptance_condition="replace with evidence-grounded copy"))
     if context.evidence.level == EvidenceLevel.C: issues.append(QualityIssue(category="business", severity="critical", evidence="insufficient evidence", violated_contract="evidence gate", acceptance_condition="obtain sufficient verified facts"))
     if not spec.h1 or not spec.primary_cta or not spec.sections: issues.append(QualityIssue(category="story", severity="high", evidence="missing thesis, action, or content", violated_contract="storyboard", acceptance_condition="complete the approved narrative"))
+    placeholder_like = spec.h1.strip().lower() in {"welcome", "hello", "instagram"} or ("generic" in text and len(spec.sections) < 2)
+    if placeholder_like:
+        issues.extend([
+            QualityIssue(category="business", severity="high", evidence="placeholder-like business proposition", violated_contract="business clarity", acceptance_condition="state one verified offer and customer decision"),
+            QualityIssue(category="design", severity="high", evidence="placeholder-like visual direction", violated_contract="visual direction", acceptance_condition="use a business-specific signature element"),
+        ])
     if not context.page_composition.signature_element: issues.append(QualityIssue(category="design", severity="high", evidence="missing signature element", violated_contract="visual direction", acceptance_condition="select and render signature"))
     if any(claim.lower() in text for claim in context.prohibited_claims if len(claim) > 3): issues.append(QualityIssue(category="copy", severity="high", evidence="prohibited claim rendered", violated_contract="evidence research", acceptance_condition="remove unsupported claim"))
     fp = fingerprint(spec, context)
