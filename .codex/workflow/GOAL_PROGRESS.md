@@ -1,5 +1,14 @@
 ﻿# Goal Progress
 
+## Integrity Follow-up (2026-07-15)
+
+- Re-synchronized the optional `siteagent-web-studio` plugin mirror from the
+  repository-owned `.agents/skills` source without changing production skill
+  resolution or checksum validation.
+- Made the Global Goal contract test whitespace-normalized so Markdown wrapping
+  cannot hide the current Codex Creative Studio production contract, while
+  preserving its assertion against the legacy deterministic build wording.
+
 ## Structural Composition Remediation (2026-07-15)
 
 - Replaced the fixed renderer content sequence with validated `PageComposition` and typed `SectionPlan` artifacts.

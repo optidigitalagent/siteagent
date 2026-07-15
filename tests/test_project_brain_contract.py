@@ -33,8 +33,9 @@ class ProjectBrainContractTests(unittest.TestCase):
 
     def test_global_goal_does_not_describe_legacy_pipeline_as_current(self) -> None:
         goal = (ROOT / ".codex/workflow/GLOBAL_GOAL.md").read_text(encoding="utf-8-sig")
-        self.assertIn("Codex Creative Studio", goal)
-        self.assertNotIn("deterministic build", goal)
+        normalized_goal = " ".join(goal.split())
+        self.assertIn("Codex Creative Studio", normalized_goal)
+        self.assertNotIn("deterministic build", normalized_goal)
 
     def test_reference_schema_is_valid_json(self) -> None:
         data = json.loads(

@@ -3,6 +3,14 @@
 This file records reusable lessons from manual reviews. Add new lessons; do not
 rewrite history to make previous failures look successful.
 
+## Repository integrity follow-up
+
+- `.agents/skills` remains the creative-skill source of truth. Any plugin mirror
+  update must be synchronized from it; checksum validation must remain strict.
+- Workflow-document semantic checks must normalize Markdown whitespace before
+  asserting prose phrases, while retaining the underlying production-contract
+  assertion.
+
 ## Infrastructure lessons
 
 - Telegram → local Codex → Cloudflare → Telegram works and must not regress.
