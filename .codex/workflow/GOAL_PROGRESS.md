@@ -1,5 +1,21 @@
 ﻿# Goal Progress
 
+## Autonomous reference-discovery migration (2026-07-16)
+
+- Invalidated `references/site_designs/human_review/human_review_decisions.json` as accidental
+  historical input. The diagnostic page no longer exports decisions and the active workflow no
+  longer has a human reference-review checkpoint.
+- Added `ReferenceDiscoveryAgent`, award-gallery adapters, original-live URL resolution,
+  screenshot completeness/blank/404/redirect validation, bounded learning scope, Curator/Auditor
+  decisions, visual near-duplicate suppression, separate active/excluded decisions and
+  active-only integrity-checked selection.
+- Refreshed from Awwwards through read-only local browser capture and screenshot analysis. The
+  catalog now records 32 active high-confidence references and eight excluded records; Orange's
+  broken redirect capture and the Kirkovsky GitHub Pages 404 are excluded automatically.
+- No `go`, Telegram, Cloudflare, publishing or calibration run occurred. Orange Beauty Studio and
+  Bella Dent Clinic remain blocked pending source research, authorised business-media manifests
+  and Cloudinary configuration; reference assets cannot substitute for those inputs.
+
 ## Integrity Follow-up (2026-07-15)
 
 - Re-synchronized the optional `siteagent-web-studio` plugin mirror from the
@@ -336,3 +352,33 @@ Live end-to-end verification requires local runtime credentials:
   `REFERENCE_LIBRARY_IMPORTED_READY_FOR_HUMAN_REVIEW`.
 - No `go`, Telegram, Cloudflare, publishing, Orange Beauty Studio, Bella Dent Clinic, or
   human-calibration-gate action was performed.
+
+## Local human review package (2026-07-16)
+
+- Created a local-only, regenerated human-review package from the already saved reference
+  artifacts: `references/site_designs/human_review/index.html`,
+  `references/site_designs/human_review/trait_matrix.html`, and a separate seed
+  `human_review_decisions.json`. Original imported `reference.json` records and screenshots
+  remain immutable inputs; review controls export decisions separately and do not rerun AI
+  analysis or access source sites.
+- The index exposes the 25 completed analyses, catalog checksum/import date, Reference Analyst
+  provenance, exact stored SHA-256 capture-pair recheck, the three resumable 45-second
+  `networkidle` capture timeouts, per-record desktop/mobile screenshots and full visual-analysis
+  fields, transferable traits, learnings, and non-copy constraints. All package navigation and
+  image references are local; source URLs are visible/copyable but not live links.
+- The trait matrix uses transparent rule-derived cross-category filters rather than business
+  categories. It deliberately shows a horizontally scrollable table only inside its bounded
+  matrix container, preserving viewport width on narrow screens.
+- Independent artifact/UX review identified and the package visibly flags the Kirkovsky GitHub
+  Pages 404, Orange Beauty Studio's blank/unrendered desktop capture, and mobile-file width
+  mismatches for Panem, Hollywood 2, Kafe Speka, and Kirkovsky. These are selection safeguards,
+  not silently accepted reference quality.
+- Verification: `python -m compileall -q scripts/build_reference_human_review.py`, generator
+  run plus `--check`, all 50 expected local capture files rehashed against catalog values,
+  static local-link/image and secret-pattern checks, and local Playwright desktop/tablet/mobile
+  viewport checks of both pages passed with no document horizontal overflow, console errors, or
+  failed requests. Inspected desktop/mobile index and mobile trait-matrix screenshots. The
+  full-page screenshot helper cannot rasterize this deliberately very tall 25-record board as a
+  single bitmap, so viewport screenshot evidence is the applicable browser artifact.
+- Stop checkpoint: `HUMAN_REFERENCE_LIBRARY_REVIEW`. No `go`, Telegram, Cloudflare, publishing,
+  Orange Beauty Studio, or Bella Dent Clinic action was performed.

@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from site_agent.config import settings
 from site_agent.llm import LLMClient, StructuredOutputError
+from site_agent.reference_discovery import ReferenceDiscoveryAgent, write_decisions
 from site_agent.workflow import checksum
 
 SEED_URLS = (
@@ -146,26 +147,30 @@ class ReferenceImporter:
     def __init__(
         self, root: Path = Path("references/site_designs"), *, analyst: ScreenshotAnalyst | None = None,
         seeds: tuple[str, ...] = SEED_URLS, max_browser_restarts: int = 3,
+        discovery: ReferenceDiscoveryAgent | None = None, refresh_discovery: bool = False, discovery_limit_per_source: int = 8,
     ) -> None:
         self.root, self.analyst, self.seeds = root, analyst, seeds
         self.max_browser_restarts = max_browser_restarts
+        self.discovery, self.refresh_discovery, self.discovery_limit_per_source = discovery, refresh_discovery, discovery_limit_per_source
+        self._discovery_by_original: dict[str, dict[str, Any]] = {}
 
     def run(self) -> dict:
         self.root.mkdir(parents=True, exist_ok=True)
+        sources = self._sources_for_run()
         warnings: list[dict[str, str]] = []
         restart_counts: dict[str, int] = {}
         browser_restarts = 0
         browser = None
         try:
             with sync_playwright() as playwright:
-                for source in self.seeds:
+                for source in sources:
                     url = normalize_url(source)
                     item_id = reference_id(url)
                     while True:
                         try:
                             if self._needs_capture(url) and browser is None:
                                 browser = playwright.chromium.launch()
-                            result = self._import_one(browser, url, cleanup_warnings=warnings)
+                            result = self._import_one(browser, url, cleanup_warnings=warnings, discovery=self._discovery_by_original.get(url))
                             self._checkpoint(warnings=warnings, restart_counts=restart_counts)
                             break
                         except BrowserDisconnected as exc:
@@ -189,6 +194,23 @@ class ReferenceImporter:
             self._safe_close(browser, warnings, "browser_close_finally")
             catalog = self._finalize_catalog(warnings=warnings, restart_counts=restart_counts)
         return catalog
+
+    def _sources_for_run(self) -> tuple[str, ...]:
+        """Refresh award discovery without ever replacing saved raw records."""
+        sources = list(self.seeds)
+        if not self.refresh_discovery:
+            return tuple(sources)
+        discovery = self.discovery or ReferenceDiscoveryAgent()
+        findings = discovery.discover(limit_per_source=self.discovery_limit_per_source)
+        _write_json_atomic(self.root / "discovery_candidates.json", {
+            "schema_version": 1, "generated_at": _timestamp(), "candidates": findings,
+        })
+        for item in findings:
+            if item.get("status") == "resolved" and item.get("original_url"):
+                original = normalize_url(str(item["original_url"]))
+                self._discovery_by_original[original] = item
+                sources.append(original)
+        return tuple(dict.fromkeys(normalize_url(item) for item in sources))
 
     def _safe_close(self, resource: Any, warnings: list[dict[str, str]], stage: str) -> None:
         if resource is None:
@@ -247,10 +269,16 @@ class ReferenceImporter:
     def _finalize_catalog(self, *, warnings: list[dict[str, str]], restart_counts: dict[str, int]) -> dict:
         records = self._saved_records()
         state = self._state(records)
+        decisions = write_decisions(self.root, records)
+        active_ids = {item["reference_id"] for item in decisions["decisions"] if item["decision"] == "active"}
+        excluded_ids = {item["reference_id"] for item in decisions["decisions"] if item["decision"] == "excluded"}
         catalog = {
             "schema_version": 3, "generated_at": _timestamp(), "references": records, **state,
             "cleanup_warnings": warnings, "browser_restart_counts": restart_counts,
-            "status": "REFERENCE_LIBRARY_IMPORTED_READY_FOR_HUMAN_REVIEW" if len(state["completed"]) >= 3 else "REFERENCE_LIBRARY_IMPORT_BLOCKED",
+            "decision_artifact": "reference_decisions.json", "active_reference_ids": sorted(active_ids),
+            "excluded_reference_ids": sorted(excluded_ids), "active_reference_count": len(active_ids),
+            "excluded_reference_count": len(excluded_ids),
+            "status": decisions["status"],
         }
         catalog["catalog_checksum"] = checksum(catalog)
         _write_json_atomic(self.root / "catalog.json", catalog)
@@ -259,6 +287,7 @@ class ReferenceImporter:
             "capture_failed": state["capture_failed"], "not_started": state["not_started"],
             "cleanup_warnings": warnings, "browser_restart_counts": restart_counts,
             "retry_counts": state["retry_counts"], "failures": state["failures"], "status": catalog["status"],
+            "active_reference_count": len(active_ids), "excluded_reference_count": len(excluded_ids),
         }
         _write_json_atomic(self.root / "import_report.json", report)
         return catalog
@@ -309,16 +338,34 @@ class ReferenceImporter:
 
     def _capture(self, browser: Any, url: str, desktop_path: Path, mobile_path: Path, warnings: list[dict[str, str]]) -> tuple[str, str, dict[str, Any]]:
         desktop = mobile = None
+        failed_assets: list[dict[str, str]] = []
+        def observe_failure(request: Any) -> None:
+            try:
+                kind = str(request.resource_type)
+                if kind in {"document", "stylesheet", "script", "image", "font"}:
+                    failed_assets.append({"resource_type": kind, "url": _safe_error(str(request.url), limit=300)})
+            except Exception:
+                return
         try:
             desktop = browser.new_page(viewport={"width": 1440, "height": 1100})
             mobile = browser.new_page(viewport={"width": 390, "height": 844}, is_mobile=True)
-            desktop.goto(url, wait_until="networkidle", timeout=45_000)
+            if callable(getattr(desktop, "on", None)):
+                desktop.on("requestfailed", observe_failure)
+            if callable(getattr(mobile, "on", None)):
+                mobile.on("requestfailed", observe_failure)
+            desktop_response = desktop.goto(url, wait_until="domcontentloaded", timeout=45_000)
+            if callable(getattr(desktop, "wait_for_timeout", None)):
+                desktop.wait_for_timeout(1500)
             title = desktop.title() or desktop_path.parent.name
             desktop.screenshot(path=str(desktop_path), full_page=True)
-            mobile.goto(url, wait_until="networkidle", timeout=45_000)
+            mobile_response = mobile.goto(url, wait_until="domcontentloaded", timeout=45_000)
+            if callable(getattr(mobile, "wait_for_timeout", None)):
+                mobile.wait_for_timeout(1500)
             mobile.screenshot(path=str(mobile_path), full_page=True)
             capture = {
                 "captured_at": _timestamp(), "final_url": desktop.url,
+                "http_status": {"desktop": getattr(desktop_response, "status", None), "mobile": getattr(mobile_response, "status", None)},
+                "failed_critical_assets": failed_assets[:30],
                 "screenshots": {"desktop.png": _file_hash(desktop_path), "mobile.png": _file_hash(mobile_path)},
                 "browser_viewports": {"desktop": [1440, 1100], "mobile": [390, 844]},
             }
@@ -340,7 +387,7 @@ class ReferenceImporter:
         _write_json_atomic(path, payload)
         return {"path": RAW_RESPONSE_FILE, "sha256": _file_hash(path), "repair_count": repair_count}
 
-    def _import_one(self, browser: Any, url: str, *, cleanup_warnings: list[dict[str, str]] | None = None) -> dict:
+    def _import_one(self, browser: Any, url: str, *, cleanup_warnings: list[dict[str, str]] | None = None, discovery: dict[str, Any] | None = None) -> dict:
         warnings = cleanup_warnings if cleanup_warnings is not None else []
         folder = self.root / reference_id(url)
         folder.mkdir(parents=True, exist_ok=True)
@@ -374,6 +421,8 @@ class ReferenceImporter:
                 "screenshot_paths": ["desktop.png", "mobile.png"], "capture_status": "captured", "analysis_status": "completed",
                 "capture": capture, "analysis": analysis, "analysis_provenance": provenance, **analysis,
             }
+            if discovery:
+                result["discovery"] = {key: value for key, value in discovery.items() if key not in {"reason"}}
             result["content_hash"] = checksum({"capture": capture, "analysis": analysis})
         except ReferenceAnalysisError as exc:
             debug = self._write_raw_responses(folder, exc.raw_responses, exc.repair_count)
@@ -397,7 +446,12 @@ class ReferenceImporter:
 
 
 def main() -> None:
-    print(json.dumps(ReferenceImporter().run(), ensure_ascii=False, indent=2))
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Import and autonomously curate screenshot-led web references.")
+    parser.add_argument("--refresh-discovery", action="store_true", help="Fetch award sources, resolve original live sites, and resume their import.")
+    options = parser.parse_args()
+    print(json.dumps(ReferenceImporter(refresh_discovery=options.refresh_discovery).run(), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

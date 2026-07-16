@@ -1,0 +1,148 @@
+{
+  "id": "eurozet-ua",
+  "title": "Стоматологія ЄВРОЗЕТ у Києві — Оболонь та Позняки",
+  "source_url": "https://eurozet.ua/",
+  "normalized_url": "https://eurozet.ua/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:12:05.795729+00:00",
+    "final_url": "https://eurozet.ua/",
+    "screenshots": {
+      "desktop.png": "94fec9a1347ced50d5b04beee79d3c252a22453a5aab1088e0d7166149318456",
+      "mobile.png": "79c9090f17dfc2b7abcb587153bf903c374f6416d7fcf4198df33284aa412ca8"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "This is a website for ЄВРОЗЕТ, a modern dental clinic network in Kyiv, with branches in Obolon and Pozniaky. Its aim is to present medical, contact, and trust-building information to prospective clients.",
+    "audience": "Primary audiences are local Ukrainian residents seeking dental care, families, and insurance-supported patients. Secondary audience includes partners and insurers.",
+    "conversion_goal": "The top CTAs signal that the primary goal is to encourage users to make contact—call the clinic or book an appointment online. Secondary conversion goals include information consumption (reading about services, doctors, and insurance partners).",
+    "first_viewport_logic": "The first viewport combines a recognizable, friendly video thumbnail with a brief intro and immediate action CTAs ('Call' or 'Book appointment'). Essential credibility elements (logo, phone, and social icons) are placed in the header, providing reassurance and easy access from the outset.",
+    "information_architecture": [
+      "Header with logo, navigation, contact and social links.",
+      "Hero section with video and intro text plus CTAs.",
+      "Service categories presented in distinct cards with icons.",
+      "Doctors carousel with images and bio snippets.",
+      "Contact cards for both clinic locations.",
+      "Insurance partners slider.",
+      "Reassurance / trust-building textual content.",
+      "Footer with navigation, privacy, and contact/social reiteration."
+    ],
+    "narrative_storytelling": "The narrative prioritizes trust and professionalism: starts with an immediate invitation to connect, moves into clear service breakdowns, introduces doctors as individuals, highlights partners, and ends on detailed, practical info about convenience and guarantees, reinforcing reliability throughout the scroll.",
+    "composition_grid": "Desktop uses a strict card-based grid with strong vertical and horizontal alignment; cards are evenly spaced and center-aligned in larger viewports. Mobile collapses to a single column, stacking cards, maintaining breathing room and clear separation.",
+    "spacing_rhythm": "Wide, consistent white space between sections and cards on desktop gives a modern, uncluttered look. Card padding and section spacing are generous. On mobile, vertical stacking maintains this rhythm with slightly reduced gutter, but enough whitespace to prevent crowding.",
+    "typography": "Clean, sans-serif font family. Clear hierarchy—a large, bold hero headline, medium-weight titles for sections and cards. Body text is legible at small sizes with sufficient leading. All-caps and bolding reserved for calls to action and headings. Specialty color is used for links and action points only.",
+    "palette_contrast": "Predominantly white and blue; dark navy for headers/footers provides high contrast for text. CTA buttons and icons employ a pale blue/accent for action and highlights. Black or dark grey is reserved for primary text, and very light grey for card backgrounds, aiding separation without harshness.",
+    "media_treatment": "Uses a friendly, relevant hero video thumbnail (with overlay play button) to humanize care. Service categories use lightweight, line-style icons in blue to reinforce clarity without overwhelming. Doctors’ photos are professional, well-lit, and set against uncluttered backgrounds, reflecting expertise and approachability.",
+    "motion_interaction": "Doctors and insurance partners carousels use horizontal sliding transitions with subtle arrows as indicators. No unnecessary animation; motion is used only for sliding content. Hover effects (such as shadow or underline) on interactive elements on desktop; tap feedback for CTAs/buttons on mobile.",
+    "cta_strategy": "Primary CTAs ('Book Appointment' and 'Call') are repeated at the top with high visibility, styled as prominent buttons. Secondary CTAs are placed per section—e.g., under each doctor for details, under contacts for navigation/appointments, and insurance slider for partner engagement.",
+    "desktop_behavior": "Cards are organized in a three-column grid. Doctor and partner carousels use horizontal scrolling with arrows. Hover effects provide visual feedback on CTA buttons. Contact details and insurance logos adapt to wider viewport with distributed alignment.",
+    "mobile_behavior": "Navigation switches to a hamburger menu. All grid elements stack vertically in one column for full-width touch accessibility. Carousels adapt to swipe, and CTAs/buttons are sized for thumb use. Spacing and visuals remain readable and tap-friendly.",
+    "learn": [
+      "Use video/still in hero to foster trust; pair with succinct intro and immediate actionable CTAs.",
+      "Service breakdown in clear, icon-led card grid for fast scanning.",
+      "Humanize clinic by prioritizing real doctor profiles, presented as a carousel on both desktop and mobile.",
+      "Trust cues (insurer/partner logos, guarantees, location info) placed logically lower in the scroll to reinforce decision-making."
+    ],
+    "do_not_copy": [
+      "Avoid over-crowding cards in mobile conversions—don't collapse into unreadably dense layouts.",
+      "Refrain from generic, stock imagery for doctors—real staff photos are essential for credibility.",
+      "Don't use crowded navigation; this example maintains only essentials in header and footer.",
+      "Do not hide essential contact CTAs behind hamburger or at page bottom on mobile."
+    ],
+    "reusable_cross_category_traits": [
+      "Visual hierarchy via strong section separation and card-based layouts.",
+      "Primary CTAs repeated and always actionable at both top and in-contact sections.",
+      "Humanized, approachable imagery paired with clean iconography.",
+      "Insurance/partner logos in a minimal carousel to emphasize trust without overcrowding."
+    ],
+    "traits": [
+      "Card-based, modular design for services and staff.",
+      "Palette emphasizing clinical professionalism (white/blue/dark blue tones).",
+      "Information progressively disclosed: starting with invite/overview, then depth by section.",
+      "Minimal motion, only used for carousels and CTA feedback.",
+      "Typography and iconography are accessible and clean throughout."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "65600e450750576314e40c92067116341166eb87783d15b73ac66cef74fdf55c",
+    "input_checksum": "3daa10e1e99ce9e142dcf646c0276b43398f9ab16cf06197371af3e2f77c0708",
+    "output_checksum": "90d9b7df7c344a69d531856af958853da65c5d1a9e78c6ce32e80a7939ba7123",
+    "timestamp": "2026-07-16T17:12:44.998185+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "a76e29d295425e6b90e826fa7c23de39f8344ac49ad02e86c3d8d2b8e0000d2c",
+      "repair_count": 0
+    }
+  },
+  "business_context": "This is a website for ЄВРОЗЕТ, a modern dental clinic network in Kyiv, with branches in Obolon and Pozniaky. Its aim is to present medical, contact, and trust-building information to prospective clients.",
+  "audience": "Primary audiences are local Ukrainian residents seeking dental care, families, and insurance-supported patients. Secondary audience includes partners and insurers.",
+  "conversion_goal": "The top CTAs signal that the primary goal is to encourage users to make contact—call the clinic or book an appointment online. Secondary conversion goals include information consumption (reading about services, doctors, and insurance partners).",
+  "first_viewport_logic": "The first viewport combines a recognizable, friendly video thumbnail with a brief intro and immediate action CTAs ('Call' or 'Book appointment'). Essential credibility elements (logo, phone, and social icons) are placed in the header, providing reassurance and easy access from the outset.",
+  "information_architecture": [
+    "Header with logo, navigation, contact and social links.",
+    "Hero section with video and intro text plus CTAs.",
+    "Service categories presented in distinct cards with icons.",
+    "Doctors carousel with images and bio snippets.",
+    "Contact cards for both clinic locations.",
+    "Insurance partners slider.",
+    "Reassurance / trust-building textual content.",
+    "Footer with navigation, privacy, and contact/social reiteration."
+  ],
+  "narrative_storytelling": "The narrative prioritizes trust and professionalism: starts with an immediate invitation to connect, moves into clear service breakdowns, introduces doctors as individuals, highlights partners, and ends on detailed, practical info about convenience and guarantees, reinforcing reliability throughout the scroll.",
+  "composition_grid": "Desktop uses a strict card-based grid with strong vertical and horizontal alignment; cards are evenly spaced and center-aligned in larger viewports. Mobile collapses to a single column, stacking cards, maintaining breathing room and clear separation.",
+  "spacing_rhythm": "Wide, consistent white space between sections and cards on desktop gives a modern, uncluttered look. Card padding and section spacing are generous. On mobile, vertical stacking maintains this rhythm with slightly reduced gutter, but enough whitespace to prevent crowding.",
+  "typography": "Clean, sans-serif font family. Clear hierarchy—a large, bold hero headline, medium-weight titles for sections and cards. Body text is legible at small sizes with sufficient leading. All-caps and bolding reserved for calls to action and headings. Specialty color is used for links and action points only.",
+  "palette_contrast": "Predominantly white and blue; dark navy for headers/footers provides high contrast for text. CTA buttons and icons employ a pale blue/accent for action and highlights. Black or dark grey is reserved for primary text, and very light grey for card backgrounds, aiding separation without harshness.",
+  "media_treatment": "Uses a friendly, relevant hero video thumbnail (with overlay play button) to humanize care. Service categories use lightweight, line-style icons in blue to reinforce clarity without overwhelming. Doctors’ photos are professional, well-lit, and set against uncluttered backgrounds, reflecting expertise and approachability.",
+  "motion_interaction": "Doctors and insurance partners carousels use horizontal sliding transitions with subtle arrows as indicators. No unnecessary animation; motion is used only for sliding content. Hover effects (such as shadow or underline) on interactive elements on desktop; tap feedback for CTAs/buttons on mobile.",
+  "cta_strategy": "Primary CTAs ('Book Appointment' and 'Call') are repeated at the top with high visibility, styled as prominent buttons. Secondary CTAs are placed per section—e.g., under each doctor for details, under contacts for navigation/appointments, and insurance slider for partner engagement.",
+  "desktop_behavior": "Cards are organized in a three-column grid. Doctor and partner carousels use horizontal scrolling with arrows. Hover effects provide visual feedback on CTA buttons. Contact details and insurance logos adapt to wider viewport with distributed alignment.",
+  "mobile_behavior": "Navigation switches to a hamburger menu. All grid elements stack vertically in one column for full-width touch accessibility. Carousels adapt to swipe, and CTAs/buttons are sized for thumb use. Spacing and visuals remain readable and tap-friendly.",
+  "learn": [
+    "Use video/still in hero to foster trust; pair with succinct intro and immediate actionable CTAs.",
+    "Service breakdown in clear, icon-led card grid for fast scanning.",
+    "Humanize clinic by prioritizing real doctor profiles, presented as a carousel on both desktop and mobile.",
+    "Trust cues (insurer/partner logos, guarantees, location info) placed logically lower in the scroll to reinforce decision-making."
+  ],
+  "do_not_copy": [
+    "Avoid over-crowding cards in mobile conversions—don't collapse into unreadably dense layouts.",
+    "Refrain from generic, stock imagery for doctors—real staff photos are essential for credibility.",
+    "Don't use crowded navigation; this example maintains only essentials in header and footer.",
+    "Do not hide essential contact CTAs behind hamburger or at page bottom on mobile."
+  ],
+  "reusable_cross_category_traits": [
+    "Visual hierarchy via strong section separation and card-based layouts.",
+    "Primary CTAs repeated and always actionable at both top and in-contact sections.",
+    "Humanized, approachable imagery paired with clean iconography.",
+    "Insurance/partner logos in a minimal carousel to emphasize trust without overcrowding."
+  ],
+  "traits": [
+    "Card-based, modular design for services and staff.",
+    "Palette emphasizing clinical professionalism (white/blue/dark blue tones).",
+    "Information progressively disclosed: starting with invite/overview, then depth by section.",
+    "Minimal motion, only used for carousels and CTA feedback.",
+    "Typography and iconography are accessible and clean throughout."
+  ],
+  "content_hash": "3bd1122d72c34155f0a245c1c09f3e1ed177ffdd1dbe5ffffa9111a0defd34f1"
+}

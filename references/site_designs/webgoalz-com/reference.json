@@ -1,0 +1,19 @@
+{
+  "id": "webgoalz-com",
+  "title": "webgoalz-com",
+  "source_url": "https://webgoalz.com/",
+  "normalized_url": "https://webgoalz.com/",
+  "capture_status": "failed",
+  "analysis_status": "not_started",
+  "failure": {
+    "stage": "capture",
+    "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://webgoalz.com/\", waiting until \"networkidle\"\n",
+    "timestamp": "2026-07-16T17:13:37.843001+00:00",
+    "attempt": 1
+  },
+  "traits": [],
+  "learn": [],
+  "do_not_copy": [
+    "The source is unavailable and cannot be used as a template."
+  ]
+}

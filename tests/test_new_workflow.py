@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -53,9 +54,16 @@ class NewWorkflowContractTests(unittest.TestCase):
             root = Path(temp)
             records = []
             for index in range(7):
-                records.append({"id": f"ref-{index}", "capture_status": "captured", "analysis_status": "completed", "screenshot_paths": ["desktop.png", "mobile.png"], "traits": ["generic"], "search_text": "generic", "business_context": "generic"})
+                folder = root / f"ref-{index}"; folder.mkdir()
+                hashes = {}
+                for name in ("desktop.png", "mobile.png"):
+                    path = folder / name
+                    Image.new("RGB", (640, 900), (index * 20, 70, 130)).save(path)
+                    hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+                records.append({"id": f"ref-{index}", "capture_status": "captured", "analysis_status": "completed", "screenshot_paths": ["desktop.png", "mobile.png"], "capture": {"screenshots": hashes}, "traits": ["generic"], "search_text": "generic", "business_context": "generic"})
             records[-1].update({"traits": ["cinematic", "conversion-led", "gallery-rhythm"], "search_text": "cinematic conversion-led gallery-rhythm private dining", "business_context": "private dining"})
-            (root / "catalog.json").write_text(json.dumps({"references": records}), encoding="utf-8")
+            (root / "catalog.json").write_text(json.dumps({"references": records, "decision_artifact": "reference_decisions.json"}), encoding="utf-8")
+            (root / "reference_decisions.json").write_text(json.dumps({"decisions": [{"reference_id": item["id"], "decision": "active", "confidence": 96, "scope_of_learning": "full_site"} for item in records]}), encoding="utf-8")
             selected = selected_references(root, business_research={"research": {"niche": "private dining", "brand_atmosphere": "cinematic"}})
             self.assertEqual(selected[0]["id"], "ref-6")
             self.assertIn("selection_rationale", selected[0])

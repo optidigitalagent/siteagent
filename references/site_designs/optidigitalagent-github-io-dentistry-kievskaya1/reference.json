@@ -1,0 +1,138 @@
+{
+  "id": "optidigitalagent-github-io-dentistry-kievskaya1",
+  "title": "Стоматологічна клініка «Київська» | Харків",
+  "source_url": "https://optidigitalagent.github.io/dentistry_kievskaya1/",
+  "normalized_url": "https://optidigitalagent.github.io/dentistry_kievskaya1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:09:48.293295+00:00",
+    "final_url": "https://optidigitalagent.github.io/dentistry_kievskaya1/",
+    "screenshots": {
+      "desktop.png": "4fec6f580a8224808bb692f5bff321449564e4a770035a2c75589470a2e65450",
+      "mobile.png": "9db4b0583543624b08508979ce934bac12429e2bd415b5e6d181c2d285749a21"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "A dental clinic in Kharkiv aiming to attract new patients by presenting a modern, pain-free, and trusted image online. The homepage leverages local cues and highlights services to build trust and prompt contact.",
+    "audience": "Prospective dental patients, particularly adults seeking treatment in Kharkiv. Design targets users who prioritize modern clinics, a pain-free experience, and clear service information.",
+    "conversion_goal": "Primary: Get visitors to book an appointment with the clinic via the 'ЗАПИСАТИСЬ НА ПРИЙОМ' (Book Appointment) button. Secondary: Encourage exploration of services and establish trust in professionalism.",
+    "first_viewport_logic": "The first viewport centers a direct value proposition: reassurance of pain-free treatment, a prominent gold appointment button, and four boxed service CTAs, all set against a person-centric hero image for trust. Navigation is clean, with contact and action-oriented links in the header. Mobile prioritizes the same message and CTA, vertically stacking elements for quick thumb access.",
+    "information_architecture": [
+      "Top header with navigation (desktop: horizontal, mobile: hamburger menu)",
+      "Hero section with headline, supporting copy, and primary CTA",
+      "Services grid with icons and brief descriptions",
+      "Key clinic stats (price, working hours, cost)",
+      "Footer with contact info, quick links, and hours"
+    ],
+    "narrative_storytelling": "Narrative is confident and empathetic—'With us, you will forget what pain is.' Human imagery establishes connection, while reassuring headlines and stats build trust. Service highlights act as proof points below the main message.",
+    "composition_grid": "Desktop: Asymmetrical grid with left-aligned text/content and right-aligned image, creating eye flow from heading to services to CTAs. Mobile: Single-column, vertical stacking for simplicity and legibility. Generous white space to separate blocks.",
+    "spacing_rhythm": "Consistent padding and generous vertical spacing separate headline, CTAs, and service cards. Breathing room around interactive elements enhances clarity. Mobile adapts by reducing space but keeps distinct separation for tap targets.",
+    "typography": "Serif display font for headings (for authority and elegance); sans-serif for supporting text enhances readability. Color contrast is maintained with white/light text on dark/navy backgrounds and gold for highlights/CTAs. Bold and italic styles are used to emphasize key words.",
+    "palette_contrast": "Navy blue, white, and gold dominate—a palette signaling professionalism and prestige. Gold is used sparingly for CTAs and highlights, ensuring high visual prominence without overwhelming. Light sections provide relief and clarity.",
+    "media_treatment": "Hero image is a cropped, candid portrait, slightly softened for emotional approachability. Service cards use line-art icons for clarity and quick scanning. No excessive graphic overlays. Minimal visual clutter ensures focus on information.",
+    "motion_interaction": "No visible animation in static screenshots, but clickable cards, highlight hover/active states implied by card visual styling. CTA button uses color shift for feedback. Mobile likely features simple transitions (menu expansion).",
+    "cta_strategy": "'Book Appointment' button is visually dominant with gold styling, placed near headline and repeated as the main interactive element. Service cards act as secondary CTAs, each card being clickable. Button shape and color differentiate from other interface elements.",
+    "desktop_behavior": "Navigation and main CTA always stay accessible; content density optimized for horizontal grid; hero image is partially masked for focus. Footer visible on large screens, providing trust signals without distraction.",
+    "mobile_behavior": "Nav condenses into hamburger, content reflows to a single column, hero text size is maintained for hierarchy. Large tappable areas for CTAs, spacing prevents accidental taps. Footer elements remain legible and accessible.",
+    "learn": [
+      "Use emotionally expressive hero imagery alongside concrete value propositions to foster trust.",
+      "Deploy color contrast (esp. gold vs. navy) to drive attention to key CTAs without crowding the interface.",
+      "Vertically stack primary CTAs and key stats for mobile-first readability and interaction.",
+      "Maintain whitespace/spacing for clean, quick scanning—essential in professional service pages."
+    ],
+    "do_not_copy": [
+      "Do not overuse gold; limit accents to avoid cheapening premium feel.",
+      "Do not crowd the first viewport with text-heavy blocks or excessive navigation elements.",
+      "Do not use generic stock icons for service cards; they must feel relevant and custom-aligned to services."
+    ],
+    "reusable_cross_category_traits": [
+      "Left-right/asymmetric layouts for desktop to combine human imagery and content.",
+      "Single-column mobile layouts prioritizing conversion blocks.",
+      "Heavy/light background alternation for visual pacing."
+    ],
+    "traits": [
+      "Professional, high-contrast palette signifies trust and status.",
+      "Clear, compelling headline communicates pain-free treatment as differentiator.",
+      "Prominent, well-styled primary CTA always above the fold.",
+      "Human-centered visuals foster emotional connection.",
+      "Layout adapts responsively and preserves hierarchy."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "c5c1805e19d5a1820900846e49fb3bb9b7e7964a66a59f7e6c75280d866dbdaa",
+    "input_checksum": "74cfddea68409a5fddb5183592ddf259973302dab206c92df50e52978b9ed4b4",
+    "output_checksum": "57ad4d714b0956e2ad199102167514ae461a0766a343ea9a6f0cbd6d14d9fde6",
+    "timestamp": "2026-07-16T17:10:29.579923+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "7dc47abedd70c83299c216dda485c9552328b64d95cd7d0433ff02ef8122fabd",
+      "repair_count": 0
+    }
+  },
+  "business_context": "A dental clinic in Kharkiv aiming to attract new patients by presenting a modern, pain-free, and trusted image online. The homepage leverages local cues and highlights services to build trust and prompt contact.",
+  "audience": "Prospective dental patients, particularly adults seeking treatment in Kharkiv. Design targets users who prioritize modern clinics, a pain-free experience, and clear service information.",
+  "conversion_goal": "Primary: Get visitors to book an appointment with the clinic via the 'ЗАПИСАТИСЬ НА ПРИЙОМ' (Book Appointment) button. Secondary: Encourage exploration of services and establish trust in professionalism.",
+  "first_viewport_logic": "The first viewport centers a direct value proposition: reassurance of pain-free treatment, a prominent gold appointment button, and four boxed service CTAs, all set against a person-centric hero image for trust. Navigation is clean, with contact and action-oriented links in the header. Mobile prioritizes the same message and CTA, vertically stacking elements for quick thumb access.",
+  "information_architecture": [
+    "Top header with navigation (desktop: horizontal, mobile: hamburger menu)",
+    "Hero section with headline, supporting copy, and primary CTA",
+    "Services grid with icons and brief descriptions",
+    "Key clinic stats (price, working hours, cost)",
+    "Footer with contact info, quick links, and hours"
+  ],
+  "narrative_storytelling": "Narrative is confident and empathetic—'With us, you will forget what pain is.' Human imagery establishes connection, while reassuring headlines and stats build trust. Service highlights act as proof points below the main message.",
+  "composition_grid": "Desktop: Asymmetrical grid with left-aligned text/content and right-aligned image, creating eye flow from heading to services to CTAs. Mobile: Single-column, vertical stacking for simplicity and legibility. Generous white space to separate blocks.",
+  "spacing_rhythm": "Consistent padding and generous vertical spacing separate headline, CTAs, and service cards. Breathing room around interactive elements enhances clarity. Mobile adapts by reducing space but keeps distinct separation for tap targets.",
+  "typography": "Serif display font for headings (for authority and elegance); sans-serif for supporting text enhances readability. Color contrast is maintained with white/light text on dark/navy backgrounds and gold for highlights/CTAs. Bold and italic styles are used to emphasize key words.",
+  "palette_contrast": "Navy blue, white, and gold dominate—a palette signaling professionalism and prestige. Gold is used sparingly for CTAs and highlights, ensuring high visual prominence without overwhelming. Light sections provide relief and clarity.",
+  "media_treatment": "Hero image is a cropped, candid portrait, slightly softened for emotional approachability. Service cards use line-art icons for clarity and quick scanning. No excessive graphic overlays. Minimal visual clutter ensures focus on information.",
+  "motion_interaction": "No visible animation in static screenshots, but clickable cards, highlight hover/active states implied by card visual styling. CTA button uses color shift for feedback. Mobile likely features simple transitions (menu expansion).",
+  "cta_strategy": "'Book Appointment' button is visually dominant with gold styling, placed near headline and repeated as the main interactive element. Service cards act as secondary CTAs, each card being clickable. Button shape and color differentiate from other interface elements.",
+  "desktop_behavior": "Navigation and main CTA always stay accessible; content density optimized for horizontal grid; hero image is partially masked for focus. Footer visible on large screens, providing trust signals without distraction.",
+  "mobile_behavior": "Nav condenses into hamburger, content reflows to a single column, hero text size is maintained for hierarchy. Large tappable areas for CTAs, spacing prevents accidental taps. Footer elements remain legible and accessible.",
+  "learn": [
+    "Use emotionally expressive hero imagery alongside concrete value propositions to foster trust.",
+    "Deploy color contrast (esp. gold vs. navy) to drive attention to key CTAs without crowding the interface.",
+    "Vertically stack primary CTAs and key stats for mobile-first readability and interaction.",
+    "Maintain whitespace/spacing for clean, quick scanning—essential in professional service pages."
+  ],
+  "do_not_copy": [
+    "Do not overuse gold; limit accents to avoid cheapening premium feel.",
+    "Do not crowd the first viewport with text-heavy blocks or excessive navigation elements.",
+    "Do not use generic stock icons for service cards; they must feel relevant and custom-aligned to services."
+  ],
+  "reusable_cross_category_traits": [
+    "Left-right/asymmetric layouts for desktop to combine human imagery and content.",
+    "Single-column mobile layouts prioritizing conversion blocks.",
+    "Heavy/light background alternation for visual pacing."
+  ],
+  "traits": [
+    "Professional, high-contrast palette signifies trust and status.",
+    "Clear, compelling headline communicates pain-free treatment as differentiator.",
+    "Prominent, well-styled primary CTA always above the fold.",
+    "Human-centered visuals foster emotional connection.",
+    "Layout adapts responsively and preserves hierarchy."
+  ],
+  "content_hash": "e5ad65fa8a0e2d59d01a93ec9bed93a5c99e6c0da42e44db56edf0deed53da95"
+}

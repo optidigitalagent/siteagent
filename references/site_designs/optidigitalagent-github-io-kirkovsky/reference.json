@@ -1,0 +1,136 @@
+{
+  "id": "optidigitalagent-github-io-kirkovsky",
+  "title": "Site not found · GitHub Pages",
+  "source_url": "https://optidigitalagent.github.io/kirkovsky/",
+  "normalized_url": "https://optidigitalagent.github.io/kirkovsky/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:03:05.802934+00:00",
+    "final_url": "https://optidigitalagent.github.io/kirkovsky/",
+    "screenshots": {
+      "desktop.png": "033101d58ffc23f6d85def8dffd171cc41b449f0434f586cfc4261c7b7f97403",
+      "mobile.png": "614db9616ee442075ab045bb9d6b0fbfb65967d905782926bab3acd285e4bf2e"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "This is a default error page for GitHub Pages, informing users that the site they're trying to access does not exist. It is generic and used as a fallback communication in the case of a misconfiguration or missing deployment.",
+    "audience": "Primarily web developers, repository owners, or technically-inclined users who attempted to load a GitHub Pages project URL; also accessible to general users who stumble upon a broken link.",
+    "conversion_goal": "There is no commercial conversion; the closest goal is to direct users to documentation to fix the deployment issue or to inform them that the site is not available.",
+    "first_viewport_logic": "Both desktop and mobile immediately show a large '404', a short explanatory message, and links for self-resolution (documentation, GitHub status) all above the fold, centered horizontally and vertically for rapid comprehension.",
+    "information_architecture": [
+      "Headline '404'",
+      "Short description of the issue",
+      "Link to documentation for setup help",
+      "Reference to 'GitHub Status' and @githubstatus",
+      "GitHub Octocat icon (brand reinforcement)"
+    ],
+    "narrative_storytelling": "The page delivers a blunt message with no narrative arc; messaging is direct—'404' signals a missing page, the subtext offers clarity, and actionable links aim at remediation. Tone is neutral and technical.",
+    "composition_grid": "Symmetrical vertical stack, fully center-aligned on both axes within the viewport using a single-column layout. No sidebars, navigation, or complex composition—purely linear and centralized.",
+    "spacing_rhythm": "Very generous whitespace surrounds elements, especially above and below the central block, conveying clarity and focus. Padding between lines is consistent and adequate for scanability. There’s strong use of vertical space for readability and visual calm, beneficial for error states.",
+    "typography": "Utilizes a sans-serif font (likely system font or GitHub's custom stack) with a large, bold '404' headline; mid-weight for the main explanation and links. Blue is reserved for call-to-action text (documentation link). Font sizing is responsive and remains readable in all viewports.",
+    "palette_contrast": "Minimalist and monochromatic; mostly black (#000) and gray (#333 to #888) text on a light gray or nearly white background (#f6f8fa or similar). The only color accent is blue for hyperlinks, ensuring distinction without overwhelming the page. High contrast maintains accessibility standards for error messaging.",
+    "media_treatment": "No media, photos, or illustrations except for the small GitHub Octocat icon at the base, maintaining brand identity without visual distraction.",
+    "motion_interaction": "No motion or interactive animation is present. Links use standard browser hover/active styles only. The page is entirely static, appropriate for error fallbacks.",
+    "cta_strategy": "CTA is informational, not commercial. The main interactive element is the inline text link to 'read the full documentation', presented as the only path for users wanting to self-correct the error; link styling is clear but subdued rather than dominant.",
+    "desktop_behavior": "Content is centered with all elements visible above the fold; no scrolling required on typical desktop resolutions. The design remains fixed in the viewport regardless of browser resizing.",
+    "mobile_behavior": "Design responsively condenses but retains hierarchy; all error text is visible without horizontal scrolling or zooming. Padding and type scale down proportionally, maintaining readability. The full message (including links) is present in the first mobile viewport, owing to the vertical stack and prioritization of core information.",
+    "learn": [
+      "For error states, use unambiguous short messaging with a clear route to resolve the issue.",
+      "Generous whitespace enhances focus and accessibility, particularly for critical or error communications.",
+      "Centrally align error content to minimize cognitive load and direct user attention.",
+      "Provide actionable next steps, such as documentation, when a conversion is not possible."
+    ],
+    "do_not_copy": [
+      "Do not use overly technical jargon in user-facing error states unless the audience is strictly technical.",
+      "Do not clutter error fallback pages with excessive links, graphics, or CTAs unrelated to the resolution of the error.",
+      "Do not include intrusive branding; keep logos subtle on functional fallback pages."
+    ],
+    "reusable_cross_category_traits": [
+      "Extreme simplicity and clarity in UI for error or fallback states.",
+      "Rapid communication of core issue (e.g., '404') via large, clear text.",
+      "Single prominent next step link to documentation or support."
+    ],
+    "traits": [
+      "Linear vertical stack layout with generous spacing.",
+      "Neutral and subdued color palette with reserved accents.",
+      "Single CTA link styled for clarity, not conversion.",
+      "Fully responsive design with perfect conservation of information hierarchy."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "18a901268918b1c1a64d5abcbc0a8e06c7b4045a911d66a3b21df8874d192298",
+    "input_checksum": "5e7854a9c9a3679e587ae88aab9a084bb8b2c73eb3fa08c363c4698ae54d9dd5",
+    "output_checksum": "ae3a8b741079fa1abf8bd21ca625e6d4a23dedce70b9d5b9e2a457df6fcc4118",
+    "timestamp": "2026-07-16T17:03:39.964600+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "8631b91ca358ad5a27f44a2845ad4f3eb9fb60ac28f33248c1401055fa1248e4",
+      "repair_count": 0
+    }
+  },
+  "business_context": "This is a default error page for GitHub Pages, informing users that the site they're trying to access does not exist. It is generic and used as a fallback communication in the case of a misconfiguration or missing deployment.",
+  "audience": "Primarily web developers, repository owners, or technically-inclined users who attempted to load a GitHub Pages project URL; also accessible to general users who stumble upon a broken link.",
+  "conversion_goal": "There is no commercial conversion; the closest goal is to direct users to documentation to fix the deployment issue or to inform them that the site is not available.",
+  "first_viewport_logic": "Both desktop and mobile immediately show a large '404', a short explanatory message, and links for self-resolution (documentation, GitHub status) all above the fold, centered horizontally and vertically for rapid comprehension.",
+  "information_architecture": [
+    "Headline '404'",
+    "Short description of the issue",
+    "Link to documentation for setup help",
+    "Reference to 'GitHub Status' and @githubstatus",
+    "GitHub Octocat icon (brand reinforcement)"
+  ],
+  "narrative_storytelling": "The page delivers a blunt message with no narrative arc; messaging is direct—'404' signals a missing page, the subtext offers clarity, and actionable links aim at remediation. Tone is neutral and technical.",
+  "composition_grid": "Symmetrical vertical stack, fully center-aligned on both axes within the viewport using a single-column layout. No sidebars, navigation, or complex composition—purely linear and centralized.",
+  "spacing_rhythm": "Very generous whitespace surrounds elements, especially above and below the central block, conveying clarity and focus. Padding between lines is consistent and adequate for scanability. There’s strong use of vertical space for readability and visual calm, beneficial for error states.",
+  "typography": "Utilizes a sans-serif font (likely system font or GitHub's custom stack) with a large, bold '404' headline; mid-weight for the main explanation and links. Blue is reserved for call-to-action text (documentation link). Font sizing is responsive and remains readable in all viewports.",
+  "palette_contrast": "Minimalist and monochromatic; mostly black (#000) and gray (#333 to #888) text on a light gray or nearly white background (#f6f8fa or similar). The only color accent is blue for hyperlinks, ensuring distinction without overwhelming the page. High contrast maintains accessibility standards for error messaging.",
+  "media_treatment": "No media, photos, or illustrations except for the small GitHub Octocat icon at the base, maintaining brand identity without visual distraction.",
+  "motion_interaction": "No motion or interactive animation is present. Links use standard browser hover/active styles only. The page is entirely static, appropriate for error fallbacks.",
+  "cta_strategy": "CTA is informational, not commercial. The main interactive element is the inline text link to 'read the full documentation', presented as the only path for users wanting to self-correct the error; link styling is clear but subdued rather than dominant.",
+  "desktop_behavior": "Content is centered with all elements visible above the fold; no scrolling required on typical desktop resolutions. The design remains fixed in the viewport regardless of browser resizing.",
+  "mobile_behavior": "Design responsively condenses but retains hierarchy; all error text is visible without horizontal scrolling or zooming. Padding and type scale down proportionally, maintaining readability. The full message (including links) is present in the first mobile viewport, owing to the vertical stack and prioritization of core information.",
+  "learn": [
+    "For error states, use unambiguous short messaging with a clear route to resolve the issue.",
+    "Generous whitespace enhances focus and accessibility, particularly for critical or error communications.",
+    "Centrally align error content to minimize cognitive load and direct user attention.",
+    "Provide actionable next steps, such as documentation, when a conversion is not possible."
+  ],
+  "do_not_copy": [
+    "Do not use overly technical jargon in user-facing error states unless the audience is strictly technical.",
+    "Do not clutter error fallback pages with excessive links, graphics, or CTAs unrelated to the resolution of the error.",
+    "Do not include intrusive branding; keep logos subtle on functional fallback pages."
+  ],
+  "reusable_cross_category_traits": [
+    "Extreme simplicity and clarity in UI for error or fallback states.",
+    "Rapid communication of core issue (e.g., '404') via large, clear text.",
+    "Single prominent next step link to documentation or support."
+  ],
+  "traits": [
+    "Linear vertical stack layout with generous spacing.",
+    "Neutral and subdued color palette with reserved accents.",
+    "Single CTA link styled for clarity, not conversion.",
+    "Fully responsive design with perfect conservation of information hierarchy."
+  ],
+  "content_hash": "eaa5880343b015a73453b0971636c7f632b83271fe1ba9f93427b519d3141c5a"
+}

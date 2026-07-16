@@ -1,0 +1,19 @@
+{
+  "id": "uniquerabbitstudios-com",
+  "title": "uniquerabbitstudios-com",
+  "source_url": "https://uniquerabbitstudios.com/",
+  "normalized_url": "https://uniquerabbitstudios.com/",
+  "capture_status": "failed",
+  "analysis_status": "not_started",
+  "failure": {
+    "stage": "capture",
+    "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://uniquerabbitstudios.com/\", waiting until \"networkidle\"\n",
+    "timestamp": "2026-07-16T17:03:03.518553+00:00",
+    "attempt": 1
+  },
+  "traits": [],
+  "learn": [],
+  "do_not_copy": [
+    "The source is unavailable and cannot be used as a template."
+  ]
+}

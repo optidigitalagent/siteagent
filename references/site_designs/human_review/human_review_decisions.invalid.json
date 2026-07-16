@@ -1,0 +1,9 @@
+{
+  "schema_version": 2,
+  "status": "historical_invalid_input",
+  "invalid_reason": "invalidated_by_user_accidental_input",
+  "selection_eligible": false,
+  "ranking_eligible": false,
+  "exclusion_eligible": false,
+  "notes": "This file is retained only as an invalid historical export. Autonomous reference decisions are written to ../reference_decisions.json."
+}

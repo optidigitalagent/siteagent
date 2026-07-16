@@ -127,3 +127,12 @@ repeat the same brief in every chat.
 - Screenshot-analysis output needs a strict complete schema, Pydantic validation, bounded
   repair, and safely retained raw responses. A model choosing its own field names is a
   failed analysis, never a reason to invent empty values or mark a record complete.
+
+## Autonomous reference-library decision (2026-07-16)
+
+- Routine reference selection, traits, curation, exclusion, screenshot review and crash recovery
+  are agent-owned. A manual review/export file is not a production gate and accidental clicks
+  must be marked machine-readable invalid, never interpreted as latent preference.
+- Award galleries introduce candidates only. Selection requires a resolved original live site,
+  screenshot evidence, Curator/Auditor agreement, bounded learning scope for incomplete pages,
+  duplicate suppression and an active-library decision separate from raw records.

@@ -1,0 +1,144 @@
+{
+  "id": "newartem855-netizen-github-io",
+  "title": "Content.ZVD — Система зростання в Instagram",
+  "source_url": "https://newartem855-netizen.github.io/-ZVD/",
+  "normalized_url": "https://newartem855-netizen.github.io/-ZVD/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:03:43.257742+00:00",
+    "final_url": "https://newartem855-netizen.github.io/-ZVD/",
+    "screenshots": {
+      "desktop.png": "864004ce6eb30ddae7a61b9649796592d9b32a8a26120fca01466eb8d206b05b",
+      "mobile.png": "7dad56f4b2e0df056fd31e43aa0d0fbbe8cdd5f2fa355ba8b725e1ccaf8ebae5"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "The site offers Instagram content growth solutions, targeting brands and influencers who want to increase their profile performance with minimal involvement in actual content maintenance.",
+    "audience": "Brands, digital marketers, influencers, and entrepreneurs seeking to scale their Instagram presence efficiently.",
+    "conversion_goal": "Encourage users to request a callback or consultation via a prominent button near the page headline.",
+    "first_viewport_logic": "Critical information and statistics are front-loaded—with a bold headline promising Instagram growth, supporting quantitative proof points, and an immediate CTA button. This creates instant credibility and encourages quick user action above the fold.",
+    "information_architecture": [
+      "Header with logo, navigation (desktop), collapsed menu (mobile), and CTA button",
+      "Hero section: headline, subheadline, lead-in text, primary CTA, three statistic modules",
+      "Empty/visual breathing spaces",
+      "Lower section for future content/modules",
+      "Footer with minimal navigation, secondary data, and credits"
+    ],
+    "narrative_storytelling": "Uses a direct message: 'We don’t run your content. We grow your Instagram.' Supports the narrative with statistically impressive numbers laid out in visual blocks. Text hierarchy guides the user from core service promise to proof, then to action, creating trust and urgency.",
+    "composition_grid": "Strict left alignment (desktop) for main headline, subheadline, and button with right-aligned stats module. Grid shifts to singular column and fully centered alignment on mobile. Grid is modular and organized, with content blocks placed in visually distinct containers.",
+    "spacing_rhythm": "Generous vertical spacing creates clear separation between modules. Hero section is well-padded. Mobile adapts this rhythm with more compact paddings to fit information without crowding. Breathing room ensures sharp content focus but could feel sparse if not filled out further down.",
+    "typography": "Ultra-bold, large geometric sans-serif for main messaging; accent colors highlight key words (Instagram, stats). Body text uses lighter weights for contrast. All-caps in brand elements and stats. Consistent use of weight and scale to guide focus. High legibility, especially against dark backgrounds.",
+    "palette_contrast": "Uses a stark black background with white primary text, orange (CTA, highlights) and yellow (secondary highlights) for immediate attention. High-contrast ensures accessibility and dynamic energy, befitting tech-social themes. Statistic modules maintain contrast with white and orange/yellow on semi-transparent dark panels.",
+    "media_treatment": "Minimal media—focus on typographic impact and UI components. No photographs used in hero; instead, graphical accents (subtle gradients, glows) evoke a sense of energy and modern tech. Ensures no visual competition with messaging.",
+    "motion_interaction": "No motion is visible in static screenshots; however, button styling and blocky UI imply possible hover or focus states for desktop. No evidence of animation, parallax, or video in first viewports. CTA and stat cards likely include hover/click transitions in production.",
+    "cta_strategy": "Primary CTA ('Замовити дзвінок') is high-contrast, above the fold, and uses a distinctive color. It is positively reinforced by trust-building stats, making action feel safe and timely. CTA is repeated only once and kept visually dominant in the hierarchy.",
+    "desktop_behavior": "Multi-column grid with left headline and right statistics block. Header navigation is visible and horizontal. CTA is immediately accessible. Layout makes strong first impression with clear information chunks.",
+    "mobile_behavior": "Collapses navigation into a hamburger-menu. Content shifts to a single column. Headline, subheadline, stats, and CTA are stacked. All modules are rescaled for thumb-friendly interaction and maximum visibility. CTA remains prominent and tap-ready.",
+    "learn": [
+      "Front-load value proposition and social proof for maximal early engagement.",
+      "Use ultrahigh-contrast color blocking to raise conversion urgency and legibility.",
+      "Centralize call to action—one clear button, above the fold, in the reading flow.",
+      "Clean modular grid can flex between desktop and mobile cleanly with no loss of hierarchy.",
+      "Typographic energy (large, bold, colored text) can compensate for sparse visuals."
+    ],
+    "do_not_copy": [
+      "Do not rely solely on statistics/copy to fill the page—deeper narrative or visual support is needed below the fold to maintain engagement.",
+      "Avoid excessive empty space below the fold, which signals incomplete or placeholder content.",
+      "Do not hide navigation on desktop—mobile hamburger is for small screens only.",
+      "Don’t use visually similar colors for background and highlight, as clarity is lost on some modules when contrast isn’t maintained."
+    ],
+    "reusable_cross_category_traits": [
+      "Strong, asymmetric split grid layouts for bold hero composition.",
+      "Stat-block cards that highlight critical proof points in visual containers.",
+      "Single, accent-colored CTA as action anchor.",
+      "Maximalist typography for brand-driven digital services."
+    ],
+    "traits": [
+      "Bold color palette (black/orange/yellow/white) with tech-social overtones.",
+      "Hero-focused, value-centric copywriting.",
+      "Modular, grid-based, single-column stacking for mobile.",
+      "High vertical spacing for clarity and focus.",
+      "Minimalist use of decorative assets—emphasis on message and UI clarity."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "48b22c32f317452960d12886715ab6285df01d786075253c81790f50ed9d9f45",
+    "input_checksum": "3846d6937e7c498d8445d29bf599b38a2bf1039afb682adf991df275f9ef2422",
+    "output_checksum": "e26e43199e09b05a5fc008e19e1d8e1bda78a4d77f6155988caecb7e85e98da9",
+    "timestamp": "2026-07-16T17:04:12.507803+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "20a77ca536de350ad4c70ba8257643a3816931305e4b21eb27c9fe2f0a031917",
+      "repair_count": 0
+    }
+  },
+  "business_context": "The site offers Instagram content growth solutions, targeting brands and influencers who want to increase their profile performance with minimal involvement in actual content maintenance.",
+  "audience": "Brands, digital marketers, influencers, and entrepreneurs seeking to scale their Instagram presence efficiently.",
+  "conversion_goal": "Encourage users to request a callback or consultation via a prominent button near the page headline.",
+  "first_viewport_logic": "Critical information and statistics are front-loaded—with a bold headline promising Instagram growth, supporting quantitative proof points, and an immediate CTA button. This creates instant credibility and encourages quick user action above the fold.",
+  "information_architecture": [
+    "Header with logo, navigation (desktop), collapsed menu (mobile), and CTA button",
+    "Hero section: headline, subheadline, lead-in text, primary CTA, three statistic modules",
+    "Empty/visual breathing spaces",
+    "Lower section for future content/modules",
+    "Footer with minimal navigation, secondary data, and credits"
+  ],
+  "narrative_storytelling": "Uses a direct message: 'We don’t run your content. We grow your Instagram.' Supports the narrative with statistically impressive numbers laid out in visual blocks. Text hierarchy guides the user from core service promise to proof, then to action, creating trust and urgency.",
+  "composition_grid": "Strict left alignment (desktop) for main headline, subheadline, and button with right-aligned stats module. Grid shifts to singular column and fully centered alignment on mobile. Grid is modular and organized, with content blocks placed in visually distinct containers.",
+  "spacing_rhythm": "Generous vertical spacing creates clear separation between modules. Hero section is well-padded. Mobile adapts this rhythm with more compact paddings to fit information without crowding. Breathing room ensures sharp content focus but could feel sparse if not filled out further down.",
+  "typography": "Ultra-bold, large geometric sans-serif for main messaging; accent colors highlight key words (Instagram, stats). Body text uses lighter weights for contrast. All-caps in brand elements and stats. Consistent use of weight and scale to guide focus. High legibility, especially against dark backgrounds.",
+  "palette_contrast": "Uses a stark black background with white primary text, orange (CTA, highlights) and yellow (secondary highlights) for immediate attention. High-contrast ensures accessibility and dynamic energy, befitting tech-social themes. Statistic modules maintain contrast with white and orange/yellow on semi-transparent dark panels.",
+  "media_treatment": "Minimal media—focus on typographic impact and UI components. No photographs used in hero; instead, graphical accents (subtle gradients, glows) evoke a sense of energy and modern tech. Ensures no visual competition with messaging.",
+  "motion_interaction": "No motion is visible in static screenshots; however, button styling and blocky UI imply possible hover or focus states for desktop. No evidence of animation, parallax, or video in first viewports. CTA and stat cards likely include hover/click transitions in production.",
+  "cta_strategy": "Primary CTA ('Замовити дзвінок') is high-contrast, above the fold, and uses a distinctive color. It is positively reinforced by trust-building stats, making action feel safe and timely. CTA is repeated only once and kept visually dominant in the hierarchy.",
+  "desktop_behavior": "Multi-column grid with left headline and right statistics block. Header navigation is visible and horizontal. CTA is immediately accessible. Layout makes strong first impression with clear information chunks.",
+  "mobile_behavior": "Collapses navigation into a hamburger-menu. Content shifts to a single column. Headline, subheadline, stats, and CTA are stacked. All modules are rescaled for thumb-friendly interaction and maximum visibility. CTA remains prominent and tap-ready.",
+  "learn": [
+    "Front-load value proposition and social proof for maximal early engagement.",
+    "Use ultrahigh-contrast color blocking to raise conversion urgency and legibility.",
+    "Centralize call to action—one clear button, above the fold, in the reading flow.",
+    "Clean modular grid can flex between desktop and mobile cleanly with no loss of hierarchy.",
+    "Typographic energy (large, bold, colored text) can compensate for sparse visuals."
+  ],
+  "do_not_copy": [
+    "Do not rely solely on statistics/copy to fill the page—deeper narrative or visual support is needed below the fold to maintain engagement.",
+    "Avoid excessive empty space below the fold, which signals incomplete or placeholder content.",
+    "Do not hide navigation on desktop—mobile hamburger is for small screens only.",
+    "Don’t use visually similar colors for background and highlight, as clarity is lost on some modules when contrast isn’t maintained."
+  ],
+  "reusable_cross_category_traits": [
+    "Strong, asymmetric split grid layouts for bold hero composition.",
+    "Stat-block cards that highlight critical proof points in visual containers.",
+    "Single, accent-colored CTA as action anchor.",
+    "Maximalist typography for brand-driven digital services."
+  ],
+  "traits": [
+    "Bold color palette (black/orange/yellow/white) with tech-social overtones.",
+    "Hero-focused, value-centric copywriting.",
+    "Modular, grid-based, single-column stacking for mobile.",
+    "High vertical spacing for clarity and focus.",
+    "Minimalist use of decorative assets—emphasis on message and UI clarity."
+  ],
+  "content_hash": "9dd530a8dc5d789752ce2a21151865bf24fe178a9a326b61ba29a64b31f52603"
+}

@@ -1,0 +1,142 @@
+{
+  "id": "optidigitalagent-github-io-yourdental1",
+  "title": "Your Dent — Стоматологія в серці Одеси",
+  "source_url": "https://optidigitalagent.github.io/yourdental1/",
+  "normalized_url": "https://optidigitalagent.github.io/yourdental1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T16:41:37.465331+00:00",
+    "final_url": "https://optidigitalagent.github.io/yourdental1/",
+    "screenshots": {
+      "desktop.png": "f63119216dcc9e352ef9cd3652eed2a95535f4e3e2a58f01fef2828c354dda1c",
+      "mobile.png": "4d6ad1bf5a304b26a87b49def77c724b67796b55c561b109975b13a7d99a4568"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Dental clinic in Odesa seeking to position itself as a modern, professional, and approachable practice with a focus on trust, comfort, and expertise.",
+    "audience": "Residents of Odesa (and surrounds) searching for dental services, likely valuing quality, cleanliness, and clear communication. Both new and returning patients, including families.",
+    "conversion_goal": "Prompt booking of appointments (via primary and WhatsApp CTAs), information engagement (scrolling for details on services, team, location), and comfort-building through trust signals (certification, contacts, testimonials).",
+    "first_viewport_logic": "Primary messaging and unique selling proposition ('your smile is our work') headline dominates above the fold beside a contextual photo of dental treatment, visually anchoring clinical professionalism. Main CTAs (appointment booking and WhatsApp) are placed just below the headline for immediate conversion, with supportive contact and social details underneath.",
+    "information_architecture": [
+      "Header with logo, nav links, WhatsApp and call buttons, and language switcher.",
+      "Hero block: headline, supporting subtext, dual CTAs, clinical image.",
+      "Trust/contact bar: address, phone, certifications, reviews.",
+      "Main nav bar: primary service categories.",
+      "Long-form content below (not in screenshot) presumed to follow; footer with contact, locations, legal, socials."
+    ],
+    "narrative_storytelling": "The narrative quickly builds trust—emphasizing expert care ('our work'), visually showcasing real dental care, and validating legitimacy with certifications and clear contact points. Friendly, clean aesthetics reinforce the sense of professionalism and approachability.",
+    "composition_grid": "Classic balanced column grid: hero text block left, image right (desktop); stacked vertical layout (mobile). Header/nav is horizontal. Major spacing zones maintain clarity and flow. Elements are vertically centered for visual harmony.",
+    "spacing_rhythm": "Extensive white space yields a calm, premium feel. Ample padding prevents crowding around text, CTAs, and images. Section dividers use color blocks for rhythm. Footer content equally spaced and easy to scan on both desktop and mobile.",
+    "typography": "Modern, highly legible serif for emphasis headlines (elegant, trustworthy), paired with clean sans-serif for body and UI text. Headline hierarchy is clear—contrasting font weights/sizes for main message and supportive subline. Considerable font size for accessibility.",
+    "palette_contrast": "High contrast: primary use of white, black, and off-white backgrounds, highlighted by strong red accents (CTAs, some headline text) for immediate CTA focus. Black/grey used for footer and info bars, supporting content segmentation without distraction.",
+    "media_treatment": "Single, well-chosen hero image with subtle border radius—realistic, professional, and relevant (in-clinic scene). No distracting overlays. Image is contextual, not decorative, and does not overpower primary messaging. No galleries or carousels above the fold.",
+    "motion_interaction": "Minimal or absent in visible viewport; interaction implied in CTAs (button hovers, WhatsApp chat trigger). Fixed WhatsApp circle persists in viewport for instant access. Menu likely has interactive flyouts, but not visible here.",
+    "cta_strategy": "Double-pronged primary CTA: red 'Book an appointment' button and WhatsApp contact—ensuring both direct and more informal conversion pathways. Placement is immediate (within first scroll), visually dominant using contrast and position. Header, hero, and persistent floating WhatsApp icon all reinforce action.",
+    "desktop_behavior": "Hero elements are horizontally split, with navigation horizontal and always visible. Footer and info bars span full width. Bordered sections provide rhythm. Persistent WhatsApp help circle is attached bottom right without interfering with content.",
+    "mobile_behavior": "Hero reflows into vertical stack: logo/navbar and call button top, followed by headline, image, CTAs, and info. Nav and contact still highly accessible. Touch targets (buttons, WhatsApp chat) are sufficiently large. Readability is maintained—no crowding. Footer sections are vertically stacked and scan-friendly.",
+    "learn": [
+      "Strong, immediate trust messaging with photo-context in hero blocks.",
+      "Primary, visually-dominant action (appointment) uses color and spacing for clarity.",
+      "Persistent secondary digital contact path (WhatsApp) as both button and floating icon increases conversion likelihood.",
+      "Responsive typography and structure preserves clarity across devices without losing emotion.",
+      "White space and simple colors can yield a high-trust, calm first impression for clinical brands."
+    ],
+    "do_not_copy": [
+      "Do not use uncontextual stock images—hero must directly relate to core service.",
+      "Do not overload with excessive CTAs or dense content above the fold. Simplicity is key.",
+      "Do not use insufficient color contrast for accessibility.",
+      "Do not omit clear, instant ways to contact (e.g., WhatsApp or phone) if lead speed is important."
+    ],
+    "reusable_cross_category_traits": [
+      "Dual-CTA hero with instant and chat-based conversion options.",
+      "Maximum clarity through strong whitespace and modular info bars.",
+      "Headline hierarchy and emotional storytelling anchored by real, relevant imagery."
+    ],
+    "traits": [
+      "Minimalist clinical layout prioritizing clarity and trust.",
+      "Emphasis on trust signals (certifications, contacts, reviews) adjacent to main CTA.",
+      "Responsive, mobile-first stack with strong touch accessibility.",
+      "Bold primary CTA paired with instant digital messenger option.",
+      "Calm, high-contrast palette with strategic red highlights."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "f66f053dda330aa96a95ef5e12edb7ef43d8146d1315575df243371ba19f2e84",
+    "input_checksum": "c3698075baa9f7b564eb433f776711af0dd598812fb9c57adf6e40a835a5afb3",
+    "output_checksum": "d60e0e91e29c7032f647d9955e58156f092306fbb2ab53b1e53ab1916adb2d39",
+    "timestamp": "2026-07-16T16:59:47.255103+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "de01ca143062585886d524fc3254f80eeae8c481aed65373dffbf36182350e4a",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Dental clinic in Odesa seeking to position itself as a modern, professional, and approachable practice with a focus on trust, comfort, and expertise.",
+  "audience": "Residents of Odesa (and surrounds) searching for dental services, likely valuing quality, cleanliness, and clear communication. Both new and returning patients, including families.",
+  "conversion_goal": "Prompt booking of appointments (via primary and WhatsApp CTAs), information engagement (scrolling for details on services, team, location), and comfort-building through trust signals (certification, contacts, testimonials).",
+  "first_viewport_logic": "Primary messaging and unique selling proposition ('your smile is our work') headline dominates above the fold beside a contextual photo of dental treatment, visually anchoring clinical professionalism. Main CTAs (appointment booking and WhatsApp) are placed just below the headline for immediate conversion, with supportive contact and social details underneath.",
+  "information_architecture": [
+    "Header with logo, nav links, WhatsApp and call buttons, and language switcher.",
+    "Hero block: headline, supporting subtext, dual CTAs, clinical image.",
+    "Trust/contact bar: address, phone, certifications, reviews.",
+    "Main nav bar: primary service categories.",
+    "Long-form content below (not in screenshot) presumed to follow; footer with contact, locations, legal, socials."
+  ],
+  "narrative_storytelling": "The narrative quickly builds trust—emphasizing expert care ('our work'), visually showcasing real dental care, and validating legitimacy with certifications and clear contact points. Friendly, clean aesthetics reinforce the sense of professionalism and approachability.",
+  "composition_grid": "Classic balanced column grid: hero text block left, image right (desktop); stacked vertical layout (mobile). Header/nav is horizontal. Major spacing zones maintain clarity and flow. Elements are vertically centered for visual harmony.",
+  "spacing_rhythm": "Extensive white space yields a calm, premium feel. Ample padding prevents crowding around text, CTAs, and images. Section dividers use color blocks for rhythm. Footer content equally spaced and easy to scan on both desktop and mobile.",
+  "typography": "Modern, highly legible serif for emphasis headlines (elegant, trustworthy), paired with clean sans-serif for body and UI text. Headline hierarchy is clear—contrasting font weights/sizes for main message and supportive subline. Considerable font size for accessibility.",
+  "palette_contrast": "High contrast: primary use of white, black, and off-white backgrounds, highlighted by strong red accents (CTAs, some headline text) for immediate CTA focus. Black/grey used for footer and info bars, supporting content segmentation without distraction.",
+  "media_treatment": "Single, well-chosen hero image with subtle border radius—realistic, professional, and relevant (in-clinic scene). No distracting overlays. Image is contextual, not decorative, and does not overpower primary messaging. No galleries or carousels above the fold.",
+  "motion_interaction": "Minimal or absent in visible viewport; interaction implied in CTAs (button hovers, WhatsApp chat trigger). Fixed WhatsApp circle persists in viewport for instant access. Menu likely has interactive flyouts, but not visible here.",
+  "cta_strategy": "Double-pronged primary CTA: red 'Book an appointment' button and WhatsApp contact—ensuring both direct and more informal conversion pathways. Placement is immediate (within first scroll), visually dominant using contrast and position. Header, hero, and persistent floating WhatsApp icon all reinforce action.",
+  "desktop_behavior": "Hero elements are horizontally split, with navigation horizontal and always visible. Footer and info bars span full width. Bordered sections provide rhythm. Persistent WhatsApp help circle is attached bottom right without interfering with content.",
+  "mobile_behavior": "Hero reflows into vertical stack: logo/navbar and call button top, followed by headline, image, CTAs, and info. Nav and contact still highly accessible. Touch targets (buttons, WhatsApp chat) are sufficiently large. Readability is maintained—no crowding. Footer sections are vertically stacked and scan-friendly.",
+  "learn": [
+    "Strong, immediate trust messaging with photo-context in hero blocks.",
+    "Primary, visually-dominant action (appointment) uses color and spacing for clarity.",
+    "Persistent secondary digital contact path (WhatsApp) as both button and floating icon increases conversion likelihood.",
+    "Responsive typography and structure preserves clarity across devices without losing emotion.",
+    "White space and simple colors can yield a high-trust, calm first impression for clinical brands."
+  ],
+  "do_not_copy": [
+    "Do not use uncontextual stock images—hero must directly relate to core service.",
+    "Do not overload with excessive CTAs or dense content above the fold. Simplicity is key.",
+    "Do not use insufficient color contrast for accessibility.",
+    "Do not omit clear, instant ways to contact (e.g., WhatsApp or phone) if lead speed is important."
+  ],
+  "reusable_cross_category_traits": [
+    "Dual-CTA hero with instant and chat-based conversion options.",
+    "Maximum clarity through strong whitespace and modular info bars.",
+    "Headline hierarchy and emotional storytelling anchored by real, relevant imagery."
+  ],
+  "traits": [
+    "Minimalist clinical layout prioritizing clarity and trust.",
+    "Emphasis on trust signals (certifications, contacts, reviews) adjacent to main CTA.",
+    "Responsive, mobile-first stack with strong touch accessibility.",
+    "Bold primary CTA paired with instant digital messenger option.",
+    "Calm, high-contrast palette with strategic red highlights."
+  ],
+  "content_hash": "11da346b8cd1520c183a093fdf5f18fb035931d15ac0f95d9e995581859fa448"
+}

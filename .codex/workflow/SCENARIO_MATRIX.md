@@ -19,3 +19,6 @@
 | Selected Studio media is verified business media | Promotion remains eligible, subject to other gates | focused provenance-promotion test |
 | Fixture media remains but its provenance disclosure is removed | Production validation fails; warning cannot be silently stripped | focused provenance-integrity test |
 | Production build is otherwise valid | Calibration-only fixture footer/disclosure is absent | focused production-output test |
+| Award source lists a candidate | Original live URL is resolved, captured and stored with source/award provenance; gallery itself is never selected | discovery candidates + raw record |
+| Candidate is blank, 404, parked, mismatched, incomplete without scope, or near-duplicate | It remains raw/excluded and cannot enter selection | reference_decisions.json + focused test |
+| Curator and Auditor disagree at low confidence | Candidate is excluded without routine user intervention | reference_decisions.json |

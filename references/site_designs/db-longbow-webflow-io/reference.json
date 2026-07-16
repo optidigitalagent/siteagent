@@ -1,0 +1,161 @@
+{
+  "id": "db-longbow-webflow-io",
+  "title": "Longbow | British Hand-Built Featherweight Sports Cars",
+  "source_url": "https://db-longbow.webflow.io/",
+  "normalized_url": "https://db-longbow.webflow.io/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:25:54.383932+00:00",
+    "final_url": "https://db-longbow.webflow.io/",
+    "screenshots": {
+      "desktop.png": "3f03502bc3c3a7458159e5042ffcce64d92dc16bef35732be10e68de99b26696",
+      "mobile.png": "3baa084d93c418bc8013c9fdc72e9dbab7bccce4c17edb3294435ac043a5a83a"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Longbow appears to be a boutique British manufacturer of hand-built, featherweight sports cars focused on high performance and bespoke craftsmanship. The site is a high-concept brand showcase, emphasizing exclusivity and design ethos over mass-market sales.",
+    "audience": "Automotive enthusiasts, affluent collectors, motorsports fans, and potential buyers of luxury or bespoke performance vehicles. The tone and visual approach targets an educated, design-savvy, and aspirational audience.",
+    "conversion_goal": "Generate leads (inquiries or expressions of interest), build brand desirability, and drive top-of-funnel engagement through aesthetic and storytelling, rather than direct online purchases.",
+    "first_viewport_logic": "Hero section uses a cinematic shot of the cars with strong brand logos, instantly establishing exclusivity and design pedigree. Branding is paired with concise messaging. Visual hierarchy moves from logo to car image to supporting subtext, driving immediate emotional engagement.",
+    "information_architecture": [
+      "Hero/Brand section with large aspirational image and logo",
+      "Introductory brand messaging and tagline",
+      "Showcase of car photography (varied angles and colorways)",
+      "Sequential storytelling blocks with bold textual highlights",
+      "Sparse, editorial layout alternating image and text",
+      "Closing brand section with call to action or contact prompt"
+    ],
+    "narrative_storytelling": "Highly curated, minimalist, and aspirational; storytelling is delivered through bold headlines, sparse but impactful supporting text, and immersive, large-format car imagery. The narrative constructs the car as a 'new species'—evocative, innovative, and purposeful.",
+    "composition_grid": "Strict vertical modular grid; content is center-aligned and symmetrical, with alternating block sections. Stacked structure on mobile and desktop, sacrificing information density for visual impact. Headline and image pairings follow fixed proportions, creating a visually rhythmic scroll experience.",
+    "spacing_rhythm": "Wide use of negative space to create drama and focus; generous padding between sections and elements prevents clutter and heightens a sense of luxury. Line spacing in headlines is tight for punchiness; body copy is sparse and airy.",
+    "typography": "Heavy, condensed, all-uppercase sans-serif for headlines—emphasizing strength and modernity. Subtle supporting sans-serif type for body, smaller in weight and scale. Text is always high-contrast (white on black, white on gray). No decorative or script fonts, contributing to the utilitarian but premium tone.",
+    "palette_contrast": "Largely grayscale (monochrome) with pops of color only in car images. Backgrounds alternate between gray, black, and muted tones, emphasizing car photography. The scarcity of color elsewhere increases the impact of imagery and maintains a restrained, elegant look.",
+    "media_treatment": "Editorial grade car photography—high detail, dramatic lighting, and studio-quality renders. No visual clutter or excessive retouching. Image aspect ratios are consistent (landscape for hero, square or 4:3 for supporting), ensuring harmony. Images are given ample space and are never crowded by text.",
+    "motion_interaction": "No visible motion or parallax in the static screenshots, indicating a largely static scroll experience. Emphasis is on the flow of content rather than distractions from animation. Any motion would be best used subtly (e.g., fade-ins, minimal transitions) if present.",
+    "cta_strategy": "No aggressive CTA; if any, it's subtle and appears at the end or in a footer, encouraging users to take a next step after engaging with the brand story. This aligns with the high-value, low-volume intent of the product.",
+    "desktop_behavior": "Full-width, immersive imagery with symmetrical center alignment. Text and images use more horizontal space. Sections are spaced out even further, reinforcing the sense of luxury.",
+    "mobile_behavior": "Stacked vertical flow; all elements collapse to single-column. Text and image proportions adjust for legibility and coherence on smaller screens. Minimal reduction of content; experience remains editorial and high-impact with no added mobile-specific features or shortcuts.",
+    "learn": [
+      "Use large-format, high-drama imagery to immediately telegraph quality and desirability.",
+      "Apply maximal negative space to support a luxury or boutique positioning—let content breathe.",
+      "Pair bold, condensed headline typography with restrained body copy to support punchy storytelling.",
+      "Alternate monochrome and black backgrounds to enhance the prominence of imagery.",
+      "Structure the scroll as a sequential, editorial journey—each ‘screen’ or fold delivers a single, memorable concept."
+    ],
+    "do_not_copy": [
+      "Do not split headlines awkwardly across lines or columns on desktop (e.g., 'A NEW SPECIES IS BORN' broken into columns).",
+      "Do not rely solely on imagery and whitespace without ensuring key actions or contact points are presented clearly.",
+      "Do not use excessive negative space that causes essential content to fall below the scroll on smaller screens.",
+      "Do not obscure vehicle features with overly dramatic lighting—always ensure clarity.",
+      "Do not crowd or overlap text on images unless absolute readability is ensured."
+    ],
+    "reusable_cross_category_traits": [
+      "Aspirational, cinematic photography as centerpiece.",
+      "Restrained color palette built upon grayscale foundation.",
+      "Editorial scroll rhythm punctuated by strong type and visuals.",
+      "Minimalism to convey quality and intention."
+    ],
+    "traits": [
+      "High-contrast, uppercase condensed type.",
+      "Maximal negative space for drama and focus.",
+      "Editorial storytelling sequence, merging image and text.",
+      "Strong visual hierarchy starting from hero image.",
+      "Subtle, non-distracting CTA placement."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "9596556991007cf27004e71dde16710d5bd250edbb40beb3d3ad2c7c14465ad6",
+    "input_checksum": "d496ce41b9a1ffb769011617eb54f79d57e172be272448027680c12212069fe5",
+    "output_checksum": "2ca0070c4f3b882bb85d4f9015c11a0ca5322d31585e9e131d6828ea1ff85906",
+    "timestamp": "2026-07-16T18:26:32.175060+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "35c0e37fd336d7e23f455af6b335819a94a5d9663c4e5defeb47634ef6a0cf7c",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Longbow appears to be a boutique British manufacturer of hand-built, featherweight sports cars focused on high performance and bespoke craftsmanship. The site is a high-concept brand showcase, emphasizing exclusivity and design ethos over mass-market sales.",
+  "audience": "Automotive enthusiasts, affluent collectors, motorsports fans, and potential buyers of luxury or bespoke performance vehicles. The tone and visual approach targets an educated, design-savvy, and aspirational audience.",
+  "conversion_goal": "Generate leads (inquiries or expressions of interest), build brand desirability, and drive top-of-funnel engagement through aesthetic and storytelling, rather than direct online purchases.",
+  "first_viewport_logic": "Hero section uses a cinematic shot of the cars with strong brand logos, instantly establishing exclusivity and design pedigree. Branding is paired with concise messaging. Visual hierarchy moves from logo to car image to supporting subtext, driving immediate emotional engagement.",
+  "information_architecture": [
+    "Hero/Brand section with large aspirational image and logo",
+    "Introductory brand messaging and tagline",
+    "Showcase of car photography (varied angles and colorways)",
+    "Sequential storytelling blocks with bold textual highlights",
+    "Sparse, editorial layout alternating image and text",
+    "Closing brand section with call to action or contact prompt"
+  ],
+  "narrative_storytelling": "Highly curated, minimalist, and aspirational; storytelling is delivered through bold headlines, sparse but impactful supporting text, and immersive, large-format car imagery. The narrative constructs the car as a 'new species'—evocative, innovative, and purposeful.",
+  "composition_grid": "Strict vertical modular grid; content is center-aligned and symmetrical, with alternating block sections. Stacked structure on mobile and desktop, sacrificing information density for visual impact. Headline and image pairings follow fixed proportions, creating a visually rhythmic scroll experience.",
+  "spacing_rhythm": "Wide use of negative space to create drama and focus; generous padding between sections and elements prevents clutter and heightens a sense of luxury. Line spacing in headlines is tight for punchiness; body copy is sparse and airy.",
+  "typography": "Heavy, condensed, all-uppercase sans-serif for headlines—emphasizing strength and modernity. Subtle supporting sans-serif type for body, smaller in weight and scale. Text is always high-contrast (white on black, white on gray). No decorative or script fonts, contributing to the utilitarian but premium tone.",
+  "palette_contrast": "Largely grayscale (monochrome) with pops of color only in car images. Backgrounds alternate between gray, black, and muted tones, emphasizing car photography. The scarcity of color elsewhere increases the impact of imagery and maintains a restrained, elegant look.",
+  "media_treatment": "Editorial grade car photography—high detail, dramatic lighting, and studio-quality renders. No visual clutter or excessive retouching. Image aspect ratios are consistent (landscape for hero, square or 4:3 for supporting), ensuring harmony. Images are given ample space and are never crowded by text.",
+  "motion_interaction": "No visible motion or parallax in the static screenshots, indicating a largely static scroll experience. Emphasis is on the flow of content rather than distractions from animation. Any motion would be best used subtly (e.g., fade-ins, minimal transitions) if present.",
+  "cta_strategy": "No aggressive CTA; if any, it's subtle and appears at the end or in a footer, encouraging users to take a next step after engaging with the brand story. This aligns with the high-value, low-volume intent of the product.",
+  "desktop_behavior": "Full-width, immersive imagery with symmetrical center alignment. Text and images use more horizontal space. Sections are spaced out even further, reinforcing the sense of luxury.",
+  "mobile_behavior": "Stacked vertical flow; all elements collapse to single-column. Text and image proportions adjust for legibility and coherence on smaller screens. Minimal reduction of content; experience remains editorial and high-impact with no added mobile-specific features or shortcuts.",
+  "learn": [
+    "Use large-format, high-drama imagery to immediately telegraph quality and desirability.",
+    "Apply maximal negative space to support a luxury or boutique positioning—let content breathe.",
+    "Pair bold, condensed headline typography with restrained body copy to support punchy storytelling.",
+    "Alternate monochrome and black backgrounds to enhance the prominence of imagery.",
+    "Structure the scroll as a sequential, editorial journey—each ‘screen’ or fold delivers a single, memorable concept."
+  ],
+  "do_not_copy": [
+    "Do not split headlines awkwardly across lines or columns on desktop (e.g., 'A NEW SPECIES IS BORN' broken into columns).",
+    "Do not rely solely on imagery and whitespace without ensuring key actions or contact points are presented clearly.",
+    "Do not use excessive negative space that causes essential content to fall below the scroll on smaller screens.",
+    "Do not obscure vehicle features with overly dramatic lighting—always ensure clarity.",
+    "Do not crowd or overlap text on images unless absolute readability is ensured."
+  ],
+  "reusable_cross_category_traits": [
+    "Aspirational, cinematic photography as centerpiece.",
+    "Restrained color palette built upon grayscale foundation.",
+    "Editorial scroll rhythm punctuated by strong type and visuals.",
+    "Minimalism to convey quality and intention."
+  ],
+  "traits": [
+    "High-contrast, uppercase condensed type.",
+    "Maximal negative space for drama and focus.",
+    "Editorial storytelling sequence, merging image and text.",
+    "Strong visual hierarchy starting from hero image.",
+    "Subtle, non-distracting CTA placement."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "longbow",
+    "candidate_url": "https://www.awwwards.com/sites/longbow",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://db-longbow.webflow.io/",
+    "resolution_source": "https://www.awwwards.com/sites/longbow",
+    "discovered_at": "2026-07-16T18:22:11.036555+00:00"
+  },
+  "content_hash": "7913f188cbb7fdd92be22797825284859c0e92ed366b11d0083c98afbdc3d9da"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "www-risk-film",
+  "title": "www-risk-film",
+  "source_url": "https://www.risk.film/",
+  "normalized_url": "https://www.risk.film/",
+  "capture_status": "failed",
+  "analysis_status": "not_started",
+  "failure": {
+    "stage": "capture",
+    "message": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+    "timestamp": "2026-07-16T18:31:41.613610+00:00",
+    "attempt": 2
+  },
+  "traits": [],
+  "learn": [],
+  "do_not_copy": [
+    "The source is unavailable and cannot be used as a template."
+  ]
+}

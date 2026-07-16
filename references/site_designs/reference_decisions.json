@@ -1,0 +1,2169 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T18:38:20.407867+00:00",
+  "decisions": [
+    {
+      "reference_id": "belladentclinik-kr-ua",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Clean, modular card layouts for presenting discrete content types.",
+          "transferable principle: Ample use of white space for calm, premium feel.",
+          "transferable principle: Full-width hero banners pairing ambient imagery with overlayed CTAs.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "elegant heading typography and soft, readable body font.",
+          "warm, muted palette with gold accent for premium impression.",
+          "social proof placed just before conversion options.",
+          "responsive design with seamless single-column mobile experience.",
+          "prioritization of contact options throughout page."
+        ],
+        "coverage_contribution": [
+          "elegant heading typography and soft, readable body font.",
+          "prioritization of contact options throughout page.",
+          "responsive design with seamless single-column mobile experience.",
+          "social proof placed just before conversion options.",
+          "warm, muted palette with gold accent for premium impression."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000fffffdff80ffffffffff80278c3fffff8001ffffffffffffffff0000",
+          "mobile.png": "0000fffffffffffffffbffffc007c003c03bffff8001800183c1ffffffff0000"
+        },
+        "assessed_at": "2026-07-16T18:38:15.604974+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:15.605029+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:15.605039+00:00"
+    },
+    {
+      "reference_id": "bymonolog-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Oversized geometric typeface for headlines and branding.",
+          "transferable principle: Clear, minimal navigation with a single, emphasized CTA.",
+          "transferable principle: Grid-based structure with generous negative space.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "logical, modular grid layout with vertical storytelling.",
+          "high-contrast color palette with strong type hierarchy.",
+          "emphasis on brand story and past client proof in first viewport.",
+          "intelligently staggered information—from intro through proof to services and final cta.",
+          "responsive, stackable layout scaling gracefully from desktop to mobile."
+        ],
+        "coverage_contribution": [
+          "emphasis on brand story and past client proof in first viewport.",
+          "high-contrast color palette with strong type hierarchy.",
+          "intelligently staggered information—from intro through proof to services and final cta.",
+          "logical, modular grid layout with vertical storytelling.",
+          "responsive, stackable layout scaling gracefully from desktop to mobile."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "07c00000000000000000ffffffffffffffff0000000000000000018000000000",
+          "mobile.png": "00000000000000000000ffffffffffffffff0000000000000000000000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:15.801782+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:15.801837+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:15.801851+00:00"
+    },
+    {
+      "reference_id": "coffee-tech-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Modular grid layouts that adapt elegantly from desktop to mobile.",
+          "transferable principle: Dramatic hero composition with product-centered visuals.",
+          "transferable principle: Section-based narrative flow to highlight innovation, trust, and value before product listings.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "very large, geometric sans-serif hero typography.",
+          "dark/light background switching for clear segmentation.",
+          "carefully isolated, high-contrast product photos.",
+          "minimal, functional navigation with persistent cta.",
+          "confident use of negative space.",
+          "static, visually led storytelling focused on expertise and technology."
+        ],
+        "coverage_contribution": [
+          "carefully isolated, high-contrast product photos.",
+          "confident use of negative space.",
+          "dark/light background switching for clear segmentation.",
+          "minimal, functional navigation with persistent cta.",
+          "static, visually led storytelling focused on expertise and technology.",
+          "very large, geometric sans-serif hero typography."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "0000000000000000c7ffffffffffffffffffffffffff87ff8c61ffff00000000",
+          "mobile.png": "0000808fffffffffffffffffffff80018027ffff8001ffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:15.920096+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:15.920148+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:15.920155+00:00"
+    },
+    {
+      "reference_id": "db-longbow-webflow-io",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Aspirational, cinematic photography as centerpiece.",
+          "transferable principle: Restrained color palette built upon grayscale foundation.",
+          "transferable principle: Editorial scroll rhythm punctuated by strong type and visuals.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "high-contrast, uppercase condensed type.",
+          "maximal negative space for drama and focus.",
+          "editorial storytelling sequence, merging image and text.",
+          "strong visual hierarchy starting from hero image.",
+          "subtle, non-distracting cta placement."
+        ],
+        "coverage_contribution": [
+          "editorial storytelling sequence, merging image and text.",
+          "high-contrast, uppercase condensed type.",
+          "maximal negative space for drama and focus.",
+          "strong visual hierarchy starting from hero image.",
+          "subtle, non-distracting cta placement."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ff7fff7fffffffffffff0600000000000ff0ffffffffffff1ff8000000000000",
+          "mobile.png": "ffffffffffffffffffffffffffff0840000000000001ffff0000000000004000"
+        },
+        "assessed_at": "2026-07-16T18:38:16.224503+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:16.224548+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:16.224556+00:00"
+    },
+    {
+      "reference_id": "defolixx-github-io-un-ity",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: High-contrast actionable buttons that float/stay accessible on both desktop and mobile.",
+          "transferable principle: Clear, honest event photography with minimal decoration to increase trust.",
+          "transferable principle: Sectional design that flows from value/service proposition through visuals to clear conversion steps without unnecessary UI.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "brand-themed palette supports recall with minimal colors.",
+          "hero background contextualizes the space immediately.",
+          "cta clustering drives conversion above the fold.",
+          "repeated media format for each event type increases user comprehension.",
+          "footer repeated in both desktop and mobile shows address, link, and service guarantees."
+        ],
+        "coverage_contribution": [
+          "brand-themed palette supports recall with minimal colors.",
+          "cta clustering drives conversion above the fold.",
+          "footer repeated in both desktop and mobile shows address, link, and service guarantees.",
+          "hero background contextualizes the space immediately.",
+          "repeated media format for each event type increases user comprehension."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "3ffe0000000000000000ffffffff8008fffffffff7f7ffff089fffff00000000",
+          "mobile.png": "0000000fffffffffffff800180c1c01780018001800180018001ffffffff0000"
+        },
+        "assessed_at": "2026-07-16T18:38:16.336417+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:16.336479+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:16.336489+00:00"
+    },
+    {
+      "reference_id": "depoluxe-xyz",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Full-viewport cinematic hero with poetic text overlay.",
+          "transferable principle: Minimal navigation with high typographic refinement.",
+          "transferable principle: Subtle, respectful cookie consent integration.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "editorial, cinematic art direction.",
+          "luxury-oriented restraint and visual hierarchy.",
+          "typography-driven, negative space-focused layout."
+        ],
+        "coverage_contribution": [
+          "editorial, cinematic art direction.",
+          "luxury-oriented restraint and visual hierarchy.",
+          "typography-driven, negative space-focused layout."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ffffff7fff7fff7fff3ffe3ffe3ffe3ffe3ffc3eec3e08000000000000080000",
+          "mobile.png": "fffcfffffffffffec1c0e100fe003f008f00c000000000008000000006000000"
+        },
+        "assessed_at": "2026-07-16T18:38:16.384362+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:16.384409+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:16.384416+00:00"
+    },
+    {
+      "reference_id": "eurozet-ua",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Visual hierarchy via strong section separation and card-based layouts.",
+          "transferable principle: Primary CTAs repeated and always actionable at both top and in-contact sections.",
+          "transferable principle: Humanized, approachable imagery paired with clean iconography.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "card-based, modular design for services and staff.",
+          "palette emphasizing clinical professionalism (white/blue/dark blue tones).",
+          "information progressively disclosed: starting with invite/overview, then depth by section.",
+          "minimal motion, only used for carousels and cta feedback.",
+          "typography and iconography are accessible and clean throughout."
+        ],
+        "coverage_contribution": [
+          "card-based, modular design for services and staff.",
+          "information progressively disclosed: starting with invite/overview, then depth by section.",
+          "minimal motion, only used for carousels and cta feedback.",
+          "palette emphasizing clinical professionalism (white/blue/dark blue tones).",
+          "typography and iconography are accessible and clean throughout."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "0000fdffffffffffffffffffffffffffc423c63fffffffffffffffffc0030000",
+          "mobile.png": "0000ffffffffffffffffffffffffffffffffffffffffffffffffdfff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:16.490039+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:16.490072+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:16.490078+00:00"
+    },
+    {
+      "reference_id": "iodent-dental",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Start with credibility: environment and team visuals, not stock photos.",
+          "transferable principle: Prioritize immediate access to appointment CTAs on all viewports.",
+          "transferable principle: Use modular, visually separated cards for complex offerings.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "visually calm and clean; avoids visual clutter.",
+          "action-focused without being overbearing.",
+          "responsive and accessible information layout.",
+          "subtle motion cues for interaction.",
+          "grid-aligned, modern healthcare web design."
+        ],
+        "coverage_contribution": [
+          "action-focused without being overbearing.",
+          "grid-aligned, modern healthcare web design.",
+          "responsive and accessible information layout.",
+          "subtle motion cues for interaction.",
+          "visually calm and clean; avoids visual clutter."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000ffffffffffffffff0000ffffffffffff0000ffffffff00008e3f0000",
+          "mobile.png": "0000d7ffffffffffffffffffffffffff0000ffff00000000ffff000000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:16.671489+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:16.671534+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:16.671543+00:00"
+    },
+    {
+      "reference_id": "neuemontreal-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Emphasize product versatility visually throughout the page sequence.",
+          "transferable principle: Bring social proof (like global usage) directly before CTAs to prime action.",
+          "transferable principle: Use segmented color blocks for fast section recognition in a long-scroll experience.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "non-traditional, asymmetric grid.",
+          "bold use of rainbow/primary accent blocks.",
+          "typography-led storytelling.",
+          "contrasting playful and minimal sections.",
+          "product proof woven with call-to-action.",
+          "flexible modular structure."
+        ],
+        "coverage_contribution": [
+          "bold use of rainbow/primary accent blocks.",
+          "contrasting playful and minimal sections.",
+          "flexible modular structure.",
+          "non-traditional, asymmetric grid.",
+          "product proof woven with call-to-action.",
+          "typography-led storytelling."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "000000000000ffffffffffffffffffffffffffff0000ffff0000ffff00000000",
+          "mobile.png": "0000000000000000fffffffffffffffffffffdffffff7ffe0000ffffffff0000"
+        },
+        "assessed_at": "2026-07-16T18:38:17.067838+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.068082+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.068109+00:00"
+    },
+    {
+      "reference_id": "newartem855-netizen-github-io",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Strong, asymmetric split grid layouts for bold hero composition.",
+          "transferable principle: Stat-block cards that highlight critical proof points in visual containers.",
+          "transferable principle: Single, accent-colored CTA as action anchor.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "bold color palette (black/orange/yellow/white) with tech-social overtones.",
+          "hero-focused, value-centric copywriting.",
+          "modular, grid-based, single-column stacking for mobile.",
+          "high vertical spacing for clarity and focus.",
+          "minimalist use of decorative assets—emphasis on message and ui clarity."
+        ],
+        "coverage_contribution": [
+          "bold color palette (black/orange/yellow/white) with tech-social overtones.",
+          "hero-focused, value-centric copywriting.",
+          "high vertical spacing for clarity and focus.",
+          "minimalist use of decorative assets—emphasis on message and ui clarity.",
+          "modular, grid-based, single-column stacking for mobile."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "3ff83fff3800000000000000000000000000000000007ffe7ffe000000000000",
+          "mobile.png": "7ffcffff000000000000000000000000000000007ffe7ffe7ffe7ffe00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:17.149198+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.149228+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.149235+00:00"
+    },
+    {
+      "reference_id": "newartem855-netizen-github-io-anem-igital-gency",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Bold typographic hero with immediate value statement.",
+          "transferable principle: Section-based, high-contrast monochrome backgrounds to segment journey.",
+          "transferable principle: Use of performance metrics/case studies as social proof anchors.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "minimalist, high-impact aesthetic.",
+          "emphasis on quantifiable results via case studies and stats.",
+          "clear vertical sectioning and progressive content disclosure.",
+          "mobile-first, with excellent stacking and touch targets.",
+          "fixed navigation and easily locatable contact points."
+        ],
+        "coverage_contribution": [
+          "clear vertical sectioning and progressive content disclosure.",
+          "emphasis on quantifiable results via case studies and stats.",
+          "fixed navigation and easily locatable contact points.",
+          "minimalist, high-impact aesthetic.",
+          "mobile-first, with excellent stacking and touch targets."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000000000000000ffffffffffffffff0000000000000000000000000000",
+          "mobile.png": "0000000000003f800000ffe0fff0fff000000000000000000000000000003fc0"
+        },
+        "assessed_at": "2026-07-16T18:38:17.252776+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.252813+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.252820+00:00"
+    },
+    {
+      "reference_id": "newartem855-netizen-github-io-auratop1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Elegant block-and-space layout",
+          "transferable principle: Persistent, clear primary CTA",
+          "transferable principle: Hero section with centered prime message over ambience-setting background",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "serif & sans-serif contrast for text hierarchy",
+          "luxurious but accessible palette",
+          "strong vertical alignment",
+          "lenient padding and sectioning",
+          "minimalist navigation"
+        ],
+        "coverage_contribution": [
+          "lenient padding and sectioning",
+          "luxurious but accessible palette",
+          "minimalist navigation",
+          "serif & sans-serif contrast for text hierarchy",
+          "strong vertical alignment"
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000000000000000ffffffff00000000ffffffff0000000000000000ffff",
+          "mobile.png": "00000000000000000000ffffffffffff00000000ffffffff000000000000ffff"
+        },
+        "assessed_at": "2026-07-16T18:38:17.365968+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.366002+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.366009+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-atmosfera-site",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Generous white space for premium perception.",
+          "transferable principle: Alternating palette sections for easy navigation and scannability.",
+          "transferable principle: Prominent, sticky or floating CTA button for quick access on mobile.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "high-contrast, editorial layout with visually distinct blocks.",
+          "elevated, minimalist typography with restrained gold accents.",
+          "aspirational imagery in product showcases.",
+          "intentional pacing from introduction to call-to-action."
+        ],
+        "coverage_contribution": [
+          "aspirational imagery in product showcases.",
+          "elevated, minimalist typography with restrained gold accents.",
+          "high-contrast, editorial layout with visually distinct blocks.",
+          "intentional pacing from introduction to call-to-action."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "0000ffffffff000000000000000000000000ffffffffffff0000ffffffff0000",
+          "mobile.png": "0000ffff0000e01fffffffffffffffffffff000000000000ffffffff4f7e0000"
+        },
+        "assessed_at": "2026-07-16T18:38:17.646520+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.646585+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.646596+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-dentistry-kievskaya1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Left-right/asymmetric layouts for desktop to combine human imagery and content.",
+          "transferable principle: Single-column mobile layouts prioritizing conversion blocks.",
+          "transferable principle: Heavy/light background alternation for visual pacing.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "professional, high-contrast palette signifies trust and status.",
+          "clear, compelling headline communicates pain-free treatment as differentiator.",
+          "prominent, well-styled primary cta always above the fold.",
+          "human-centered visuals foster emotional connection.",
+          "layout adapts responsively and preserves hierarchy."
+        ],
+        "coverage_contribution": [
+          "clear, compelling headline communicates pain-free treatment as differentiator.",
+          "human-centered visuals foster emotional connection.",
+          "layout adapts responsively and preserves hierarchy.",
+          "professional, high-contrast palette signifies trust and status.",
+          "prominent, well-styled primary cta always above the fold."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "000000000000ffffffffffffffffffff00000000ffffffffffff000000000000",
+          "mobile.png": "000000000000ffffffffffff000000000000ffffffffffffffff000000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:17.751386+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.751417+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.751424+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-dentistry-kievskaya2",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Large, reassuring value claims in bold type.",
+          "transferable principle: Immediacy in call-to-action placement and contrast.",
+          "transferable principle: Clear trust-building imagery (real professionals, not stock photos).",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "bold, concise headline with highlighted keywords.",
+          "maximum visibility of conversion ctas.",
+          "clean, friendly palette and large photos of staff.",
+          "whitespace-driven layout emphasizing comfort and trust."
+        ],
+        "coverage_contribution": [
+          "bold, concise headline with highlighted keywords.",
+          "clean, friendly palette and large photos of staff.",
+          "maximum visibility of conversion ctas.",
+          "whitespace-driven layout emphasizing comfort and trust."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "cf008701ff01ffffffffffffffffffffffffffff0000ffffffffffffffff0000",
+          "mobile.png": "0000ffffffffffffffffffffffffffffffff0000ffffffffffffffffffff0000"
+        },
+        "assessed_at": "2026-07-16T18:38:17.837357+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.837388+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:17.837395+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-drivepark",
+      "decision": "excluded",
+      "confidence": 10,
+      "scope_of_learning": null,
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 10,
+        "reasons": [
+          "does not introduce a new primary trait; retained only if it materially strengthens a sparse trait"
+        ],
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "unrelated_redirect"
+        ],
+        "scope_of_learning": null,
+        "traits": [],
+        "coverage_contribution": [],
+        "screenshot_fingerprints": {},
+        "assessed_at": "2026-07-16T18:38:17.837522+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "mobile_mismatch",
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:17.837532+00:00"
+      },
+      "rejection_reasons": [
+        "analysis_incomplete",
+        "capture_failed",
+        "insufficient_scope",
+        "low_confidence",
+        "mobile_mismatch",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:17.837536+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-eliz-de-fleur-site-20260711095843",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Contrasting editorial typography for premium effect.",
+          "transferable principle: Tight grid system with adaptive layout shifting (columns to stack).",
+          "transferable principle: Sectioned IA: story, proof (gallery), process, CTA.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "bold editorial layout with large serif headlines.",
+          "negative space and clear visual rhythm.",
+          "minimalist navigation and understated ctas.",
+          "portfolio-forward grid gallery.",
+          "distinctive, split-section color blocking.",
+          "process transparency through dedicated narrative segments."
+        ],
+        "coverage_contribution": [
+          "bold editorial layout with large serif headlines.",
+          "distinctive, split-section color blocking.",
+          "minimalist navigation and understated ctas.",
+          "negative space and clear visual rhythm.",
+          "portfolio-forward grid gallery.",
+          "process transparency through dedicated narrative segments."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000002ffffffc3f9ff8991cd91ffffffff0000c0ff80ffdfffffffffffffff",
+          "mobile.png": "00008001c003ffffffffffffffffffffffffffff00008003c003ffffffffffff"
+        },
+        "assessed_at": "2026-07-16T18:38:18.098177+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.098211+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.098220+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-hereta",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Soft but assertive CTAs for reassurance-focused industries.",
+          "transferable principle: Grid-based layouts with clear modular sections.",
+          "transferable principle: Palette that supports both calm and trust (blend of warmth + neutrality).",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "patient reassurance emphasized visually and textually.",
+          "strong, clear type hierarchy with standout hero headlines.",
+          "multiple, strategically placed ctas.",
+          "balance of warm, inviting color blocks with clean whitespace.",
+          "judicious use of testimonial and credential visuals for social proof."
+        ],
+        "coverage_contribution": [
+          "balance of warm, inviting color blocks with clean whitespace.",
+          "judicious use of testimonial and credential visuals for social proof.",
+          "multiple, strategically placed ctas.",
+          "patient reassurance emphasized visually and textually.",
+          "strong, clear type hierarchy with standout hero headlines."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ffc3ffffffffffff00000000ffe3ffffffffffffc403ce63ffffc0ff00000000",
+          "mobile.png": "ffffffffffff81e1fc01ffffffffffffffffc003c003ffffffff800100000000"
+        },
+        "assessed_at": "2026-07-16T18:38:18.326350+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.326402+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.326411+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-hollywood1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "hero_only",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Top-loaded clear navigation and instant-action CTA.",
+          "transferable principle: Minimalist, luxury-driven spacing logic.",
+          "transferable principle: Price or offers visible on first screen to support decision making.",
+          "learning scope: hero_only"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "hero_only",
+        "traits": [
+          "elegant serif typography for hero; script accent for secondary title.",
+          "strong color-blocking with cream/burgundy/black for branding and flow.",
+          "dense above-fold, airy below-fold structure for a luxe, uncluttered feel."
+        ],
+        "coverage_contribution": [
+          "dense above-fold, airy below-fold structure for a luxe, uncluttered feel.",
+          "elegant serif typography for hero; script accent for secondary title.",
+          "strong color-blocking with cream/burgundy/black for branding and flow."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ffffffffffffffffffffffffffffffffffffffff000000000000ffff00000000",
+          "mobile.png": "ffffffffffffffffffffffffffffffffffff0000000000000000ffffffff0000"
+        },
+        "assessed_at": "2026-07-16T18:38:18.410995+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.411048+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.411068+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-hollywood2",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Strong hero section with singular focus.",
+          "transferable principle: Discerning, limited color palette; contrast without harshness.",
+          "transferable principle: Emphasis on vertical separation for information clarity.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "premium, calming visual tone.",
+          "clear hierarchy and immediate access to primary actions.",
+          "trust and reassurance via testimonials, badges, and elegant typography."
+        ],
+        "coverage_contribution": [
+          "clear hierarchy and immediate access to primary actions.",
+          "premium, calming visual tone.",
+          "trust and reassurance via testimonials, badges, and elegant typography."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "fffb8f81ffffffffffffffffffffffff00000000ffffffffffffffffffff0000",
+          "mobile.png": "ffff0007ffffffffffffffff000700030003ffffffffffffffffffffffff0003"
+        },
+        "assessed_at": "2026-07-16T18:38:18.541161+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.541207+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.541217+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-kafespeka2",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Central, hero-driven offer with immediate CTAs.",
+          "transferable principle: Alternating color-blocked sections for sectional clarity.",
+          "transferable principle: Clear footer with comprehensive contact, legal, and social info.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "warm, celebratory interior theme set with hero image and color.",
+          "immediate conversion-oriented layout.",
+          "mobile-responsiveness with clean menu adaptation.",
+          "emphasis on family-friendly, festive atmosphere through visual styling."
+        ],
+        "coverage_contribution": [
+          "emphasis on family-friendly, festive atmosphere through visual styling.",
+          "immediate conversion-oriented layout.",
+          "mobile-responsiveness with clean menu adaptation.",
+          "warm, celebratory interior theme set with hero image and color."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "000000007700ffffffff00000000000000000000ffffffffffffffff00000000",
+          "mobile.png": "00010001ffffffff00010001000100010000fffdffffffffffffffff00010001"
+        },
+        "assessed_at": "2026-07-16T18:38:18.634391+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.634428+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.634435+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-kirkovsky",
+      "decision": "excluded",
+      "confidence": 30,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 84,
+        "reasons": [],
+        "rejection_reasons": [
+          "404"
+        ],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "linear vertical stack layout with generous spacing.",
+          "neutral and subdued color palette with reserved accents.",
+          "single cta link styled for clarity, not conversion.",
+          "fully responsive design with perfect conservation of information hierarchy."
+        ],
+        "coverage_contribution": [
+          "fully responsive design with perfect conservation of information hierarchy.",
+          "linear vertical stack layout with generous spacing.",
+          "neutral and subdued color palette with reserved accents.",
+          "single cta link styled for clarity, not conversion."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "fe7ffe7ff81ff80ffc3ffe7fffffffffffffffffffffffffffffffffffffffff",
+          "mobile.png": "fe7fe007f00fffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "assessed_at": "2026-07-16T18:38:18.657016+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "404"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.657048+00:00"
+      },
+      "rejection_reasons": [
+        "404"
+      ],
+      "decision_at": "2026-07-16T18:38:18.657053+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-orange-beauty-studio",
+      "decision": "excluded",
+      "confidence": 30,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Clear hero-section value statement and fast access to main CTA",
+          "transferable principle: Contrasting CTA button color tied to brand accent",
+          "transferable principle: Spacing that matches the tone/sector (premium feel through breathability)",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "warm modernity via orange and brown tones",
+          "premium feel by use of serif/cursive headline pairing",
+          "clarity focus: easy-to-find booking, simple navigation",
+          "carefully curated photographic subject matter"
+        ],
+        "coverage_contribution": [
+          "carefully curated photographic subject matter",
+          "clarity focus: easy-to-find booking, simple navigation",
+          "premium feel by use of serif/cursive headline pairing",
+          "warm modernity via orange and brown tones"
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ff03ff83ffff00000000ffffffffffffffffffffffffffffffffffffffff0000",
+          "mobile.png": "ffffffffffff00000000ffffffffffffffffffffffffffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:18.781043+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.781128+00:00"
+      },
+      "rejection_reasons": [
+        "curator_auditor_disagreement",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:18.781138+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-orange1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Hero layouts pairing left-aligned info with right-aligned product/service imagery.",
+          "transferable principle: Warm, branded gradients and high-contrast CTAs for identity and attention.",
+          "transferable principle: Instant credibility badges/stats tightly coupled to main content.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "modern luxury through serif fonts and soft gradients.",
+          "trust via social proof (reviews, kpis) displayed upfront.",
+          "careful content modularity: every element in the hero supports conversion or trust.",
+          "consistent, device-appropriate image and section scaling."
+        ],
+        "coverage_contribution": [
+          "careful content modularity: every element in the hero supports conversion or trust.",
+          "consistent, device-appropriate image and section scaling.",
+          "modern luxury through serif fonts and soft gradients.",
+          "trust via social proof (reviews, kpis) displayed upfront."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "87818701003fffffffffffffffffffffffffffffffffffffffffffffffff0000",
+          "mobile.png": "8007ffffffffffffffffffffffffffffffffffffffffffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:18.871694+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.871727+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:18.871734+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-orange2",
+      "decision": "excluded",
+      "confidence": 30,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Balanced desktop split layouts",
+          "transferable principle: Stacked/condensed mobile layouts",
+          "transferable principle: Elevated, colored CTAs",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "soft, segmented backgrounds",
+          "visual storytelling via product/result imagery",
+          "immediate cta visibility",
+          "elegant font pairing for distinction",
+          "footer as a solid visual anchor"
+        ],
+        "coverage_contribution": [
+          "elegant font pairing for distinction",
+          "footer as a solid visual anchor",
+          "immediate cta visibility",
+          "soft, segmented backgrounds",
+          "visual storytelling via product/result imagery"
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "cf03c703ffffffffffffffffffffffffffffffffffffffffffffffffffff0000",
+          "mobile.png": "803fffffffffffffffffffffffffffffffffffffffffffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:18.980714+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "near_duplicate"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:18.980749+00:00"
+      },
+      "rejection_reasons": [
+        "curator_auditor_disagreement",
+        "near_duplicate"
+      ],
+      "decision_at": "2026-07-16T18:38:18.980755+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-yourdental1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Dual-CTA hero with instant and chat-based conversion options.",
+          "transferable principle: Maximum clarity through strong whitespace and modular info bars.",
+          "transferable principle: Headline hierarchy and emotional storytelling anchored by real, relevant imagery.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "minimalist clinical layout prioritizing clarity and trust.",
+          "emphasis on trust signals (certifications, contacts, reviews) adjacent to main cta.",
+          "responsive, mobile-first stack with strong touch accessibility.",
+          "bold primary cta paired with instant digital messenger option.",
+          "calm, high-contrast palette with strategic red highlights."
+        ],
+        "coverage_contribution": [
+          "bold primary cta paired with instant digital messenger option.",
+          "calm, high-contrast palette with strategic red highlights.",
+          "emphasis on trust signals (certifications, contacts, reviews) adjacent to main cta.",
+          "minimalist clinical layout prioritizing clarity and trust.",
+          "responsive, mobile-first stack with strong touch accessibility."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ff818781ffffffffffff000000000000ffffffffffffffffffffffffffff0000",
+          "mobile.png": "0000ffffffffffffffff000000000000ffffffffffffffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.090356+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.090392+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.090400+00:00"
+    },
+    {
+      "reference_id": "optidigitalagent-github-io-yourdental2",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Conversationally direct value proposition at top, not hidden beneath imagery.",
+          "transferable principle: Prominent embedded proof (e.g., photo card) over amorphous stock visuals.",
+          "transferable principle: Sticky, visually prioritized CTA button in hero.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "immediate promise and proof structure in hero area.",
+          "red accent as a brand and action identifier.",
+          "clean, minimal, but not sterile clinical layout.",
+          "heavy vertical spacing to create relaxed premium impression.",
+          "high readability through typographic hierarchy and color contrast."
+        ],
+        "coverage_contribution": [
+          "clean, minimal, but not sterile clinical layout.",
+          "heavy vertical spacing to create relaxed premium impression.",
+          "high readability through typographic hierarchy and color contrast.",
+          "immediate promise and proof structure in hero area.",
+          "red accent as a brand and action identifier."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "fffffffbffffffffffff00000000ffffffffffffffffffffffff000000000000",
+          "mobile.png": "ffffffffffffffffffffffff00000000ffffffffffffffffffff000000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.205850+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.205938+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.205950+00:00"
+    },
+    {
+      "reference_id": "parkrestaurant-kyiv-ua",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Clear, prominent hero with primary CTA overlay.",
+          "transferable principle: Black/dark mode backgrounds with bright type for upscale ambiance.",
+          "transferable principle: Image-driven storytelling focused on authenticity and warmth.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "family-friendly and cozy branding.",
+          "emphasis on local or signature menu items with monthly highlights.",
+          "strong visual contrast with a restrained, elegant palette.",
+          "sticky navigation (desktop) and hamburger menu (mobile)."
+        ],
+        "coverage_contribution": [
+          "emphasis on local or signature menu items with monthly highlights.",
+          "family-friendly and cozy branding.",
+          "sticky navigation (desktop) and hamburger menu (mobile).",
+          "strong visual contrast with a restrained, elegant palette."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "31fc3ffc3ff407fc004000003ffc3ffc3ffc000000003c003c001c0008000000",
+          "mobile.png": "5fce7ffe61fe0000000000000000fffefffe02007f325ffe7fff6c0000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.291954+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.291989+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.291995+00:00"
+    },
+    {
+      "reference_id": "shop-brunellocucinelli-com-en-gb-ai",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "typography_only",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Error pages should be branded, visually structured, and provide actionable options regardless of sector.",
+          "transferable principle: Clear visual hierarchy is essential, even for error or edge-case states.",
+          "transferable principle: Responsiveness should ensure consistent, appropriate experience on all devices.",
+          "learning scope: typography_only"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "typography_only",
+        "traits": [
+          "unstyled, utilitarian error state",
+          "clear but unbranded message",
+          "no actionable recovery",
+          "no layout, structure, or visual relief"
+        ],
+        "coverage_contribution": [
+          "clear but unbranded message",
+          "no actionable recovery",
+          "no layout, structure, or visual relief",
+          "unstyled, utilitarian error state"
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "01ff01ff07ffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "mobile.png": "001f01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "assessed_at": "2026-07-16T18:38:19.313847+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.313908+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.313916+00:00"
+    },
+    {
+      "reference_id": "uniquerabbitstudios-com",
+      "decision": "excluded",
+      "confidence": 10,
+      "scope_of_learning": null,
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 10,
+        "reasons": [
+          "does not introduce a new primary trait; retained only if it materially strengthens a sparse trait"
+        ],
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "unrelated_redirect"
+        ],
+        "scope_of_learning": null,
+        "traits": [],
+        "coverage_contribution": [],
+        "screenshot_fingerprints": {},
+        "assessed_at": "2026-07-16T18:38:19.314059+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "mobile_mismatch",
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.314069+00:00"
+      },
+      "rejection_reasons": [
+        "analysis_incomplete",
+        "capture_failed",
+        "insufficient_scope",
+        "low_confidence",
+        "mobile_mismatch",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:19.314074+00:00"
+    },
+    {
+      "reference_id": "vectrfl-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: High-contrast left-aligned navigation with minimal brand signature can be adapted for other professional B2B pages.",
+          "transferable principle: Vertical sectioning, ample whitespace, and disciplined typography create calmness and confidence—suitable for any serious service offering.",
+          "transferable principle: Direct, jargon-light copywriting reinforcing core differentiators.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "industrial-grade visual minimalism (absence of decorative/stock imagery, total focus on value and process).",
+          "strong white/negative space discipline.",
+          "distinct, high-contrast ctas in sparsely populated footers.",
+          "animated motion reserved for signature brand moments only.",
+          "sequential narrative structure establishing modernity, reliability, and urgency."
+        ],
+        "coverage_contribution": [
+          "animated motion reserved for signature brand moments only.",
+          "distinct, high-contrast ctas in sparsely populated footers.",
+          "industrial-grade visual minimalism (absence of decorative/stock imagery, total focus on value and process).",
+          "sequential narrative structure establishing modernity, reliability, and urgency.",
+          "strong white/negative space discipline."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ffffdfffffffffffffffffffffffffffffffffffffffffffffffffff00000000",
+          "mobile.png": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.441109+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.441157+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.441164+00:00"
+    },
+    {
+      "reference_id": "webgoalz-com",
+      "decision": "excluded",
+      "confidence": 10,
+      "scope_of_learning": null,
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 10,
+        "reasons": [
+          "does not introduce a new primary trait; retained only if it materially strengthens a sparse trait"
+        ],
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "unrelated_redirect"
+        ],
+        "scope_of_learning": null,
+        "traits": [],
+        "coverage_contribution": [],
+        "screenshot_fingerprints": {
+          "desktop.png": "f01fe00fffffffffffffffffffffffffe707d7ff8001ffffffffffff00000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.571655+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "mobile_mismatch",
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.571680+00:00"
+      },
+      "rejection_reasons": [
+        "analysis_incomplete",
+        "capture_failed",
+        "insufficient_scope",
+        "low_confidence",
+        "mobile_mismatch",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:19.571686+00:00"
+    },
+    {
+      "reference_id": "www-21hrs-space",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Corner framing lines and subtle interface accents for visual cohesion.",
+          "transferable principle: Central visual focus using atmospheric rich media (moon, stars) with sparse interface elements.",
+          "transferable principle: Mobile onboarding with fast, visually distinctive CTA and clear instructional copy.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "minimalist cinematic visual design.",
+          "high centrality and symmetry in composition.",
+          "single, bold cta with clear user action pathway.",
+          "atmospheric media treatment supporting narrative immersion."
+        ],
+        "coverage_contribution": [
+          "atmospheric media treatment supporting narrative immersion.",
+          "high centrality and symmetry in composition.",
+          "minimalist cinematic visual design.",
+          "single, bold cta with clear user action pathway."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "c003800100000000000000000000000000000000010007e00ff01ff8bc3de007",
+          "mobile.png": "7c00000000000000000000003ffc3ffcffffffff300c000000000ff00ff00000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.594753+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.594802+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.594809+00:00"
+    },
+    {
+      "reference_id": "www-hildenkaira-fi",
+      "decision": "excluded",
+      "confidence": 10,
+      "scope_of_learning": null,
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 10,
+        "reasons": [
+          "does not introduce a new primary trait; retained only if it materially strengthens a sparse trait"
+        ],
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "unrelated_redirect"
+        ],
+        "scope_of_learning": null,
+        "traits": [],
+        "coverage_contribution": [],
+        "screenshot_fingerprints": {},
+        "assessed_at": "2026-07-16T18:38:19.594943+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "mobile_mismatch",
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.594952+00:00"
+      },
+      "rejection_reasons": [
+        "analysis_incomplete",
+        "capture_failed",
+        "insufficient_scope",
+        "low_confidence",
+        "mobile_mismatch",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:19.594957+00:00"
+    },
+    {
+      "reference_id": "www-houseofhoney-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Strong wordmark with contrasting type weights for expressive branding.",
+          "transferable principle: Full-width, high-quality photography anchoring homepage mood.",
+          "transferable principle: Whitespace used to segment narrative, not just content blocks.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "warm, editorial palette with a soft ground layer and deep accent hues.",
+          "microcopy that blends expertise with playfulness ('designed with pleasure').",
+          "responsive design with preserved image impact across devices.",
+          "visually-led storytelling—details revealed as visitor scrolls past hero."
+        ],
+        "coverage_contribution": [
+          "microcopy that blends expertise with playfulness ('designed with pleasure').",
+          "responsive design with preserved image impact across devices.",
+          "visually-led storytelling—details revealed as visitor scrolls past hero.",
+          "warm, editorial palette with a soft ground layer and deep accent hues."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "ffffffff0180fbf3ffffffffdce0c0e0c0e040a040a040a4fc6c801800000000",
+          "mobile.png": "5fffffffffffffffffffffff00fe00fe00860086008e00260000000004000000"
+        },
+        "assessed_at": "2026-07-16T18:38:19.635081+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.635129+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.635136+00:00"
+    },
+    {
+      "reference_id": "www-juliencalot-com",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Equal sizing and clean margining of portfolio items regardless of content type.",
+          "transferable principle: Whitespace to balance immersive content showcases, especially in creative industries.",
+          "transferable principle: Consistent visual rhythm in grid layouts for large collections.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "artistic confidence via minimal ui; the art itself is enough.",
+          "simple, legible grid that feels gallery-like, not e-commerce or editorial.",
+          "whitespace as a framing tool, not just negative space.",
+          "no overt user prompting—experience is contemplative, not commercial."
+        ],
+        "coverage_contribution": [
+          "artistic confidence via minimal ui; the art itself is enough.",
+          "no overt user prompting—experience is contemplative, not commercial.",
+          "simple, legible grid that feels gallery-like, not e-commerce or editorial.",
+          "whitespace as a framing tool, not just negative space."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "0000ffffffff366f364c366c366c364c366c366c364c324c324cb66c367c366c",
+          "mobile.png": "ffffffffc181df8181818181818181818d81c181818181818181819b81818181"
+        },
+        "assessed_at": "2026-07-16T18:38:19.962494+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.962547+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:19.962554+00:00"
+    },
+    {
+      "reference_id": "www-risk-film",
+      "decision": "excluded",
+      "confidence": 10,
+      "scope_of_learning": null,
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "excluded",
+        "confidence": 10,
+        "reasons": [
+          "does not introduce a new primary trait; retained only if it materially strengthens a sparse trait"
+        ],
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "unrelated_redirect"
+        ],
+        "scope_of_learning": null,
+        "traits": [],
+        "coverage_contribution": [],
+        "screenshot_fingerprints": {},
+        "assessed_at": "2026-07-16T18:38:19.962691+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "excluded",
+        "confidence": 30,
+        "rejection_reasons": [
+          "analysis_incomplete",
+          "capture_failed",
+          "insufficient_scope",
+          "low_confidence",
+          "mobile_mismatch",
+          "unrelated_redirect"
+        ],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:19.962701+00:00"
+      },
+      "rejection_reasons": [
+        "analysis_incomplete",
+        "capture_failed",
+        "insufficient_scope",
+        "low_confidence",
+        "mobile_mismatch",
+        "unrelated_redirect"
+      ],
+      "decision_at": "2026-07-16T18:38:19.962706+00:00"
+    },
+    {
+      "reference_id": "zaffiraxis-github-io-margo-salon",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Single focus CTA with high prominence.",
+          "transferable principle: Hero photography that creates atmosphere and context, not just illustration.",
+          "transferable principle: Clear, easy-to-navigate layout with strong information hierarchy.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "minimalist structure emphasizing whitespace",
+          "sophisticated serif/sans typography combination",
+          "muted, rich earth-tone palette with gold accentuation",
+          "centralized, legible cta buttons",
+          "photo-driven brand narrative",
+          "well-spaced, single-column stacking on mobile"
+        ],
+        "coverage_contribution": [
+          "centralized, legible cta buttons",
+          "minimalist structure emphasizing whitespace",
+          "muted, rich earth-tone palette with gold accentuation",
+          "photo-driven brand narrative",
+          "sophisticated serif/sans typography combination",
+          "well-spaced, single-column stacking on mobile"
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000ffffffffffffffffffffffffffff00000000ffff00000000ffff0000",
+          "mobile.png": "0000ffffffffffffffffffffffffffffffffffff000000000000000060000000"
+        },
+        "assessed_at": "2026-07-16T18:38:20.084237+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:20.084273+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:20.084280+00:00"
+    },
+    {
+      "reference_id": "zaffiraxis-github-io-silk-road-rent-car-index-html",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Large, direct hero with emotional impact and clear utility benefit.",
+          "transferable principle: Grid cards for feature explanation, service proofs, or products.",
+          "transferable principle: Dark theme with bold mono-type contrast and photographic accent.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "minimal top navigation with standout cta.",
+          "hero photo with text overlay covering two columns or more.",
+          "white-on-black palette for premium impact.",
+          "highly legible, extra-bold headlines for main messages.",
+          "evenly spaced, visual card grids for advantage and fleet presentations.",
+          "sectionalized vertical stack mirroring progressive disclosure logic."
+        ],
+        "coverage_contribution": [
+          "evenly spaced, visual card grids for advantage and fleet presentations.",
+          "hero photo with text overlay covering two columns or more.",
+          "highly legible, extra-bold headlines for main messages.",
+          "minimal top navigation with standout cta.",
+          "sectionalized vertical stack mirroring progressive disclosure logic.",
+          "white-on-black palette for premium impact."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "fdfff1ff7ffe7f8170003ffc3ffe052020007ffc23f000000000220000000000",
+          "mobile.png": "027f7ff07fc07ffe7ffe7ffe7ffe7c00703e62be000000000000000000000000"
+        },
+        "assessed_at": "2026-07-16T18:38:20.207989+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:20.208021+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:20.208027+00:00"
+    },
+    {
+      "reference_id": "zaffiraxis-github-io-status1",
+      "decision": "active",
+      "confidence": 96,
+      "scope_of_learning": "full_site",
+      "curator": {
+        "role": "ReferenceCurator",
+        "decision": "active",
+        "confidence": 100,
+        "reasons": [
+          "transferable principle: Sequential visual storytelling (problem, proof, solution, conversion) is effective for any trust-based service business.",
+          "transferable principle: Sticky and clearly branded navigation aids orientation without overwhelming content.",
+          "transferable principle: Mobile layouts must stack trusted content vertically and avoid carousels/sliders where possible for clarity and accessibility.",
+          "learning scope: full_site"
+        ],
+        "rejection_reasons": [],
+        "scope_of_learning": "full_site",
+        "traits": [
+          "calm, inviting hero with blended value proposition and visual human connection.",
+          "service/benefit cards with icons and short copy for clarity.",
+          "documentary-style case galleries establish expertise authentically.",
+          "certification/credentials images for authority.",
+          "centrally placed, minimal friction booking cta and form.",
+          "testimonial section with large quote icon and clear author separation.",
+          "map/contact block integrated for post-conversion orientation.",
+          "clear, not distracting, footers with legal, navigation, and social links."
+        ],
+        "coverage_contribution": [
+          "calm, inviting hero with blended value proposition and visual human connection.",
+          "centrally placed, minimal friction booking cta and form.",
+          "certification/credentials images for authority.",
+          "clear, not distracting, footers with legal, navigation, and social links.",
+          "documentary-style case galleries establish expertise authentically.",
+          "map/contact block integrated for post-conversion orientation.",
+          "service/benefit cards with icons and short copy for clarity.",
+          "testimonial section with large quote icon and clear author separation."
+        ],
+        "screenshot_fingerprints": {
+          "desktop.png": "00000000ffffffffc1ffffff0000ffffffffffffffffffff00000000ffff0000",
+          "mobile.png": "00000000ffffffff8001ffff0000ffffffffffffffffffffffff00001f980000"
+        },
+        "assessed_at": "2026-07-16T18:38:20.407703+00:00"
+      },
+      "auditor": {
+        "role": "ReferenceAuditor",
+        "decision": "active",
+        "confidence": 96,
+        "rejection_reasons": [],
+        "reasons": [
+          "Independent validation of live capture, completeness, mobile evidence and visual duplication."
+        ],
+        "assessed_at": "2026-07-16T18:38:20.407740+00:00"
+      },
+      "rejection_reasons": [],
+      "decision_at": "2026-07-16T18:38:20.407747+00:00"
+    }
+  ],
+  "active_reference_count": 32,
+  "excluded_reference_count": 8,
+  "covered_traits": [
+    "action-focused without being overbearing.",
+    "animated motion reserved for signature brand moments only.",
+    "artistic confidence via minimal ui; the art itself is enough.",
+    "aspirational imagery in product showcases.",
+    "atmospheric media treatment supporting narrative immersion.",
+    "balance of warm, inviting color blocks with clean whitespace.",
+    "bold color palette (black/orange/yellow/white) with tech-social overtones.",
+    "bold editorial layout with large serif headlines.",
+    "bold primary cta paired with instant digital messenger option.",
+    "bold use of rainbow/primary accent blocks.",
+    "bold, concise headline with highlighted keywords.",
+    "brand-themed palette supports recall with minimal colors.",
+    "calm, high-contrast palette with strategic red highlights.",
+    "calm, inviting hero with blended value proposition and visual human connection.",
+    "card-based, modular design for services and staff.",
+    "careful content modularity: every element in the hero supports conversion or trust.",
+    "carefully isolated, high-contrast product photos.",
+    "centralized, legible cta buttons",
+    "centrally placed, minimal friction booking cta and form.",
+    "certification/credentials images for authority.",
+    "clean, friendly palette and large photos of staff.",
+    "clean, minimal, but not sterile clinical layout.",
+    "clear but unbranded message",
+    "clear hierarchy and immediate access to primary actions.",
+    "clear vertical sectioning and progressive content disclosure.",
+    "clear, compelling headline communicates pain-free treatment as differentiator.",
+    "clear, not distracting, footers with legal, navigation, and social links.",
+    "confident use of negative space.",
+    "consistent, device-appropriate image and section scaling.",
+    "contrasting playful and minimal sections.",
+    "cta clustering drives conversion above the fold.",
+    "dark/light background switching for clear segmentation.",
+    "dense above-fold, airy below-fold structure for a luxe, uncluttered feel.",
+    "distinct, high-contrast ctas in sparsely populated footers.",
+    "distinctive, split-section color blocking.",
+    "documentary-style case galleries establish expertise authentically.",
+    "editorial storytelling sequence, merging image and text.",
+    "editorial, cinematic art direction.",
+    "elegant heading typography and soft, readable body font.",
+    "elegant serif typography for hero; script accent for secondary title.",
+    "elevated, minimalist typography with restrained gold accents.",
+    "emphasis on brand story and past client proof in first viewport.",
+    "emphasis on family-friendly, festive atmosphere through visual styling.",
+    "emphasis on local or signature menu items with monthly highlights.",
+    "emphasis on quantifiable results via case studies and stats.",
+    "emphasis on trust signals (certifications, contacts, reviews) adjacent to main cta.",
+    "evenly spaced, visual card grids for advantage and fleet presentations.",
+    "family-friendly and cozy branding.",
+    "fixed navigation and easily locatable contact points.",
+    "flexible modular structure.",
+    "footer repeated in both desktop and mobile shows address, link, and service guarantees.",
+    "grid-aligned, modern healthcare web design.",
+    "heavy vertical spacing to create relaxed premium impression.",
+    "hero background contextualizes the space immediately.",
+    "hero photo with text overlay covering two columns or more.",
+    "hero-focused, value-centric copywriting.",
+    "high centrality and symmetry in composition.",
+    "high readability through typographic hierarchy and color contrast.",
+    "high vertical spacing for clarity and focus.",
+    "high-contrast color palette with strong type hierarchy.",
+    "high-contrast, editorial layout with visually distinct blocks.",
+    "high-contrast, uppercase condensed type.",
+    "highly legible, extra-bold headlines for main messages.",
+    "human-centered visuals foster emotional connection.",
+    "immediate conversion-oriented layout.",
+    "immediate promise and proof structure in hero area.",
+    "industrial-grade visual minimalism (absence of decorative/stock imagery, total focus on value and process).",
+    "information progressively disclosed: starting with invite/overview, then depth by section.",
+    "intelligently staggered information—from intro through proof to services and final cta.",
+    "intentional pacing from introduction to call-to-action.",
+    "judicious use of testimonial and credential visuals for social proof.",
+    "layout adapts responsively and preserves hierarchy.",
+    "lenient padding and sectioning",
+    "logical, modular grid layout with vertical storytelling.",
+    "luxurious but accessible palette",
+    "luxury-oriented restraint and visual hierarchy.",
+    "map/contact block integrated for post-conversion orientation.",
+    "maximal negative space for drama and focus.",
+    "maximum visibility of conversion ctas.",
+    "microcopy that blends expertise with playfulness ('designed with pleasure').",
+    "minimal motion, only used for carousels and cta feedback.",
+    "minimal top navigation with standout cta.",
+    "minimal, functional navigation with persistent cta.",
+    "minimalist cinematic visual design.",
+    "minimalist clinical layout prioritizing clarity and trust.",
+    "minimalist navigation",
+    "minimalist navigation and understated ctas.",
+    "minimalist structure emphasizing whitespace",
+    "minimalist use of decorative assets—emphasis on message and ui clarity.",
+    "minimalist, high-impact aesthetic.",
+    "mobile-first, with excellent stacking and touch targets.",
+    "mobile-responsiveness with clean menu adaptation.",
+    "modern luxury through serif fonts and soft gradients.",
+    "modular, grid-based, single-column stacking for mobile.",
+    "multiple, strategically placed ctas.",
+    "muted, rich earth-tone palette with gold accentuation",
+    "negative space and clear visual rhythm.",
+    "no actionable recovery",
+    "no layout, structure, or visual relief",
+    "no overt user prompting—experience is contemplative, not commercial.",
+    "non-traditional, asymmetric grid.",
+    "palette emphasizing clinical professionalism (white/blue/dark blue tones).",
+    "patient reassurance emphasized visually and textually.",
+    "photo-driven brand narrative",
+    "portfolio-forward grid gallery.",
+    "premium, calming visual tone.",
+    "prioritization of contact options throughout page.",
+    "process transparency through dedicated narrative segments.",
+    "product proof woven with call-to-action.",
+    "professional, high-contrast palette signifies trust and status.",
+    "prominent, well-styled primary cta always above the fold.",
+    "red accent as a brand and action identifier.",
+    "repeated media format for each event type increases user comprehension.",
+    "responsive and accessible information layout.",
+    "responsive design with preserved image impact across devices.",
+    "responsive design with seamless single-column mobile experience.",
+    "responsive, mobile-first stack with strong touch accessibility.",
+    "responsive, stackable layout scaling gracefully from desktop to mobile.",
+    "sectionalized vertical stack mirroring progressive disclosure logic.",
+    "sequential narrative structure establishing modernity, reliability, and urgency.",
+    "serif & sans-serif contrast for text hierarchy",
+    "service/benefit cards with icons and short copy for clarity.",
+    "simple, legible grid that feels gallery-like, not e-commerce or editorial.",
+    "single, bold cta with clear user action pathway.",
+    "social proof placed just before conversion options.",
+    "sophisticated serif/sans typography combination",
+    "static, visually led storytelling focused on expertise and technology.",
+    "sticky navigation (desktop) and hamburger menu (mobile).",
+    "strong color-blocking with cream/burgundy/black for branding and flow.",
+    "strong vertical alignment",
+    "strong visual contrast with a restrained, elegant palette.",
+    "strong visual hierarchy starting from hero image.",
+    "strong white/negative space discipline.",
+    "strong, clear type hierarchy with standout hero headlines.",
+    "subtle motion cues for interaction.",
+    "subtle, non-distracting cta placement.",
+    "testimonial section with large quote icon and clear author separation.",
+    "trust and reassurance via testimonials, badges, and elegant typography.",
+    "trust via social proof (reviews, kpis) displayed upfront.",
+    "typography and iconography are accessible and clean throughout.",
+    "typography-driven, negative space-focused layout.",
+    "typography-led storytelling.",
+    "unstyled, utilitarian error state",
+    "very large, geometric sans-serif hero typography.",
+    "visually calm and clean; avoids visual clutter.",
+    "visually-led storytelling—details revealed as visitor scrolls past hero.",
+    "warm, celebratory interior theme set with hero image and color.",
+    "warm, editorial palette with a soft ground layer and deep accent hues.",
+    "warm, muted palette with gold accent for premium impression.",
+    "well-spaced, single-column stacking on mobile",
+    "white-on-black palette for premium impact.",
+    "whitespace as a framing tool, not just negative space.",
+    "whitespace-driven layout emphasizing comfort and trust."
+  ],
+  "status": "AUTONOMOUS_REFERENCE_LIBRARY_READY"
+}

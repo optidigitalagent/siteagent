@@ -1,0 +1,149 @@
+{
+  "id": "www-21hrs-space",
+  "title": "21 Hours on the Moon",
+  "source_url": "https://www.21hrs.space/",
+  "normalized_url": "https://www.21hrs.space/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:27:51.141731+00:00",
+    "final_url": "https://www.21hrs.space/",
+    "screenshots": {
+      "desktop.png": "f60d3d9d3012b17c8b80f4bb353d921e80b69ea1bb877bff69f4f6f39bf2734e",
+      "mobile.png": "a1905b1d0e3f0d5a9890bcc44610b6bf272e7fa9caae615678fb852187499e7f"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "This site presents an interactive digital experience focusing on the crucial 21 hours spent on the moon by the Apollo 11 mission. The design and content are tailored to educational storytelling and immersive historical exploration.",
+    "audience": "A general audience with an interest in space exploration, history, education, and interactive storytelling, including students and enthusiasts.",
+    "conversion_goal": "Encourage visitors to begin interacting with the lunar exploration story by scrolling to begin ('Scroll to Land'), exploring the mission timeline, and engaging with educational content.",
+    "first_viewport_logic": "On desktop, the initial viewport is a minimalist space scene with the moon and stars, evoking intrigue and setting the tone, but offers almost no immediate instruction. On mobile, narrative and instructions ('Navigate the lunar surface...') are immediately presented, along with a prominent call to action and mission/year details, quickly orienting the user and inviting engagement.",
+    "information_architecture": [
+      "Intro/landing hero visual",
+      "Mission summary (mobile only in first viewport)",
+      "Primary navigation (icon-based in corner)",
+      "Visual CTA for starting the experience ('Scroll to Land')",
+      "Footer note (sound recommendation)"
+    ],
+    "narrative_storytelling": "The experience uses cinematic visuals and minimal, impactful copy to immerse users in the historical context. On mobile, storytelling elements are brought forward immediately, combining mission data and a concise introduction. The moon serves as both a literal and metaphorical launchpad for deeper exploration.",
+    "composition_grid": "Both views use strong centering and symmetry: the moon's curve occupies the lower third, and major text elements (on mobile) are vertically stacked and centrally aligned. Corner framing lines subtly contain the visual space without cluttering it.",
+    "spacing_rhythm": "Generous negative space, especially in desktop view, creates focus and drama. On mobile, elements are well spaced for legibility, separation, and touch interaction, avoiding crowding despite the vertical stack.",
+    "typography": "Sans-serif, geometric fonts dominate. Title ('MOON') is bold, uppercase, and oversized for emphasis, with contrast to smaller supporting text. Supporting text uses bold and regular weights for hierarchy and scannability. All text is white or off-white, maximizing contrast.",
+    "palette_contrast": "A stark black background populated by subtle star fields pairs with the grey, cratered moon and white type. The only accent color is a muted bronze used for interface lines and framing, offering subtle visual interest.",
+    "media_treatment": "Rich, realistic rendering of the moon provides a dramatic, immersive anchor. Stars are delicately scattered for realism. No superfluous imagery distracts from the core visual story.",
+    "motion_interaction": "Static in the first viewports (no autoplay motion or animation visible). The mobile CTA ('Scroll to Land') likely animates or changes response on interaction, implying dynamism after initial scroll. Sound is recommended but not automatically played.",
+    "cta_strategy": "The CTA is highly legible, boxed, and clearly labeled ('Scroll to Land'), distinguished with visual framing. It uses direct action language and is positioned directly above a note encouraging sound for immersion.",
+    "desktop_behavior": "Desktop prioritizes atmospheric immersion via minimalism—no initial instruction, only subtle UI (top left corner) and the moon graphic. User is implicitly expected to scroll or interact.",
+    "mobile_behavior": "Mobile surfaces crucial instructions and CTAs immediately, compensating for less screen real estate by using a clean vertical stack, legible tap targets, and concise explanatory copy. All primary actions and info are above the fold.",
+    "learn": [
+      "How to evoke a cinematic, immersive feel with minimal elements and smart negative space.",
+      "How to visually prioritize onboarding/informational content on mobile versus desktop without cluttering the layout.",
+      "How strong visual centering and atmospheric background set mood without overwhelming content.",
+      "How to use UI corner framing and subtle accent color for interface cohesion."
+    ],
+    "do_not_copy": [
+      "Do not omit basic orientation or CTAs entirely on desktop—too little guidance could lose users who are unfamiliar with ambient/interactive web formats.",
+      "Do not place dense or lengthy copy in the first viewport; maintain brevity and strong hierarchy for impact.",
+      "Do not introduce multiple accent colors or photographic backgrounds that disrupt the strict visual language and focus."
+    ],
+    "reusable_cross_category_traits": [
+      "Corner framing lines and subtle interface accents for visual cohesion.",
+      "Central visual focus using atmospheric rich media (moon, stars) with sparse interface elements.",
+      "Mobile onboarding with fast, visually distinctive CTA and clear instructional copy."
+    ],
+    "traits": [
+      "Minimalist cinematic visual design.",
+      "High centrality and symmetry in composition.",
+      "Single, bold CTA with clear user action pathway.",
+      "Atmospheric media treatment supporting narrative immersion."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "c0e72d740a3be9a2ac06a17ba479f43f3e488b0b69f53794c853c16ed8d9aafd",
+    "input_checksum": "50ef3ed6a3d015a849c57a246b05fe365482b793b9be13e1266a3d7adfa74a40",
+    "output_checksum": "df064caf2f5cd3800b3b19506614c6e2e11d19fd814714687ee931f37f834979",
+    "timestamp": "2026-07-16T18:28:23.799527+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "fab607eb710dbe8639d1419b47f64aa70a28bede165647290279a643a10672d9",
+      "repair_count": 0
+    }
+  },
+  "business_context": "This site presents an interactive digital experience focusing on the crucial 21 hours spent on the moon by the Apollo 11 mission. The design and content are tailored to educational storytelling and immersive historical exploration.",
+  "audience": "A general audience with an interest in space exploration, history, education, and interactive storytelling, including students and enthusiasts.",
+  "conversion_goal": "Encourage visitors to begin interacting with the lunar exploration story by scrolling to begin ('Scroll to Land'), exploring the mission timeline, and engaging with educational content.",
+  "first_viewport_logic": "On desktop, the initial viewport is a minimalist space scene with the moon and stars, evoking intrigue and setting the tone, but offers almost no immediate instruction. On mobile, narrative and instructions ('Navigate the lunar surface...') are immediately presented, along with a prominent call to action and mission/year details, quickly orienting the user and inviting engagement.",
+  "information_architecture": [
+    "Intro/landing hero visual",
+    "Mission summary (mobile only in first viewport)",
+    "Primary navigation (icon-based in corner)",
+    "Visual CTA for starting the experience ('Scroll to Land')",
+    "Footer note (sound recommendation)"
+  ],
+  "narrative_storytelling": "The experience uses cinematic visuals and minimal, impactful copy to immerse users in the historical context. On mobile, storytelling elements are brought forward immediately, combining mission data and a concise introduction. The moon serves as both a literal and metaphorical launchpad for deeper exploration.",
+  "composition_grid": "Both views use strong centering and symmetry: the moon's curve occupies the lower third, and major text elements (on mobile) are vertically stacked and centrally aligned. Corner framing lines subtly contain the visual space without cluttering it.",
+  "spacing_rhythm": "Generous negative space, especially in desktop view, creates focus and drama. On mobile, elements are well spaced for legibility, separation, and touch interaction, avoiding crowding despite the vertical stack.",
+  "typography": "Sans-serif, geometric fonts dominate. Title ('MOON') is bold, uppercase, and oversized for emphasis, with contrast to smaller supporting text. Supporting text uses bold and regular weights for hierarchy and scannability. All text is white or off-white, maximizing contrast.",
+  "palette_contrast": "A stark black background populated by subtle star fields pairs with the grey, cratered moon and white type. The only accent color is a muted bronze used for interface lines and framing, offering subtle visual interest.",
+  "media_treatment": "Rich, realistic rendering of the moon provides a dramatic, immersive anchor. Stars are delicately scattered for realism. No superfluous imagery distracts from the core visual story.",
+  "motion_interaction": "Static in the first viewports (no autoplay motion or animation visible). The mobile CTA ('Scroll to Land') likely animates or changes response on interaction, implying dynamism after initial scroll. Sound is recommended but not automatically played.",
+  "cta_strategy": "The CTA is highly legible, boxed, and clearly labeled ('Scroll to Land'), distinguished with visual framing. It uses direct action language and is positioned directly above a note encouraging sound for immersion.",
+  "desktop_behavior": "Desktop prioritizes atmospheric immersion via minimalism—no initial instruction, only subtle UI (top left corner) and the moon graphic. User is implicitly expected to scroll or interact.",
+  "mobile_behavior": "Mobile surfaces crucial instructions and CTAs immediately, compensating for less screen real estate by using a clean vertical stack, legible tap targets, and concise explanatory copy. All primary actions and info are above the fold.",
+  "learn": [
+    "How to evoke a cinematic, immersive feel with minimal elements and smart negative space.",
+    "How to visually prioritize onboarding/informational content on mobile versus desktop without cluttering the layout.",
+    "How strong visual centering and atmospheric background set mood without overwhelming content.",
+    "How to use UI corner framing and subtle accent color for interface cohesion."
+  ],
+  "do_not_copy": [
+    "Do not omit basic orientation or CTAs entirely on desktop—too little guidance could lose users who are unfamiliar with ambient/interactive web formats.",
+    "Do not place dense or lengthy copy in the first viewport; maintain brevity and strong hierarchy for impact.",
+    "Do not introduce multiple accent colors or photographic backgrounds that disrupt the strict visual language and focus."
+  ],
+  "reusable_cross_category_traits": [
+    "Corner framing lines and subtle interface accents for visual cohesion.",
+    "Central visual focus using atmospheric rich media (moon, stars) with sparse interface elements.",
+    "Mobile onboarding with fast, visually distinctive CTA and clear instructional copy."
+  ],
+  "traits": [
+    "Minimalist cinematic visual design.",
+    "High centrality and symmetry in composition.",
+    "Single, bold CTA with clear user action pathway.",
+    "Atmospheric media treatment supporting narrative immersion."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "21 hrs on the moon",
+    "candidate_url": "https://www.awwwards.com/sites/21-hrs-on-the-moon",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://www.21hrs.space/",
+    "resolution_source": "https://www.awwwards.com/sites/21-hrs-on-the-moon",
+    "discovered_at": "2026-07-16T18:22:12.130168+00:00"
+  },
+  "content_hash": "0aa81375f4cc91b99fab9054d78977d6b175bedc09c726e8015d1542565a10b1"
+}

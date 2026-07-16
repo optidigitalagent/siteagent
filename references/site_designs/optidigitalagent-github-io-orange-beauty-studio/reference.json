@@ -1,0 +1,138 @@
+{
+  "id": "optidigitalagent-github-io-orange-beauty-studio",
+  "title": "Orange Beauty Studio — салон краси у Запоріжжі",
+  "source_url": "https://optidigitalagent.github.io/orange-beauty-studio/",
+  "normalized_url": "https://optidigitalagent.github.io/orange-beauty-studio/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T16:39:34.007142+00:00",
+    "final_url": "https://orange-beautystudio.zp.ua/",
+    "screenshots": {
+      "desktop.png": "ad5f86a7054787d593dd14c98d1e039176f53cbb73156452337fb204167a5940",
+      "mobile.png": "a5d2389a1206105f6c55532721264d644a73a9e7e2760cc3ecb20df2f2b6628d"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "The website is for a beauty studio (salon) in Zaporizhzhia, Ukraine, seeking to attract local clientele for beauty services such as nail treatments. The business positions itself on artistry and care, using modern visual cues to communicate expertise and trust.",
+    "audience": "Local Ukrainian-speaking women interested in beauty services, likely aged 18-50, seeking professional nail care and related salon experiences.",
+    "conversion_goal": "Drive service bookings (via the primary CTA), encourage contact, and foster social media engagement. Quick booking through a button is emphasized early in the interface.",
+    "first_viewport_logic": "Both desktop and mobile prioritize succinctly communicating the studio’s value proposition ('Ваша краса наше мистецтво' which translates to 'Your beauty is our art'), a strong introductory statement, two styled service images (nails), Booking CTA, and supporting micro-copy. Mobile stacks all elements vertically, keeping the CTA and headline above the fold.",
+    "information_architecture": [
+      "Hero section: Logo, navigation, headline/subheadline, service imagery, booking CTA, social proof (reviews & icons)",
+      "Infographic-like or thematic separating stripes (used to pace sections)",
+      "Footer containing contact details, address, social links, and micro-navigation"
+    ],
+    "narrative_storytelling": "Story begins with a relatable promise (beauty is art), quickly validated by visual proof (photos of detailed nail work). Trust-building happens through mention of reviews and visible social links. The visual narrative is warm, modern, and carefully spaced for elegance.",
+    "composition_grid": "Desktop uses a left-aligned main grid with whitespace to the right, allowing hero content (text/images) breathing room; mobile adapts to a single-column vertical flow. Clear visual separation between hero, body stripes, and footer. Cards and blocks use rounded rectangle treatments.",
+    "spacing_rhythm": "Significant whitespace between content blocks supports a premium feel. Padding and margins surround the hero content generously. Sections have generous vertical separation. Small touch targets for CTAs reflect intent for careful, non-chaotic navigation.",
+    "typography": "Bold serif headline for 'Ваше краса', cursive/italic treatment for 'наше мистецтво' in orange to create hierarchy and accent. Subheadings in sans-serif. Typographic contrast is strong: large font sizes for main message, reduced size for meta/utility nav and supporting text.",
+    "palette_contrast": "Palette consists of white, black-brown, warm beige, and signature orange. Orange used sparingly for CTAs and highlights, providing high contrast and focal points. Liberal use of dark brown for footer and separator blocks grounds the page and amplifies the warmth of the brand.",
+    "media_treatment": "Photography is minimal but high-quality and tightly cropped, focusing on hands/nails that exemplify service quality. Images use rounded rectangle masks with subtle drop-shadow for depth. Media is never background; photos are presented as focal objects, not ornamental fills.",
+    "motion_interaction": "No visible animation or motion on first load. Interaction cues are straightforward (button hovers, standard link underlines). User is not distracted by unnecessary effects; emphasis remains on conversion and clarity.",
+    "cta_strategy": "Primary CTA ('Записатись') is orange, pill-shaped, and given prime placement in both desktop and mobile hero section. All other CTAs (e.g., social) are visually secondary, smaller, and off to the side or bottom. CTA copy is direct and urgency-neutral.",
+    "desktop_behavior": "Navigation is horizontal and top-fixed (logo, nav, booking CTA). Hero is left-heavy, with media next to the copy. Footer has a three-column layout (logo/contact, nav, and address/details). All essential actions visible without scrolling the hero.",
+    "mobile_behavior": "Stacked layout; nav compresses vertically with booking CTA above hero text. Imagery follows hero text, then subtext, then reviews. Footer switches to a single column. Everything is touch-optimized with vertical alignment and significant white space between elements.",
+    "learn": [
+      "Strong typographic contrast elevates perceived brand quality",
+      "Minimal, carefully curated imagery enhances trust without clutter",
+      "Generously spaced layout conveys premium service",
+      "Distinct yet harmonious color palette builds warm, memorable identity",
+      "Hero-section focus and placement of primary CTA supports conversion"
+    ],
+    "do_not_copy": [
+      "Overly large vertical dead space between sections (unless justified by analogous brand goals)",
+      "Low-contrast text (ensure AA accessibility compliance if using light beige)",
+      "Minimal media approach if product/service is highly visual or varied",
+      "Non-animated hero for highly dynamic/energetic brands"
+    ],
+    "reusable_cross_category_traits": [
+      "Clear hero-section value statement and fast access to main CTA",
+      "Contrasting CTA button color tied to brand accent",
+      "Spacing that matches the tone/sector (premium feel through breathability)",
+      "Footer containing full contact, navigation, and social connection"
+    ],
+    "traits": [
+      "Warm modernity via orange and brown tones",
+      "Premium feel by use of serif/cursive headline pairing",
+      "Clarity focus: easy-to-find booking, simple navigation",
+      "Carefully curated photographic subject matter"
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "ef4a3a03c4cd93612e91e2f4ddcebe600cd88c48b50c79dc63e45b3b3372e268",
+    "input_checksum": "41c4c5dfe276c1810afd2acbb30a709e4b8ce337b4eff747bcb55000de7adb90",
+    "output_checksum": "93c6540f7d8c7fa5ecca6c0dd62b64f1822b75e299d31a97f9b401ea977fd3ee",
+    "timestamp": "2026-07-16T16:57:33.253971+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "52b2448b975674baf6f171cd929372d5964da0cd0666506802fb4187661836ae",
+      "repair_count": 0
+    }
+  },
+  "business_context": "The website is for a beauty studio (salon) in Zaporizhzhia, Ukraine, seeking to attract local clientele for beauty services such as nail treatments. The business positions itself on artistry and care, using modern visual cues to communicate expertise and trust.",
+  "audience": "Local Ukrainian-speaking women interested in beauty services, likely aged 18-50, seeking professional nail care and related salon experiences.",
+  "conversion_goal": "Drive service bookings (via the primary CTA), encourage contact, and foster social media engagement. Quick booking through a button is emphasized early in the interface.",
+  "first_viewport_logic": "Both desktop and mobile prioritize succinctly communicating the studio’s value proposition ('Ваша краса наше мистецтво' which translates to 'Your beauty is our art'), a strong introductory statement, two styled service images (nails), Booking CTA, and supporting micro-copy. Mobile stacks all elements vertically, keeping the CTA and headline above the fold.",
+  "information_architecture": [
+    "Hero section: Logo, navigation, headline/subheadline, service imagery, booking CTA, social proof (reviews & icons)",
+    "Infographic-like or thematic separating stripes (used to pace sections)",
+    "Footer containing contact details, address, social links, and micro-navigation"
+  ],
+  "narrative_storytelling": "Story begins with a relatable promise (beauty is art), quickly validated by visual proof (photos of detailed nail work). Trust-building happens through mention of reviews and visible social links. The visual narrative is warm, modern, and carefully spaced for elegance.",
+  "composition_grid": "Desktop uses a left-aligned main grid with whitespace to the right, allowing hero content (text/images) breathing room; mobile adapts to a single-column vertical flow. Clear visual separation between hero, body stripes, and footer. Cards and blocks use rounded rectangle treatments.",
+  "spacing_rhythm": "Significant whitespace between content blocks supports a premium feel. Padding and margins surround the hero content generously. Sections have generous vertical separation. Small touch targets for CTAs reflect intent for careful, non-chaotic navigation.",
+  "typography": "Bold serif headline for 'Ваше краса', cursive/italic treatment for 'наше мистецтво' in orange to create hierarchy and accent. Subheadings in sans-serif. Typographic contrast is strong: large font sizes for main message, reduced size for meta/utility nav and supporting text.",
+  "palette_contrast": "Palette consists of white, black-brown, warm beige, and signature orange. Orange used sparingly for CTAs and highlights, providing high contrast and focal points. Liberal use of dark brown for footer and separator blocks grounds the page and amplifies the warmth of the brand.",
+  "media_treatment": "Photography is minimal but high-quality and tightly cropped, focusing on hands/nails that exemplify service quality. Images use rounded rectangle masks with subtle drop-shadow for depth. Media is never background; photos are presented as focal objects, not ornamental fills.",
+  "motion_interaction": "No visible animation or motion on first load. Interaction cues are straightforward (button hovers, standard link underlines). User is not distracted by unnecessary effects; emphasis remains on conversion and clarity.",
+  "cta_strategy": "Primary CTA ('Записатись') is orange, pill-shaped, and given prime placement in both desktop and mobile hero section. All other CTAs (e.g., social) are visually secondary, smaller, and off to the side or bottom. CTA copy is direct and urgency-neutral.",
+  "desktop_behavior": "Navigation is horizontal and top-fixed (logo, nav, booking CTA). Hero is left-heavy, with media next to the copy. Footer has a three-column layout (logo/contact, nav, and address/details). All essential actions visible without scrolling the hero.",
+  "mobile_behavior": "Stacked layout; nav compresses vertically with booking CTA above hero text. Imagery follows hero text, then subtext, then reviews. Footer switches to a single column. Everything is touch-optimized with vertical alignment and significant white space between elements.",
+  "learn": [
+    "Strong typographic contrast elevates perceived brand quality",
+    "Minimal, carefully curated imagery enhances trust without clutter",
+    "Generously spaced layout conveys premium service",
+    "Distinct yet harmonious color palette builds warm, memorable identity",
+    "Hero-section focus and placement of primary CTA supports conversion"
+  ],
+  "do_not_copy": [
+    "Overly large vertical dead space between sections (unless justified by analogous brand goals)",
+    "Low-contrast text (ensure AA accessibility compliance if using light beige)",
+    "Minimal media approach if product/service is highly visual or varied",
+    "Non-animated hero for highly dynamic/energetic brands"
+  ],
+  "reusable_cross_category_traits": [
+    "Clear hero-section value statement and fast access to main CTA",
+    "Contrasting CTA button color tied to brand accent",
+    "Spacing that matches the tone/sector (premium feel through breathability)",
+    "Footer containing full contact, navigation, and social connection"
+  ],
+  "traits": [
+    "Warm modernity via orange and brown tones",
+    "Premium feel by use of serif/cursive headline pairing",
+    "Clarity focus: easy-to-find booking, simple navigation",
+    "Carefully curated photographic subject matter"
+  ],
+  "content_hash": "9ab526ede0cacb21016f7c6e4c871eae487ba6927cb4f06ab7e84237c8ba70c8"
+}

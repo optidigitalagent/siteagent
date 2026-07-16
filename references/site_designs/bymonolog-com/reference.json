@@ -1,0 +1,165 @@
+{
+  "id": "bymonolog-com",
+  "title": "MONOLOG | Brand and Web Design Studio founded By Huy",
+  "source_url": "https://bymonolog.com/",
+  "normalized_url": "https://bymonolog.com/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:32:12.280891+00:00",
+    "final_url": "https://bymonolog.com/",
+    "screenshots": {
+      "desktop.png": "12b31258dee364286dceea476ac7434e615fc8f95d41e947dfbe24c5dfb43cd4",
+      "mobile.png": "c655ebd76228f894f1046c5c17c1ab59544cd691b1dd928a0d1846797b2549e1"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Creative brand and web design studio emphasizing visual storytelling, sophistication, and digital experience for potential clients seeking high-level branding and website work.",
+    "audience": "Business owners, marketing managers, creative directors, and startups looking for premium branding and digital design services.",
+    "conversion_goal": "Prompt users to inquire or start a project, using the central CTA: 'Tell us your story.'",
+    "first_viewport_logic": "Immediate brand impact through a dynamic, moody background, a large, deconstructed logotype, succinct value statement, and contextual microcopy, all supported by social proof (logos of past clients). A compact navigation sits top-left, with a conspicuous 'Contact' CTA top-right. Shows clear expertise and niche commitment fast.",
+    "information_architecture": [
+      "Hero with logotype, positioning, and CTA",
+      "Awards/recognition with partner logos",
+      "Selected client projects/case studies",
+      "Studio services list (Brand Strategy, Website Identity etc.)",
+      "Project journey/approach breakdown",
+      "Testimonials/featured review with image",
+      "Footer: navigation, contact, legal, and address info"
+    ],
+    "narrative_storytelling": "The page uses minimal but sharp copy, and strong typographic hierarchy to communicate its credentials, unique approach, and success stories, guiding the user from bold introduction to proof and then a clear call to action.",
+    "composition_grid": "Clean, modular grid with wide columns for impact sections (hero, services, case studies). Overlapping text/images in hero, then strict vertical stacking. Content widths vary for emphasis. Strong left-aligned blocks with centered content for CTAs and quotes. Clearly defined grid shift between dark and light sections.",
+    "spacing_rhythm": "Generous negative space in dark sections (hero, services, testimonials), compressing for project lists. Clear breathing room above/below major blocks. Margins are wider on desktop, tighter stacked on mobile—no crowding even on small screens. Spacing is functional and supports readability and luxury branding.",
+    "typography": "Bold, geometric sans-serif for logo/titles; mono or minimal sans for body and accent text. High-contrast, oversized headings with tight capitalization for emphasis. Text scales down responsively but maintains style and hierarchy; careful line spacing avoids crowding. Primary font color is white or very light grey on black; black on white in sections.",
+    "palette_contrast": "Ultra-high contrast black and near-white/white dominate; sand or cream used for background in mid-sections. Accent colors only for hover states or micro-interactions. Project imagery balances muted and grayscale to keep brand dominance. Contrast pushes luxury and clarity.",
+    "media_treatment": "Hero background is abstract, subtly animated/filtered. Project/media blocks use muted, grayscale or similarly filtered images. No photography overpowers the logotype or copy. Testimonial uses a small, circular portrait. Media feels secondary to bold type and grid.",
+    "motion_interaction": "Subtle on-load transitions in hero (background, type), animated iconography, and soft hover/focus states for buttons and links. No jarring transitions. Possible type scrambles or reveals for brand name. Interactions are purposeful, not decorative—never distract from reading or conversion.",
+    "cta_strategy": "Top-right persistent 'Contact' for direct access, plus a hero-deep CTA ('Tell us your story'). A repeated, oversized CTA before the footer to catch late scrollers. Button design is minimal with strong border contrast. Copy is empathetic and user-directed, not generic.",
+    "desktop_behavior": "Navigation persistent and easily accessible; sections open wide for impact; more columns allow for breathing space alongside content. Hover effects for links and icons; no side-scroll or modal interruptions. Larger type and logo scale appropriately.",
+    "mobile_behavior": "Navigation collapses to hamburger; stacked single-column layout; all interactive elements finger-friendly; images resize and center. Spacing scales down but maintains clarity. Sections retain hierarchy but compress for scroll usability; CTAs remain prominent. No hidden or cut-off key content.",
+    "learn": [
+      "First viewport should establish brand and credibility instantly using bold logotype, poetic positioning, and social proof.",
+      "Maintain high contrast between sections using clear changes in background and text color.",
+      "Emphasize generous spacing and clear block separation for a premium/luxury feel.",
+      "Let oversized type and clear CTA sequencing guide the user through the funnel.",
+      "Integrate subtle, brand-consistent animations to boost perceived quality without distracting."
+    ],
+    "do_not_copy": [
+      "Do not overload hero with too much text—keep opening copy terse and impactful.",
+      "Avoid decorative or irrelevant imagery that dilutes the focus from type and core message.",
+      "Do not use generic, undifferentiated CTAs ('Submit', 'Learn More'). The CTAs must feel part of the story ('Tell us your story').",
+      "Do not compress or crowd spacing to 'fill gaps'—negative space is central to the experience.",
+      "Never disrupt vertical narrative flow with modals, popups or hidden sections."
+    ],
+    "reusable_cross_category_traits": [
+      "Oversized geometric typeface for headlines and branding.",
+      "Clear, minimal navigation with a single, emphasized CTA.",
+      "Grid-based structure with generous negative space.",
+      "Mix of dark and light palette sections for visual rhythm and scanability.",
+      "Hero section that leverages brand/logo as centerpiece, not as an afterthought."
+    ],
+    "traits": [
+      "Logical, modular grid layout with vertical storytelling.",
+      "High-contrast color palette with strong type hierarchy.",
+      "Emphasis on brand story and past client proof in first viewport.",
+      "Intelligently staggered information—from intro through proof to services and final CTA.",
+      "Responsive, stackable layout scaling gracefully from desktop to mobile."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "b2564a6ee66689fc198596f3638fa86db09fc98e2d36669b5c86db719468f828",
+    "input_checksum": "3aa9fc04fa90f7015f38cf4ec554f0ece8e0e8e768991b3d258dbb3d5ac12e43",
+    "output_checksum": "78c287ab7c9f0398167c0b7ee71180d0a22ad00822386d7c099dfb7c6d6ea3e3",
+    "timestamp": "2026-07-16T18:33:04.385249+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "f4758b6a7ef63cad22dc41018c63b3489060d3d5de8af5b187380a659bfa81fe",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Creative brand and web design studio emphasizing visual storytelling, sophistication, and digital experience for potential clients seeking high-level branding and website work.",
+  "audience": "Business owners, marketing managers, creative directors, and startups looking for premium branding and digital design services.",
+  "conversion_goal": "Prompt users to inquire or start a project, using the central CTA: 'Tell us your story.'",
+  "first_viewport_logic": "Immediate brand impact through a dynamic, moody background, a large, deconstructed logotype, succinct value statement, and contextual microcopy, all supported by social proof (logos of past clients). A compact navigation sits top-left, with a conspicuous 'Contact' CTA top-right. Shows clear expertise and niche commitment fast.",
+  "information_architecture": [
+    "Hero with logotype, positioning, and CTA",
+    "Awards/recognition with partner logos",
+    "Selected client projects/case studies",
+    "Studio services list (Brand Strategy, Website Identity etc.)",
+    "Project journey/approach breakdown",
+    "Testimonials/featured review with image",
+    "Footer: navigation, contact, legal, and address info"
+  ],
+  "narrative_storytelling": "The page uses minimal but sharp copy, and strong typographic hierarchy to communicate its credentials, unique approach, and success stories, guiding the user from bold introduction to proof and then a clear call to action.",
+  "composition_grid": "Clean, modular grid with wide columns for impact sections (hero, services, case studies). Overlapping text/images in hero, then strict vertical stacking. Content widths vary for emphasis. Strong left-aligned blocks with centered content for CTAs and quotes. Clearly defined grid shift between dark and light sections.",
+  "spacing_rhythm": "Generous negative space in dark sections (hero, services, testimonials), compressing for project lists. Clear breathing room above/below major blocks. Margins are wider on desktop, tighter stacked on mobile—no crowding even on small screens. Spacing is functional and supports readability and luxury branding.",
+  "typography": "Bold, geometric sans-serif for logo/titles; mono or minimal sans for body and accent text. High-contrast, oversized headings with tight capitalization for emphasis. Text scales down responsively but maintains style and hierarchy; careful line spacing avoids crowding. Primary font color is white or very light grey on black; black on white in sections.",
+  "palette_contrast": "Ultra-high contrast black and near-white/white dominate; sand or cream used for background in mid-sections. Accent colors only for hover states or micro-interactions. Project imagery balances muted and grayscale to keep brand dominance. Contrast pushes luxury and clarity.",
+  "media_treatment": "Hero background is abstract, subtly animated/filtered. Project/media blocks use muted, grayscale or similarly filtered images. No photography overpowers the logotype or copy. Testimonial uses a small, circular portrait. Media feels secondary to bold type and grid.",
+  "motion_interaction": "Subtle on-load transitions in hero (background, type), animated iconography, and soft hover/focus states for buttons and links. No jarring transitions. Possible type scrambles or reveals for brand name. Interactions are purposeful, not decorative—never distract from reading or conversion.",
+  "cta_strategy": "Top-right persistent 'Contact' for direct access, plus a hero-deep CTA ('Tell us your story'). A repeated, oversized CTA before the footer to catch late scrollers. Button design is minimal with strong border contrast. Copy is empathetic and user-directed, not generic.",
+  "desktop_behavior": "Navigation persistent and easily accessible; sections open wide for impact; more columns allow for breathing space alongside content. Hover effects for links and icons; no side-scroll or modal interruptions. Larger type and logo scale appropriately.",
+  "mobile_behavior": "Navigation collapses to hamburger; stacked single-column layout; all interactive elements finger-friendly; images resize and center. Spacing scales down but maintains clarity. Sections retain hierarchy but compress for scroll usability; CTAs remain prominent. No hidden or cut-off key content.",
+  "learn": [
+    "First viewport should establish brand and credibility instantly using bold logotype, poetic positioning, and social proof.",
+    "Maintain high contrast between sections using clear changes in background and text color.",
+    "Emphasize generous spacing and clear block separation for a premium/luxury feel.",
+    "Let oversized type and clear CTA sequencing guide the user through the funnel.",
+    "Integrate subtle, brand-consistent animations to boost perceived quality without distracting."
+  ],
+  "do_not_copy": [
+    "Do not overload hero with too much text—keep opening copy terse and impactful.",
+    "Avoid decorative or irrelevant imagery that dilutes the focus from type and core message.",
+    "Do not use generic, undifferentiated CTAs ('Submit', 'Learn More'). The CTAs must feel part of the story ('Tell us your story').",
+    "Do not compress or crowd spacing to 'fill gaps'—negative space is central to the experience.",
+    "Never disrupt vertical narrative flow with modals, popups or hidden sections."
+  ],
+  "reusable_cross_category_traits": [
+    "Oversized geometric typeface for headlines and branding.",
+    "Clear, minimal navigation with a single, emphasized CTA.",
+    "Grid-based structure with generous negative space.",
+    "Mix of dark and light palette sections for visual rhythm and scanability.",
+    "Hero section that leverages brand/logo as centerpiece, not as an afterthought."
+  ],
+  "traits": [
+    "Logical, modular grid layout with vertical storytelling.",
+    "High-contrast color palette with strong type hierarchy.",
+    "Emphasis on brand story and past client proof in first viewport.",
+    "Intelligently staggered information—from intro through proof to services and final CTA.",
+    "Responsive, stackable layout scaling gracefully from desktop to mobile."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "monolog",
+    "candidate_url": "https://www.awwwards.com/sites/monolog",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://bymonolog.com/",
+    "resolution_source": "https://www.awwwards.com/sites/monolog",
+    "discovered_at": "2026-07-16T18:22:14.274637+00:00"
+  },
+  "content_hash": "39507fda12f4cdac8b106cf862e57f0f4ae33d762d92a579b81dcf698cf2bd14"
+}

@@ -1,0 +1,140 @@
+{
+  "id": "optidigitalagent-github-io-orange1",
+  "title": "Orange Beauty Studio — Салон краси Запоріжжя",
+  "source_url": "https://optidigitalagent.github.io/orange1/",
+  "normalized_url": "https://optidigitalagent.github.io/orange1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:07:39.233851+00:00",
+    "final_url": "https://optidigitalagent.github.io/orange1/",
+    "screenshots": {
+      "desktop.png": "166dee1845bf1d1dd31a2eaa10ab8b58b901ab2332d385da60758f62fe01d529",
+      "mobile.png": "3212c25592eef73ba7016dafe9fa9ed1b22040766c453945572159319e8d3d7f"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "This is a landing page for a beauty salon in Zaporizhzhia aiming to attract clients and present its services and credentials online. The site serves as a digital storefront for Orange Beauty Studio, focusing on establishing credibility, providing essential information, and encouraging bookings.",
+    "audience": "Primarily women interested in beauty services such as manicures and pedicures, likely local to Zaporizhzhia. The design caters to a modern, style-conscious clientele who value credibility, aesthetics, and ease of booking.",
+    "conversion_goal": "The main goal is to drive bookings for services via prominent call-to-action buttons ('Записатися онлайн') and to build trust via customer reviews and credentials.",
+    "first_viewport_logic": "The desktop and mobile first viewports both introduce the brand name, a succinct description, and prominent calls to action. The desktop showcases a modular grid of service images; the mobile version condenses visuals to a single inline image for speed and focus. Both establish immediate trust with ratings and stats below the introductory text.",
+    "information_architecture": [
+      "Logo and quick nav (phone, location, Instagram)",
+      "Page navigation (Home, Services, Prices, About, Gallery, Reviews, Contacts)",
+      "Hero area with business intro, prominent CTA, and service images",
+      "Quick-access booking and callback buttons",
+      "Trust markers/statistics (number of clients, reviews, years active)",
+      "Section navigation bar (secondary nav just below hero)",
+      "Footer with address, mini-menu, and contact details"
+    ],
+    "narrative_storytelling": "The sequencing rapidly builds brand trust by pairing succinct credentials with client testimonials and photo evidence of work. Text introduces the studio’s positioning, while the image grid (desktop) and review metrics showcase visual results and social proof.",
+    "composition_grid": "Desktop uses a clear left-right split—textual information on the left, gridded service images on the right. Mobile collapses to a single-column vertical hierarchy, prioritizing CTA and summary before images. Sections are horizontally banded for clarity.",
+    "spacing_rhythm": "Ample white space segregates key content blocks. Paddings prevent crowding around text, buttons, and images. Balanced margins on both desktop and mobile keep the layout light, open, and scannable.",
+    "typography": "The brand name uses a bold, serif, high-contrast font for 'Orange' and a classic serif for 'Beauty Studio', conveying elegance and warmth. Smaller text is clean and sans-serif for readability, with consistent sizing and hierarchy. All major headings are attention-grabbing yet friendly.",
+    "palette_contrast": "Warm, soft gradients in cream-to-orange tones dominate the background, reinforcing the 'orange' brand theme. High-contrast orange buttons and details stand out against light backgrounds. Black text on light backgrounds ensures legibility; the dark footer provides sharp separation from the content.",
+    "media_treatment": "On desktop, images are arranged in a visually dynamic, slightly overlapping grid with rounded corners and drop shadows for depth. Mobile shows a single image inline, prioritizing speed. Service imagery features close-up manicure shots, directly demonstrating expertise.",
+    "motion_interaction": "No animated, kinetic, or hover effects are visible in the screenshots. The interaction relies on straightforward, familiar button and navigation conventions. There is no apparent parallax or micro-interaction.",
+    "cta_strategy": "Booking-related CTAs are immediately visible as colored buttons in the hero section and repeated in the header as a floating 'book online' option. CTAs are visually dominant, clearly labeled, and separated from informational text. Mobile and desktop both prioritize the 'Записатися онлайн' button above the fold.",
+    "desktop_behavior": "Navigation is simple and persistent at the top, with logical content segmentation. Images are arranged in a modular grid. Key buttons remain easily visible on scroll, and footer info is always available after main content.",
+    "mobile_behavior": "Navigation is condensed, likely via a pop-out or hamburger menu (inferred from spacing). Content stacks vertically with clear separation between sections. CTAs fit the device width for easy tapping. Images are minimized to reduce load and scrolling overhead.",
+    "learn": [
+      "Balance dense information with plenty of white space to maintain luxury appeal.",
+      "Use prominent, visually distinct CTA buttons placed above the fold on all viewports.",
+      "Leverage real service photos laid out in a memorable arrangement to build trust and credibility.",
+      "Pair key service stats/ratings with the hero area to establish expertise immediately."
+    ],
+    "do_not_copy": [
+      "Avoid overloading mobile first screens with too many images—prioritize clarity and speed.",
+      "Do not use distracting animation or motion in a credibility-focused intro layout.",
+      "Do not bury booking CTAs or make users scroll too far to find contact options."
+    ],
+    "reusable_cross_category_traits": [
+      "Hero layouts pairing left-aligned info with right-aligned product/service imagery.",
+      "Warm, branded gradients and high-contrast CTAs for identity and attention.",
+      "Instant credibility badges/stats tightly coupled to main content."
+    ],
+    "traits": [
+      "Modern luxury through serif fonts and soft gradients.",
+      "Trust via social proof (reviews, KPIs) displayed upfront.",
+      "Careful content modularity: every element in the hero supports conversion or trust.",
+      "Consistent, device-appropriate image and section scaling."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "acbdad77ee91024427bfc00320bdd2ad83781a5df0144b240a072f2140a4b98c",
+    "input_checksum": "1179c7e944e502676b6e78e09467c433d1385e5f7f3734a75903cabb43da4f63",
+    "output_checksum": "7de1f18da09e0dda5ddbe09e7e42d92c9a292df6517669842e6f03e1ccc27f46",
+    "timestamp": "2026-07-16T17:08:25.048345+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "7df92cbb35f355aa042144e8459b6bcf683603877d0b30fabd8ddc15a6c95963",
+      "repair_count": 0
+    }
+  },
+  "business_context": "This is a landing page for a beauty salon in Zaporizhzhia aiming to attract clients and present its services and credentials online. The site serves as a digital storefront for Orange Beauty Studio, focusing on establishing credibility, providing essential information, and encouraging bookings.",
+  "audience": "Primarily women interested in beauty services such as manicures and pedicures, likely local to Zaporizhzhia. The design caters to a modern, style-conscious clientele who value credibility, aesthetics, and ease of booking.",
+  "conversion_goal": "The main goal is to drive bookings for services via prominent call-to-action buttons ('Записатися онлайн') and to build trust via customer reviews and credentials.",
+  "first_viewport_logic": "The desktop and mobile first viewports both introduce the brand name, a succinct description, and prominent calls to action. The desktop showcases a modular grid of service images; the mobile version condenses visuals to a single inline image for speed and focus. Both establish immediate trust with ratings and stats below the introductory text.",
+  "information_architecture": [
+    "Logo and quick nav (phone, location, Instagram)",
+    "Page navigation (Home, Services, Prices, About, Gallery, Reviews, Contacts)",
+    "Hero area with business intro, prominent CTA, and service images",
+    "Quick-access booking and callback buttons",
+    "Trust markers/statistics (number of clients, reviews, years active)",
+    "Section navigation bar (secondary nav just below hero)",
+    "Footer with address, mini-menu, and contact details"
+  ],
+  "narrative_storytelling": "The sequencing rapidly builds brand trust by pairing succinct credentials with client testimonials and photo evidence of work. Text introduces the studio’s positioning, while the image grid (desktop) and review metrics showcase visual results and social proof.",
+  "composition_grid": "Desktop uses a clear left-right split—textual information on the left, gridded service images on the right. Mobile collapses to a single-column vertical hierarchy, prioritizing CTA and summary before images. Sections are horizontally banded for clarity.",
+  "spacing_rhythm": "Ample white space segregates key content blocks. Paddings prevent crowding around text, buttons, and images. Balanced margins on both desktop and mobile keep the layout light, open, and scannable.",
+  "typography": "The brand name uses a bold, serif, high-contrast font for 'Orange' and a classic serif for 'Beauty Studio', conveying elegance and warmth. Smaller text is clean and sans-serif for readability, with consistent sizing and hierarchy. All major headings are attention-grabbing yet friendly.",
+  "palette_contrast": "Warm, soft gradients in cream-to-orange tones dominate the background, reinforcing the 'orange' brand theme. High-contrast orange buttons and details stand out against light backgrounds. Black text on light backgrounds ensures legibility; the dark footer provides sharp separation from the content.",
+  "media_treatment": "On desktop, images are arranged in a visually dynamic, slightly overlapping grid with rounded corners and drop shadows for depth. Mobile shows a single image inline, prioritizing speed. Service imagery features close-up manicure shots, directly demonstrating expertise.",
+  "motion_interaction": "No animated, kinetic, or hover effects are visible in the screenshots. The interaction relies on straightforward, familiar button and navigation conventions. There is no apparent parallax or micro-interaction.",
+  "cta_strategy": "Booking-related CTAs are immediately visible as colored buttons in the hero section and repeated in the header as a floating 'book online' option. CTAs are visually dominant, clearly labeled, and separated from informational text. Mobile and desktop both prioritize the 'Записатися онлайн' button above the fold.",
+  "desktop_behavior": "Navigation is simple and persistent at the top, with logical content segmentation. Images are arranged in a modular grid. Key buttons remain easily visible on scroll, and footer info is always available after main content.",
+  "mobile_behavior": "Navigation is condensed, likely via a pop-out or hamburger menu (inferred from spacing). Content stacks vertically with clear separation between sections. CTAs fit the device width for easy tapping. Images are minimized to reduce load and scrolling overhead.",
+  "learn": [
+    "Balance dense information with plenty of white space to maintain luxury appeal.",
+    "Use prominent, visually distinct CTA buttons placed above the fold on all viewports.",
+    "Leverage real service photos laid out in a memorable arrangement to build trust and credibility.",
+    "Pair key service stats/ratings with the hero area to establish expertise immediately."
+  ],
+  "do_not_copy": [
+    "Avoid overloading mobile first screens with too many images—prioritize clarity and speed.",
+    "Do not use distracting animation or motion in a credibility-focused intro layout.",
+    "Do not bury booking CTAs or make users scroll too far to find contact options."
+  ],
+  "reusable_cross_category_traits": [
+    "Hero layouts pairing left-aligned info with right-aligned product/service imagery.",
+    "Warm, branded gradients and high-contrast CTAs for identity and attention.",
+    "Instant credibility badges/stats tightly coupled to main content."
+  ],
+  "traits": [
+    "Modern luxury through serif fonts and soft gradients.",
+    "Trust via social proof (reviews, KPIs) displayed upfront.",
+    "Careful content modularity: every element in the hero supports conversion or trust.",
+    "Consistent, device-appropriate image and section scaling."
+  ],
+  "content_hash": "4e9fd370937fc6a85fc7deeb2a32184b0be0af98aaefb3a82ddda393fa7cd0e3"
+}

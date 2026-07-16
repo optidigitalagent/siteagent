@@ -1,0 +1,164 @@
+{
+  "id": "iodent-dental",
+  "title": "IODENT | Стоматологічна Клініка",
+  "source_url": "https://iodent.dental/",
+  "normalized_url": "https://iodent.dental/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:16:09.115116+00:00",
+    "final_url": "https://iodent.dental/",
+    "screenshots": {
+      "desktop.png": "a3f27397af2f406e755772b7a3ca73351fbeed8513bd8b9911f0d35f29ee1f2c",
+      "mobile.png": "23573b860c42ba7410de68aac88d21404edb695f3581a92a6fa55c95ddde3254"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "This is the homepage of IODENT, a dental clinic. The site primarily serves to introduce the clinic, communicate expertise, present services, and encourage appointments/consultations. It must instill trust and signal professionalism to attract new patients.",
+    "audience": "Ukrainian-speaking local adults seeking reliable dental care. Secondary audience includes returning patients needing contact or booking details.",
+    "conversion_goal": "Primary: Get users to book an appointment or make direct contact (call, visit clinic, fill out form). Secondary: Build credibility and trust in dental services, showcase expertise and positive patient stories.",
+    "first_viewport_logic": "The first viewport on both desktop and mobile displays a dark hero section featuring an ambient photograph of the clinic or staff, a concise headline, short supportive copy, and a primary CTA ('Записатися' - Book). Navigation is simple and discrete, ensuring the booking action is visually dominant. Social links support credibility but are subordinate.",
+    "information_architecture": [
+      "Hero with headline, subtitle, booking CTA, and socials",
+      "Service overview (visual cards summarizing offerings)",
+      "Brief trust/brand statement",
+      "Team qualification highlight (carousel)",
+      "Patient testimonials",
+      "Contact/booking section with form and details",
+      "Map & directions (footer)",
+      "Global footer with links and policy info"
+    ],
+    "narrative_storytelling": "Sections are sequenced to foster trust: service offerings and unique value come before medical credentials, then patient outcomes, followed by actionable contact points. Subtle transitions and section headers support an educational flow from 'why choose us' to 'who we are', ending with 'how to reach us'.",
+    "composition_grid": "Strict geometric modular grid—three-column structure on desktop for services, collapsing to single column cards on mobile. Carousels and testimonial cards maintain internal symmetry. Content and imagery are left-aligned, with generous margins to balance large white/gray backgrounds.",
+    "spacing_rhythm": "Consistent, ample vertical spacing divides sections for clarity, while padding within cards prevents overcrowding. Space is used to allow each section to 'breathe', giving a sense of calm suitable for healthcare. Mobile maintains spacing, but slightly compresses due to screen size.",
+    "typography": "Modern sans-serif font, high readability. Headings are bold and prominent, body is medium weight, color contrast consistently high (black/gray on white, white on dark backgrounds). Font scale is significantly larger for CTAs and headlines. All caps on headings for clarity. Centered and left-aligned text used contextually.",
+    "palette_contrast": "High-contrast, neutrally cool monochromatic palette: whites and light grays for main backgrounds, with sections in dark gray or black for key interludes (hero, contact, testimonials). Accent colors are very subtle (light blue for callouts or icons). Contrast supports immediate readability and a calm, medical feel.",
+    "media_treatment": "Photography focuses on the clinic environment and staff, always in grayscale or muted tones for professionalism. Icons for services are minimal and line-based. Images occupy large blocks in carousels, fading in with subtle overlays for legibility in text overlays. No stocky or saturated imagery; all feels bespoke.",
+    "motion_interaction": "Transitions are subtle: carousels and information cards slide or gently fade. No abrupt popups. Hover states on cards and buttons use mild color shifts or elevation. Smooth scrolling anchors and contacts. Mobile menu is a side-drawer overlay, with minimal animation on reveal.",
+    "cta_strategy": "Primary CTA ('Записатися' - Book) is visually distinct (solid, high-contrast button) and repeated: in the hero, contact form, and footer. Secondary CTAs focus on calling or starting chats. All are actionable, simple, and not overwhelming. No confusing or secondary paths near main CTAs.",
+    "desktop_behavior": "Hover states highlight interactive cards or buttons. Carousel arrows and navigation are visible. Extensive whitespace and columns distribute information. Contact form is expansive. Contact links are clickable.",
+    "mobile_behavior": "Single column layout: cards stack vertically, CTAs remain large for tap targets. Mobile menu is hidden under a hamburger and overlays the view when activated. Space slightly reduced, but legibility and tap-ability preserved. All forms and contact details are mobile-friendly.",
+    "learn": [
+      "Stack service information in clear, visually separated cards for clarity.",
+      "Use professional, understated monochromatic photography to build trust without distraction.",
+      "Start with a clear value proposition and immediate actionable CTA in the hero section.",
+      "Repeat booking/contact CTAs contextually—never just at the bottom.",
+      "Use a modular grid for easy desktop/mobile adaptation.",
+      "Keep typography modern and highly legible, with disciplined contrast for accessibility.",
+      "Add testimonials and practitioner credentials to increase consumer trust.",
+      "Employ subtle, purposeful animation (not excessive or decorative).",
+      "Support every information section with adequate spacing."
+    ],
+    "do_not_copy": [
+      "Do not overload hero with multiple CTAs—clarity and focus are essential.",
+      "Do not use oversaturated, attention-seeking imagery; trust is built with calm professionalism.",
+      "Do not crowd services or contacts into tightly packed columns/pages.",
+      "Do not use low-contrast or decorative fonts that would hurt accessibility.",
+      "Avoid playful or informal iconography—maintain a clinical yet approachable tone.",
+      "Never allow animations to delay or block user actions (avoid intrusive popups/modals)."
+    ],
+    "reusable_cross_category_traits": [
+      "Start with credibility: environment and team visuals, not stock photos.",
+      "Prioritize immediate access to appointment CTAs on all viewports.",
+      "Use modular, visually separated cards for complex offerings.",
+      "Apply monochrome or muted palettes for medical or health-related businesses.",
+      "Reinforce trust through testimonials and transparency of practitioner qualifications."
+    ],
+    "traits": [
+      "Visually calm and clean; avoids visual clutter.",
+      "Action-focused without being overbearing.",
+      "Responsive and accessible information layout.",
+      "Subtle motion cues for interaction.",
+      "Grid-aligned, modern healthcare web design."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "69dfd30e69db1de019b6a086282ee872aa56bfcff95d52ce45995b6c9975699e",
+    "input_checksum": "4006e7c7012f84951360128585eb5645367210b3a19bfd7a26d23cdb50d3a108",
+    "output_checksum": "c02498bc0a4b09b4f7feb3ca172845905cd215b8ed0652cfb0b4e472fde87dec",
+    "timestamp": "2026-07-16T17:16:40.152463+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "584acade40b53d1bdfe36abb6241f4d1c34be3d27a04c69e9d9f4046d2866c80",
+      "repair_count": 0
+    }
+  },
+  "business_context": "This is the homepage of IODENT, a dental clinic. The site primarily serves to introduce the clinic, communicate expertise, present services, and encourage appointments/consultations. It must instill trust and signal professionalism to attract new patients.",
+  "audience": "Ukrainian-speaking local adults seeking reliable dental care. Secondary audience includes returning patients needing contact or booking details.",
+  "conversion_goal": "Primary: Get users to book an appointment or make direct contact (call, visit clinic, fill out form). Secondary: Build credibility and trust in dental services, showcase expertise and positive patient stories.",
+  "first_viewport_logic": "The first viewport on both desktop and mobile displays a dark hero section featuring an ambient photograph of the clinic or staff, a concise headline, short supportive copy, and a primary CTA ('Записатися' - Book). Navigation is simple and discrete, ensuring the booking action is visually dominant. Social links support credibility but are subordinate.",
+  "information_architecture": [
+    "Hero with headline, subtitle, booking CTA, and socials",
+    "Service overview (visual cards summarizing offerings)",
+    "Brief trust/brand statement",
+    "Team qualification highlight (carousel)",
+    "Patient testimonials",
+    "Contact/booking section with form and details",
+    "Map & directions (footer)",
+    "Global footer with links and policy info"
+  ],
+  "narrative_storytelling": "Sections are sequenced to foster trust: service offerings and unique value come before medical credentials, then patient outcomes, followed by actionable contact points. Subtle transitions and section headers support an educational flow from 'why choose us' to 'who we are', ending with 'how to reach us'.",
+  "composition_grid": "Strict geometric modular grid—three-column structure on desktop for services, collapsing to single column cards on mobile. Carousels and testimonial cards maintain internal symmetry. Content and imagery are left-aligned, with generous margins to balance large white/gray backgrounds.",
+  "spacing_rhythm": "Consistent, ample vertical spacing divides sections for clarity, while padding within cards prevents overcrowding. Space is used to allow each section to 'breathe', giving a sense of calm suitable for healthcare. Mobile maintains spacing, but slightly compresses due to screen size.",
+  "typography": "Modern sans-serif font, high readability. Headings are bold and prominent, body is medium weight, color contrast consistently high (black/gray on white, white on dark backgrounds). Font scale is significantly larger for CTAs and headlines. All caps on headings for clarity. Centered and left-aligned text used contextually.",
+  "palette_contrast": "High-contrast, neutrally cool monochromatic palette: whites and light grays for main backgrounds, with sections in dark gray or black for key interludes (hero, contact, testimonials). Accent colors are very subtle (light blue for callouts or icons). Contrast supports immediate readability and a calm, medical feel.",
+  "media_treatment": "Photography focuses on the clinic environment and staff, always in grayscale or muted tones for professionalism. Icons for services are minimal and line-based. Images occupy large blocks in carousels, fading in with subtle overlays for legibility in text overlays. No stocky or saturated imagery; all feels bespoke.",
+  "motion_interaction": "Transitions are subtle: carousels and information cards slide or gently fade. No abrupt popups. Hover states on cards and buttons use mild color shifts or elevation. Smooth scrolling anchors and contacts. Mobile menu is a side-drawer overlay, with minimal animation on reveal.",
+  "cta_strategy": "Primary CTA ('Записатися' - Book) is visually distinct (solid, high-contrast button) and repeated: in the hero, contact form, and footer. Secondary CTAs focus on calling or starting chats. All are actionable, simple, and not overwhelming. No confusing or secondary paths near main CTAs.",
+  "desktop_behavior": "Hover states highlight interactive cards or buttons. Carousel arrows and navigation are visible. Extensive whitespace and columns distribute information. Contact form is expansive. Contact links are clickable.",
+  "mobile_behavior": "Single column layout: cards stack vertically, CTAs remain large for tap targets. Mobile menu is hidden under a hamburger and overlays the view when activated. Space slightly reduced, but legibility and tap-ability preserved. All forms and contact details are mobile-friendly.",
+  "learn": [
+    "Stack service information in clear, visually separated cards for clarity.",
+    "Use professional, understated monochromatic photography to build trust without distraction.",
+    "Start with a clear value proposition and immediate actionable CTA in the hero section.",
+    "Repeat booking/contact CTAs contextually—never just at the bottom.",
+    "Use a modular grid for easy desktop/mobile adaptation.",
+    "Keep typography modern and highly legible, with disciplined contrast for accessibility.",
+    "Add testimonials and practitioner credentials to increase consumer trust.",
+    "Employ subtle, purposeful animation (not excessive or decorative).",
+    "Support every information section with adequate spacing."
+  ],
+  "do_not_copy": [
+    "Do not overload hero with multiple CTAs—clarity and focus are essential.",
+    "Do not use oversaturated, attention-seeking imagery; trust is built with calm professionalism.",
+    "Do not crowd services or contacts into tightly packed columns/pages.",
+    "Do not use low-contrast or decorative fonts that would hurt accessibility.",
+    "Avoid playful or informal iconography—maintain a clinical yet approachable tone.",
+    "Never allow animations to delay or block user actions (avoid intrusive popups/modals)."
+  ],
+  "reusable_cross_category_traits": [
+    "Start with credibility: environment and team visuals, not stock photos.",
+    "Prioritize immediate access to appointment CTAs on all viewports.",
+    "Use modular, visually separated cards for complex offerings.",
+    "Apply monochrome or muted palettes for medical or health-related businesses.",
+    "Reinforce trust through testimonials and transparency of practitioner qualifications."
+  ],
+  "traits": [
+    "Visually calm and clean; avoids visual clutter.",
+    "Action-focused without being overbearing.",
+    "Responsive and accessible information layout.",
+    "Subtle motion cues for interaction.",
+    "Grid-aligned, modern healthcare web design."
+  ],
+  "content_hash": "56c22678491c5baa0e5b227e537df3991f0fbfb3718922a322aefc4be9f17c70"
+}

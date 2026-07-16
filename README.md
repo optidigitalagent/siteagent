@@ -248,3 +248,15 @@ Import the approved reference library locally before calibration:
 ```powershell
 python -m site_agent.reference_import
 ```
+
+Refresh autonomous discovery from curated award sources with:
+
+```powershell
+python -m site_agent.reference_import --refresh-discovery
+```
+
+Award and gallery pages are discovery inputs only. SiteAgent resolves an original live URL,
+captures desktop/mobile evidence, then records separate Curator/Auditor active-or-excluded
+decisions in `references/site_designs/reference_decisions.json`. Production reference selection
+fails closed unless there are enough high-confidence active records; the optional local
+`human_review` pages are diagnostics only and cannot influence selection, ranking or exclusion.

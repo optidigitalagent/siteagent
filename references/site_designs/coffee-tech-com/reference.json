@@ -1,0 +1,167 @@
+{
+  "id": "coffee-tech-com",
+  "title": "CoffeeTech® - Advanced Commercial Coffee Roasters",
+  "source_url": "https://coffee-tech.com/",
+  "normalized_url": "https://coffee-tech.com/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:22:24.608931+00:00",
+    "final_url": "https://www.coffee-tech.com/",
+    "screenshots": {
+      "desktop.png": "c24eb518cfa6dc6ad67e69ab62336e62dea869c28935350e5aba5bce485549c9",
+      "mobile.png": "f69d0763f8188ca3edff08d50736e35ca3b9f334c0edf8f9254a146a1e3be2cc"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "CoffeeTech is positioned as a premium, innovative manufacturer of advanced commercial coffee roasters, aiming to appeal to discerning coffee professionals interested in state-of-the-art technology and design.",
+    "audience": "Coffee shop owners, commercial coffee producers, coffee technology enthusiasts, and decision-makers in the coffee roasting industry seeking premium, technological, and efficient roasting solutions.",
+    "conversion_goal": "Drive interest in product exploration, direct product inquiries, and ultimately B2B contact through 'Get in touch' or product-specific CTAs.",
+    "first_viewport_logic": "Highly impactful: very large, bold headline immediately grabs attention (“Coffee Roasting Reinvented”), paired with a dramatic, high-quality product hero shot. Minimal navigation present, focusing attention on the core proposition before scrolling.",
+    "information_architecture": [
+      "Header/navigation with logo, minimal links, and a primary 'Products' CTA",
+      "Hero section with headline, subheadline, and product image",
+      "Founder/expert testimonial section",
+      "Section headline: 'Beyond your expectations'",
+      "Grid/listing of featured products with images and names",
+      "Product categories (Coffee, Cocoa, Nuts)",
+      "Technology/values section (Technology, Efficiency, Sustainability)",
+      "Content/news/updates grid",
+      "Callout for product inquiry or contacting sales",
+      "Footer with resources, company info, and contact details"
+    ],
+    "narrative_storytelling": "Establishes authority and aspiration by opening with bold claims, a dramatic product reveal, followed by social proof (testimonial), then immediately steering the narrative toward exceeding customer expectations and innovation.",
+    "composition_grid": "Rigid, modular grid layout using clear columns and rows. Large sections are visually separated. Product grids and content grids maintain even spacing. Mobile adapts to a single-column, vertically stacked layout.",
+    "spacing_rhythm": "Hero and section headings have generous vertical whitespace, making the experience feel premium and uncluttered. Product tiles and content blocks are well-padded. Mobile keeps the same spacing proportional, maintaining clarity and separation between sections.",
+    "typography": "Extremely large, high-impact geometric sans-serif for the hero and headlines, with a restrained use of weight variation. Smaller supporting body text is clean and modern. Hierarchy is clear and visually confident.",
+    "palette_contrast": "High-contrast palette: primary use of deep black and off-white/beige backgrounds for major transitions, with sharp white text on dark and black text on light. Product imagery is neutral, blending into the background without adding visual noise. Orange is used sparingly as an accent/CTA color, creating clear focal points.",
+    "media_treatment": "Product images are isolated, crisp, and shot with soft, even lighting for a tech-industrial allure. Backgrounds are typically plain to draw attention to the machines. News/content blocks use blurred or vignetted thumbnails. No distracting graphical effects.",
+    "motion_interaction": "No motion evident in screenshots, but emphasized CTAs (button states) and arrows on mobile suggest subtle hover/touch feedback. Layout is static with no animated transitions in visual evidence.",
+    "cta_strategy": "'Products' is the persistent, primary CTA in the header, with additional CTAs like 'See all products' and 'Get in touch' presented at major section junctures. CTAs have high contrast, are visually separated, and use clear, actionable text.",
+    "desktop_behavior": "Navigation is contained within a single strip with limited visible links and a prominent product CTA. All hero text and visuals are above the fold. Grids show multiple columns, with content structured for scanning and high-impact visual breaks.",
+    "mobile_behavior": "Navigation condenses to a hamburger menu. All content stacks into a single column for thumb-scroll accessibility. Product images and tiles expand to full width, with CTAs switching to larger tap targets. Spacing and typographic rhythm are preserved, creating a seamless, uncluttered experience.",
+    "learn": [
+      "Use extremely bold, oversized typography in hero sections to immediately express authority and confidence.",
+      "Immerse users in product sophistication by pairing dramatic claims with high-fidelity, focus-only product imagery.",
+      "Divide the flow into strikingly clear sections to encourage scanning and comprehension, especially for tech-forward B2B propositions.",
+      "Use a minimalist, binary palette (black/white or near-white) with precise accent color for hierarchy and focus—never for decoration."
+    ],
+    "do_not_copy": [
+      "Do not rely solely on oversized hero text without sufficient balancing whitespace—ensure main content is truly scroll-pulling.",
+      "Avoid excessive product grid density; maintain luxurious spacing to signal quality.",
+      "Don't use accent color excessively—keep highlight colors for the most business-critical actions only.",
+      "Do not crowd navigation; limit visible header links for focus."
+    ],
+    "reusable_cross_category_traits": [
+      "Modular grid layouts that adapt elegantly from desktop to mobile.",
+      "Dramatic hero composition with product-centered visuals.",
+      "Section-based narrative flow to highlight innovation, trust, and value before product listings.",
+      "Consistent vertical rhythm and generous breathing room."
+    ],
+    "traits": [
+      "Very large, geometric sans-serif hero typography.",
+      "Dark/light background switching for clear segmentation.",
+      "Carefully isolated, high-contrast product photos.",
+      "Minimal, functional navigation with persistent CTA.",
+      "Confident use of negative space.",
+      "Static, visually led storytelling focused on expertise and technology."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "860dc32bca10ca24d52caa2fa5c8fed94c8139838d53d30b292425859f32b7e7",
+    "input_checksum": "75a45ad8e81a6ee3840ed2d8ff26893174153c4569e8293b916d9391921f27b7",
+    "output_checksum": "e26e9c5228e474857c00b8fa34907d279a6c5f1bebd6a6d8186ed2438a1968c7",
+    "timestamp": "2026-07-16T18:23:09.843376+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "ba6388ae5d2a954a8d9f0e0c75706c3e5bc96b5600f81118c82eda8917fb609c",
+      "repair_count": 0
+    }
+  },
+  "business_context": "CoffeeTech is positioned as a premium, innovative manufacturer of advanced commercial coffee roasters, aiming to appeal to discerning coffee professionals interested in state-of-the-art technology and design.",
+  "audience": "Coffee shop owners, commercial coffee producers, coffee technology enthusiasts, and decision-makers in the coffee roasting industry seeking premium, technological, and efficient roasting solutions.",
+  "conversion_goal": "Drive interest in product exploration, direct product inquiries, and ultimately B2B contact through 'Get in touch' or product-specific CTAs.",
+  "first_viewport_logic": "Highly impactful: very large, bold headline immediately grabs attention (“Coffee Roasting Reinvented”), paired with a dramatic, high-quality product hero shot. Minimal navigation present, focusing attention on the core proposition before scrolling.",
+  "information_architecture": [
+    "Header/navigation with logo, minimal links, and a primary 'Products' CTA",
+    "Hero section with headline, subheadline, and product image",
+    "Founder/expert testimonial section",
+    "Section headline: 'Beyond your expectations'",
+    "Grid/listing of featured products with images and names",
+    "Product categories (Coffee, Cocoa, Nuts)",
+    "Technology/values section (Technology, Efficiency, Sustainability)",
+    "Content/news/updates grid",
+    "Callout for product inquiry or contacting sales",
+    "Footer with resources, company info, and contact details"
+  ],
+  "narrative_storytelling": "Establishes authority and aspiration by opening with bold claims, a dramatic product reveal, followed by social proof (testimonial), then immediately steering the narrative toward exceeding customer expectations and innovation.",
+  "composition_grid": "Rigid, modular grid layout using clear columns and rows. Large sections are visually separated. Product grids and content grids maintain even spacing. Mobile adapts to a single-column, vertically stacked layout.",
+  "spacing_rhythm": "Hero and section headings have generous vertical whitespace, making the experience feel premium and uncluttered. Product tiles and content blocks are well-padded. Mobile keeps the same spacing proportional, maintaining clarity and separation between sections.",
+  "typography": "Extremely large, high-impact geometric sans-serif for the hero and headlines, with a restrained use of weight variation. Smaller supporting body text is clean and modern. Hierarchy is clear and visually confident.",
+  "palette_contrast": "High-contrast palette: primary use of deep black and off-white/beige backgrounds for major transitions, with sharp white text on dark and black text on light. Product imagery is neutral, blending into the background without adding visual noise. Orange is used sparingly as an accent/CTA color, creating clear focal points.",
+  "media_treatment": "Product images are isolated, crisp, and shot with soft, even lighting for a tech-industrial allure. Backgrounds are typically plain to draw attention to the machines. News/content blocks use blurred or vignetted thumbnails. No distracting graphical effects.",
+  "motion_interaction": "No motion evident in screenshots, but emphasized CTAs (button states) and arrows on mobile suggest subtle hover/touch feedback. Layout is static with no animated transitions in visual evidence.",
+  "cta_strategy": "'Products' is the persistent, primary CTA in the header, with additional CTAs like 'See all products' and 'Get in touch' presented at major section junctures. CTAs have high contrast, are visually separated, and use clear, actionable text.",
+  "desktop_behavior": "Navigation is contained within a single strip with limited visible links and a prominent product CTA. All hero text and visuals are above the fold. Grids show multiple columns, with content structured for scanning and high-impact visual breaks.",
+  "mobile_behavior": "Navigation condenses to a hamburger menu. All content stacks into a single column for thumb-scroll accessibility. Product images and tiles expand to full width, with CTAs switching to larger tap targets. Spacing and typographic rhythm are preserved, creating a seamless, uncluttered experience.",
+  "learn": [
+    "Use extremely bold, oversized typography in hero sections to immediately express authority and confidence.",
+    "Immerse users in product sophistication by pairing dramatic claims with high-fidelity, focus-only product imagery.",
+    "Divide the flow into strikingly clear sections to encourage scanning and comprehension, especially for tech-forward B2B propositions.",
+    "Use a minimalist, binary palette (black/white or near-white) with precise accent color for hierarchy and focus—never for decoration."
+  ],
+  "do_not_copy": [
+    "Do not rely solely on oversized hero text without sufficient balancing whitespace—ensure main content is truly scroll-pulling.",
+    "Avoid excessive product grid density; maintain luxurious spacing to signal quality.",
+    "Don't use accent color excessively—keep highlight colors for the most business-critical actions only.",
+    "Do not crowd navigation; limit visible header links for focus."
+  ],
+  "reusable_cross_category_traits": [
+    "Modular grid layouts that adapt elegantly from desktop to mobile.",
+    "Dramatic hero composition with product-centered visuals.",
+    "Section-based narrative flow to highlight innovation, trust, and value before product listings.",
+    "Consistent vertical rhythm and generous breathing room."
+  ],
+  "traits": [
+    "Very large, geometric sans-serif hero typography.",
+    "Dark/light background switching for clear segmentation.",
+    "Carefully isolated, high-contrast product photos.",
+    "Minimal, functional navigation with persistent CTA.",
+    "Confident use of negative space.",
+    "Static, visually led storytelling focused on expertise and technology."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "coffeetech r",
+    "candidate_url": "https://www.awwwards.com/sites/coffeetech-r",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://coffee-tech.com/",
+    "resolution_source": "https://www.awwwards.com/sites/coffeetech-r",
+    "discovered_at": "2026-07-16T18:22:08.888666+00:00"
+  },
+  "content_hash": "20c30480722276257f6ef941c27304c51764d366eb614de827297d2ad49c1bfc"
+}

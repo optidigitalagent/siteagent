@@ -1,0 +1,143 @@
+{
+  "id": "depoluxe-xyz",
+  "title": "Depo Luxe",
+  "source_url": "https://depoluxe.xyz/",
+  "normalized_url": "https://depoluxe.xyz/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:31:00.761252+00:00",
+    "final_url": "https://depoluxe.xyz/",
+    "screenshots": {
+      "desktop.png": "bd2b2b50aa475a4ce77a1e81861863475756812a760f0bfd566123b3dd80f5af",
+      "mobile.png": "d50961365cc6a0c02df240425ada1cc3c89b49f895b5aaa38fa05c0bd2c96009"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Depo Luxe presents itself as a creative agency or studio specializing in a 'strategic and cinematic approach to contemporary luxury.' The focus is on high-end, visually sophisticated branding and campaigns, likely catering to luxury fashion, design, and lifestyle clients.",
+    "audience": "The target audience is creative directors, brand executives, and marketing managers within luxury, fashion, and cultural sectors who value avant-garde aesthetics and strategic visual communication.",
+    "conversion_goal": "To secure inquiries and project briefs from potential luxury clients seeking elevated, cinematic brand narratives and campaign direction. Secondary goals include showcasing portfolio highlights and establishing brand ethos.",
+    "first_viewport_logic": "Both desktop and mobile hero sections immerse visitors immediately with a large, visually arresting background video or image (with a distinctive art direction), overlaid with minimalist, centered text showing a featured project ('Numéro France'), the authorship (Gus And Lo), concise navigation, and a custom cookie policy prompt. No direct call-to-action dominates; the focus is on ambience and intrigue.",
+    "information_architecture": [
+      "Top-level navigation: Featured, Archive, Talent, Approach, Contact",
+      "Brand masthead with tagline",
+      "Prominently displayed featured work title and credit",
+      "Cookie consent banner accessible from the outset"
+    ],
+    "narrative_storytelling": "Cinematic visual storytelling dominates the homepage, situating the visitor within an artful, moody scene that feels editorial and immersive. Text overlays are sparse and poetic, relying on visual emotional resonance over explanatory copy. The narrative positions the agency as visionary and creatively driven.",
+    "composition_grid": "Centered, vertical stacking of content. Navigation and masthead sit at the top with generous breathing room, featured project title is vertically centered, and lower-right holds the cookie consent. Overall, the grid follows a high-fashion editorial sensibility with asymmetrical framing and large negative spaces.",
+    "spacing_rhythm": "Significant negative space between content elements, reinforcing sophistication and a luxury feel. Text is spaced apart, not crowded, with navigation links given wide kerning and separate placement. Cookie banner is respectfully sized and offset to the edge.",
+    "typography": "Classic, serif typeface (“Numéro France” headline) for creative gravitas, paired with modern, lightweight sans-serif for navigation, tagline, and supporting text, evoking timelessness and clarity. Letter spacing and italics elevate the fashion editorial tone.",
+    "palette_contrast": "Muted, almost monochromatic backgrounds defocused to foreground the text; white text on darker grounds achieves legibility and contrast. Subtle color cues (underline hover, accent colors in video) avoid any garish tones, aligning with luxury standards.",
+    "media_treatment": "Full-viewport background video or heavily art-directed still, treated with grain and desaturation for a painterly effect. All media content feels cinematic, foregrounding avant-garde style over literal representation.",
+    "motion_interaction": "Cookie banner shows on load. Potential subtle background video motion (not visible in screenshot but inferred from grain and style), suggesting immersive movement. No visible hover or interactive motion apart from navigation underlines.",
+    "cta_strategy": "No aggressive call-to-action; 'Featured' is pre-selected in navigation to orient user. Cookie consent uses clear, minimal 'Accept', 'Cancel', and 'Settings' options in the banner—inviting interaction without breaking aesthetic flow.",
+    "desktop_behavior": "Content is centered and balanced with wide margins, navigation is horizontal, cookie banner is small and anchored to bottom right; full hero media is visible, directing focus to featured project.",
+    "mobile_behavior": "Navigation and brand elements stack vertically, cookie consent banner expands in height to remain usable. Featured image/caption fill most of the viewport, keeping hierarchy consistent despite reduced space. All interactions remain clear and minimal on smaller screens.",
+    "learn": [
+      "How to let an immersive media background and minimalist type hierarchy communicate luxury without crowding or cliché.",
+      "The effectiveness of centering content and using generous negative space to convey exclusivity.",
+      "Pairing cinematic visuals with classic typefaces for instant editorial depth."
+    ],
+    "do_not_copy": [
+      "Do not obscure navigation or essential brand information in pursuit of minimalism—clarity remains key.",
+      "Do not allow cookie banners to overwhelm or obscure hero content on smaller screens—maintain proportionality.",
+      "Do not use generic or non-distinctive imagery; all media must support brand mood and sophistication."
+    ],
+    "reusable_cross_category_traits": [
+      "Full-viewport cinematic hero with poetic text overlay.",
+      "Minimal navigation with high typographic refinement.",
+      "Subtle, respectful cookie consent integration."
+    ],
+    "traits": [
+      "Editorial, cinematic art direction.",
+      "Luxury-oriented restraint and visual hierarchy.",
+      "Typography-driven, negative space-focused layout."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "d38c0392a611179dd76ef017b5b69f43fa12eec777371c5df1fdc663cecb8a6d",
+    "input_checksum": "3ae297986f2ff1d5d104b3158698f05824353fbfa1651f02a4245ee60fb53423",
+    "output_checksum": "6a97357e30ac8a8d0a693dc96f369a8e1d0555e93891cbc311d5faced2b18f9c",
+    "timestamp": "2026-07-16T18:31:43.810375+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "091d49b62853d104926b0bb9fb046830801b04dbd5697821863905df17914861",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Depo Luxe presents itself as a creative agency or studio specializing in a 'strategic and cinematic approach to contemporary luxury.' The focus is on high-end, visually sophisticated branding and campaigns, likely catering to luxury fashion, design, and lifestyle clients.",
+  "audience": "The target audience is creative directors, brand executives, and marketing managers within luxury, fashion, and cultural sectors who value avant-garde aesthetics and strategic visual communication.",
+  "conversion_goal": "To secure inquiries and project briefs from potential luxury clients seeking elevated, cinematic brand narratives and campaign direction. Secondary goals include showcasing portfolio highlights and establishing brand ethos.",
+  "first_viewport_logic": "Both desktop and mobile hero sections immerse visitors immediately with a large, visually arresting background video or image (with a distinctive art direction), overlaid with minimalist, centered text showing a featured project ('Numéro France'), the authorship (Gus And Lo), concise navigation, and a custom cookie policy prompt. No direct call-to-action dominates; the focus is on ambience and intrigue.",
+  "information_architecture": [
+    "Top-level navigation: Featured, Archive, Talent, Approach, Contact",
+    "Brand masthead with tagline",
+    "Prominently displayed featured work title and credit",
+    "Cookie consent banner accessible from the outset"
+  ],
+  "narrative_storytelling": "Cinematic visual storytelling dominates the homepage, situating the visitor within an artful, moody scene that feels editorial and immersive. Text overlays are sparse and poetic, relying on visual emotional resonance over explanatory copy. The narrative positions the agency as visionary and creatively driven.",
+  "composition_grid": "Centered, vertical stacking of content. Navigation and masthead sit at the top with generous breathing room, featured project title is vertically centered, and lower-right holds the cookie consent. Overall, the grid follows a high-fashion editorial sensibility with asymmetrical framing and large negative spaces.",
+  "spacing_rhythm": "Significant negative space between content elements, reinforcing sophistication and a luxury feel. Text is spaced apart, not crowded, with navigation links given wide kerning and separate placement. Cookie banner is respectfully sized and offset to the edge.",
+  "typography": "Classic, serif typeface (“Numéro France” headline) for creative gravitas, paired with modern, lightweight sans-serif for navigation, tagline, and supporting text, evoking timelessness and clarity. Letter spacing and italics elevate the fashion editorial tone.",
+  "palette_contrast": "Muted, almost monochromatic backgrounds defocused to foreground the text; white text on darker grounds achieves legibility and contrast. Subtle color cues (underline hover, accent colors in video) avoid any garish tones, aligning with luxury standards.",
+  "media_treatment": "Full-viewport background video or heavily art-directed still, treated with grain and desaturation for a painterly effect. All media content feels cinematic, foregrounding avant-garde style over literal representation.",
+  "motion_interaction": "Cookie banner shows on load. Potential subtle background video motion (not visible in screenshot but inferred from grain and style), suggesting immersive movement. No visible hover or interactive motion apart from navigation underlines.",
+  "cta_strategy": "No aggressive call-to-action; 'Featured' is pre-selected in navigation to orient user. Cookie consent uses clear, minimal 'Accept', 'Cancel', and 'Settings' options in the banner—inviting interaction without breaking aesthetic flow.",
+  "desktop_behavior": "Content is centered and balanced with wide margins, navigation is horizontal, cookie banner is small and anchored to bottom right; full hero media is visible, directing focus to featured project.",
+  "mobile_behavior": "Navigation and brand elements stack vertically, cookie consent banner expands in height to remain usable. Featured image/caption fill most of the viewport, keeping hierarchy consistent despite reduced space. All interactions remain clear and minimal on smaller screens.",
+  "learn": [
+    "How to let an immersive media background and minimalist type hierarchy communicate luxury without crowding or cliché.",
+    "The effectiveness of centering content and using generous negative space to convey exclusivity.",
+    "Pairing cinematic visuals with classic typefaces for instant editorial depth."
+  ],
+  "do_not_copy": [
+    "Do not obscure navigation or essential brand information in pursuit of minimalism—clarity remains key.",
+    "Do not allow cookie banners to overwhelm or obscure hero content on smaller screens—maintain proportionality.",
+    "Do not use generic or non-distinctive imagery; all media must support brand mood and sophistication."
+  ],
+  "reusable_cross_category_traits": [
+    "Full-viewport cinematic hero with poetic text overlay.",
+    "Minimal navigation with high typographic refinement.",
+    "Subtle, respectful cookie consent integration."
+  ],
+  "traits": [
+    "Editorial, cinematic art direction.",
+    "Luxury-oriented restraint and visual hierarchy.",
+    "Typography-driven, negative space-focused layout."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "depo luxe",
+    "candidate_url": "https://www.awwwards.com/sites/depo-luxe",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://depoluxe.xyz/",
+    "resolution_source": "https://www.awwwards.com/sites/depo-luxe",
+    "discovered_at": "2026-07-16T18:22:13.692087+00:00"
+  },
+  "content_hash": "974f83976c35018fd5ce0a7dced477eb37ead26d17365168b9f838a41fc0c296"
+}

@@ -42,3 +42,9 @@
 - Instagram media preparation preserves originals, records crop confidence/coordinates, leaves
   ambiguous crop candidates untouched for manual review, writes a contact sheet and accepts an
   existing Cloudinary delivery URL only with explicit authorisation, business linkage and origin.
+- Reference discovery is autonomous: award/gallery pages are discovery sources only, candidates
+  must resolve to original live sites, and raw captures are never selected directly. Separate
+  Curator/Auditor decisions require validated desktop/mobile screenshots, explicit transferable
+  principles and non-copy constraints; low-confidence disagreement is excluded automatically.
+- The former `human_review_decisions.json` export was invalidated as accidental input. The local
+  reference page is diagnostic only and cannot rank, select or exclude production references.

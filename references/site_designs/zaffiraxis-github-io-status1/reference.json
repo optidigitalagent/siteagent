@@ -1,0 +1,158 @@
+{
+  "id": "zaffiraxis-github-io-status1",
+  "title": "STATUS — Центр сучасної стоматології · Запоріжжя",
+  "source_url": "https://zaffiraxis.github.io/status1/",
+  "normalized_url": "https://zaffiraxis.github.io/status1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:14:16.277766+00:00",
+    "final_url": "https://zaffiraxis.github.io/status1/",
+    "screenshots": {
+      "desktop.png": "0dec517d3bab0e4ac4247a8d2a277e55d7b9a9952e8fc6466c7b4065a5c379d9",
+      "mobile.png": "e54e7b2ec4b6e7ec9c9d4ce442ef2d463783a3d3b4971cf1b5d84c7134d7bb81"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "A modern dental clinic in Zaporizhzhia presenting their comprehensive dentistry services, credibility, team expertise, certifications, and before/after results to attract and convert new patients via appointments.",
+    "audience": "Potential dental patients in Zaporizhzhia, particularly those seeking trustworthy, modern dental care; includes families and adults seeking cosmetic or complex dental treatments.",
+    "conversion_goal": "To encourage users to book an appointment using the form near the footer, clearly signposted throughout; secondary goals include educating users and providing directions/contact details.",
+    "first_viewport_logic": "The hero section prioritizes credibility by combining a calm, inviting dental photo in the background with a succinct, value-based headline, short explanatory text, and immediate call to action ('Записатися'). Navigation is minimal and unobtrusive to focus attention on the message and CTA. In mobile, the structure and priorities are preserved, with navigation collapsed to a menu for focus and clarity.",
+    "information_architecture": [
+      "Hero section with headline and CTA",
+      "Introductory service summary with visual cards",
+      "Key benefits/services grid",
+      "Process overview with supporting visual",
+      "Results gallery with before/after dental images",
+      "Certification and awards section with image proofs",
+      "Trusted doctors block (carousel/grid)",
+      "Patient testimonials block",
+      "CTA form for appointment booking",
+      "Contact/location/map section",
+      "Footer with legal and navigation links"
+    ],
+    "narrative_storytelling": "The page uses sequential visual storytelling: greeting users with a reassuring, friendly image and headline, then introducing core services, visually validating expertise (certificates, results, trusted doctors), and closing with social proof (testimonials) and a frictionless appointment CTA—following a trust-building, problem/solution-centric narrative.",
+    "composition_grid": "A strict vertical modular grid, reinforced by generous whitespace, clearly delimits sections; cards and blocks are aligned symmetrically, with prominent centrality of forms and service icons. Mobile stacks sections vertically with preserved visual rhythm, and reduces icons/cards to single-column blocks for clarity.",
+    "spacing_rhythm": "Wide vertical spacers between sections ensure clarity and invite scrolling. Consistent internal padding around cards/forms supports readability. Typography, cards, and images have breathing room, avoiding visual crowding, and creating a calm, professional feel.",
+    "typography": "Classical, medical-inspired typeface pairing: a refined serif for main headings communicates expertise, while clean sans-serif text supports readability for body and navigation. Hierarchical contrast is strong: large, colored headings, medium-weight subheads, and light, spaced body copy.",
+    "palette_contrast": "Soft, clinical palette: white backgrounds with teal/aqua accents for buttons, highlights, and section backgrounds; black for CTAs and footer. Pastel and muted tones reinforce calmness and trust, with high legibility through dark text on light sections and vice versa. Accent colors direct attention to CTAs and interactive elements.",
+    "media_treatment": "Photographic media is documentary and authentic—office scenes, before/after dental case images, doctor/certificate proofs—framed in circles or grids. Images support trust and transparency, with each purpose-dedicated block having distinct image presentation. No distracting overlays or heavy filters.",
+    "motion_interaction": "Minimal motion; hover effects on navigation and CTAs for feedback. Potential subtle fade-ins/slide-ups as sections enter the viewport (not explicitly visible in screenshot, but would be typical for this style). Mobile interactions reduce motion for performance and clarity.",
+    "cta_strategy": "Primary CTA 'Записатися' repeats after trust-building elements (hero, process, testimonials), always using the distinct teal button. Placement above the fold and then as form within a dark block before footer ensures persistent conversion focus. Form is short and supportive, reducing friction.",
+    "desktop_behavior": "Navigation is horizontal, sticky at the top. Side-by-side cards and images maximize wide screens; main CTAs anchor at visual hot-spots. Section alignment increases scannability. No parallax or intrusive overlays.",
+    "mobile_behavior": "Navigation condenses to a hamburger menu; service cards and media stack vertically full-width for readability. Cards and form fields remain tap-friendly. Spacing and panel order remain logical; images shrink but retain clarity; interactive blocks are thumb-accessible.",
+    "learn": [
+      "Modular page sections with clear vertical flow enhance scannability for service businesses.",
+      "Visual trust signals (certificates, before/after galleries, testimonials) should appear before key CTAs to maximize conversion likelihood.",
+      "Consistent palette and generous whitespace reinforce brand calmness and build trust, especially in medical contexts.",
+      "Placing the primary CTA form near the footer embeds it at the end of the user’s trust-building journey."
+    ],
+    "do_not_copy": [
+      "Avoid using generic or clichéd stock images—authentic photography from the business inspires more trust.",
+      "Do not obscure page purpose with too many competing CTAs—one primary action (appointment) is emphasized narrowly here.",
+      "Never compress or crowd service summary areas—white space is an integral part of the communication and sense of quality.",
+      "Do not use harsh or jarring accent colors in clinical/medical contexts—gentle tones are essential for reassurance."
+    ],
+    "reusable_cross_category_traits": [
+      "Sequential visual storytelling (problem, proof, solution, conversion) is effective for any trust-based service business.",
+      "Sticky and clearly branded navigation aids orientation without overwhelming content.",
+      "Mobile layouts must stack trusted content vertically and avoid carousels/sliders where possible for clarity and accessibility."
+    ],
+    "traits": [
+      "Calm, inviting hero with blended value proposition and visual human connection.",
+      "Service/benefit cards with icons and short copy for clarity.",
+      "Documentary-style case galleries establish expertise authentically.",
+      "Certification/credentials images for authority.",
+      "Centrally placed, minimal friction booking CTA and form.",
+      "Testimonial section with large quote icon and clear author separation.",
+      "Map/contact block integrated for post-conversion orientation.",
+      "Clear, not distracting, footers with legal, navigation, and social links."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "2e9793e4ce2c26ff1413dfbfd43a08f2daf0d189776c5a0c2c50c87008d518e0",
+    "input_checksum": "b00e6769c1fc3877bdd1c47e3a94f4f12630c7cbb3a02ab3c3bea8421bfec0bc",
+    "output_checksum": "ad67ee6c974126ecbf51026e0ff05e5dfc97aef5331bff52d2ac2ecda0201da5",
+    "timestamp": "2026-07-16T17:14:54.936247+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "39ca68350d31ea63ce02e5f2282743fb9c758706aa98b130e4d71fa46824de38",
+      "repair_count": 0
+    }
+  },
+  "business_context": "A modern dental clinic in Zaporizhzhia presenting their comprehensive dentistry services, credibility, team expertise, certifications, and before/after results to attract and convert new patients via appointments.",
+  "audience": "Potential dental patients in Zaporizhzhia, particularly those seeking trustworthy, modern dental care; includes families and adults seeking cosmetic or complex dental treatments.",
+  "conversion_goal": "To encourage users to book an appointment using the form near the footer, clearly signposted throughout; secondary goals include educating users and providing directions/contact details.",
+  "first_viewport_logic": "The hero section prioritizes credibility by combining a calm, inviting dental photo in the background with a succinct, value-based headline, short explanatory text, and immediate call to action ('Записатися'). Navigation is minimal and unobtrusive to focus attention on the message and CTA. In mobile, the structure and priorities are preserved, with navigation collapsed to a menu for focus and clarity.",
+  "information_architecture": [
+    "Hero section with headline and CTA",
+    "Introductory service summary with visual cards",
+    "Key benefits/services grid",
+    "Process overview with supporting visual",
+    "Results gallery with before/after dental images",
+    "Certification and awards section with image proofs",
+    "Trusted doctors block (carousel/grid)",
+    "Patient testimonials block",
+    "CTA form for appointment booking",
+    "Contact/location/map section",
+    "Footer with legal and navigation links"
+  ],
+  "narrative_storytelling": "The page uses sequential visual storytelling: greeting users with a reassuring, friendly image and headline, then introducing core services, visually validating expertise (certificates, results, trusted doctors), and closing with social proof (testimonials) and a frictionless appointment CTA—following a trust-building, problem/solution-centric narrative.",
+  "composition_grid": "A strict vertical modular grid, reinforced by generous whitespace, clearly delimits sections; cards and blocks are aligned symmetrically, with prominent centrality of forms and service icons. Mobile stacks sections vertically with preserved visual rhythm, and reduces icons/cards to single-column blocks for clarity.",
+  "spacing_rhythm": "Wide vertical spacers between sections ensure clarity and invite scrolling. Consistent internal padding around cards/forms supports readability. Typography, cards, and images have breathing room, avoiding visual crowding, and creating a calm, professional feel.",
+  "typography": "Classical, medical-inspired typeface pairing: a refined serif for main headings communicates expertise, while clean sans-serif text supports readability for body and navigation. Hierarchical contrast is strong: large, colored headings, medium-weight subheads, and light, spaced body copy.",
+  "palette_contrast": "Soft, clinical palette: white backgrounds with teal/aqua accents for buttons, highlights, and section backgrounds; black for CTAs and footer. Pastel and muted tones reinforce calmness and trust, with high legibility through dark text on light sections and vice versa. Accent colors direct attention to CTAs and interactive elements.",
+  "media_treatment": "Photographic media is documentary and authentic—office scenes, before/after dental case images, doctor/certificate proofs—framed in circles or grids. Images support trust and transparency, with each purpose-dedicated block having distinct image presentation. No distracting overlays or heavy filters.",
+  "motion_interaction": "Minimal motion; hover effects on navigation and CTAs for feedback. Potential subtle fade-ins/slide-ups as sections enter the viewport (not explicitly visible in screenshot, but would be typical for this style). Mobile interactions reduce motion for performance and clarity.",
+  "cta_strategy": "Primary CTA 'Записатися' repeats after trust-building elements (hero, process, testimonials), always using the distinct teal button. Placement above the fold and then as form within a dark block before footer ensures persistent conversion focus. Form is short and supportive, reducing friction.",
+  "desktop_behavior": "Navigation is horizontal, sticky at the top. Side-by-side cards and images maximize wide screens; main CTAs anchor at visual hot-spots. Section alignment increases scannability. No parallax or intrusive overlays.",
+  "mobile_behavior": "Navigation condenses to a hamburger menu; service cards and media stack vertically full-width for readability. Cards and form fields remain tap-friendly. Spacing and panel order remain logical; images shrink but retain clarity; interactive blocks are thumb-accessible.",
+  "learn": [
+    "Modular page sections with clear vertical flow enhance scannability for service businesses.",
+    "Visual trust signals (certificates, before/after galleries, testimonials) should appear before key CTAs to maximize conversion likelihood.",
+    "Consistent palette and generous whitespace reinforce brand calmness and build trust, especially in medical contexts.",
+    "Placing the primary CTA form near the footer embeds it at the end of the user’s trust-building journey."
+  ],
+  "do_not_copy": [
+    "Avoid using generic or clichéd stock images—authentic photography from the business inspires more trust.",
+    "Do not obscure page purpose with too many competing CTAs—one primary action (appointment) is emphasized narrowly here.",
+    "Never compress or crowd service summary areas—white space is an integral part of the communication and sense of quality.",
+    "Do not use harsh or jarring accent colors in clinical/medical contexts—gentle tones are essential for reassurance."
+  ],
+  "reusable_cross_category_traits": [
+    "Sequential visual storytelling (problem, proof, solution, conversion) is effective for any trust-based service business.",
+    "Sticky and clearly branded navigation aids orientation without overwhelming content.",
+    "Mobile layouts must stack trusted content vertically and avoid carousels/sliders where possible for clarity and accessibility."
+  ],
+  "traits": [
+    "Calm, inviting hero with blended value proposition and visual human connection.",
+    "Service/benefit cards with icons and short copy for clarity.",
+    "Documentary-style case galleries establish expertise authentically.",
+    "Certification/credentials images for authority.",
+    "Centrally placed, minimal friction booking CTA and form.",
+    "Testimonial section with large quote icon and clear author separation.",
+    "Map/contact block integrated for post-conversion orientation.",
+    "Clear, not distracting, footers with legal, navigation, and social links."
+  ],
+  "content_hash": "a13dba4d76907af80d346edd1d9c0e5c7725449e735ca0389045c0dd9182e19f"
+}

@@ -1,0 +1,161 @@
+{
+  "id": "neuemontreal-com",
+  "title": "PP Neue Montreal – Grotesque Font by Pangram Pangram",
+  "source_url": "https://neuemontreal.com/",
+  "normalized_url": "https://neuemontreal.com/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:24:34.373207+00:00",
+    "final_url": "https://neuemontreal.com/",
+    "screenshots": {
+      "desktop.png": "c5f68640cc99aab2b99755bb0c13d159dcd92f3dd4992dc96281234d06b0111a",
+      "mobile.png": "dc2bf46399330dbdf44802f995a18229f157f9e5dad22c21e3e116946e1b879d"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "The site promotes 'PP Neue Montreal,' a grotesque font designed by Pangram Pangram. Its primary business objective is to showcase and drive font licensing or downloads by demonstrating the font's versatility, usage, and global credibility. The brand aligns itself with modern, experimental type design for forward-thinking digital creatives and studios.",
+    "audience": "Target audience includes graphic designers, brand managers, creative directors, and digital professionals seeking innovative and flexible sans-serif fonts for branding, editorial, or interface projects.",
+    "conversion_goal": "The main conversion goal is to prompt users to license or download the Neue Montreal font, reinforced by 'Already in Use Worldwide!' and practical showcase content.",
+    "first_viewport_logic": "The first viewport uses asymmetrical composition and color pops to catch creative attention. A playful, multi-colored headline ('Out with the old, in with the Neue') overlays dark space beside minimal navigation and preview cards. Design signals modularity and creativity, which positions the brand as innovative and non-traditional.",
+    "information_architecture": [
+      "Header navigation (burger or logo left)",
+      "Tagline and concept pitch",
+      "Interactive font feature cards",
+      "Scrolling showcase imagery (rainbow stripes, urban environment)",
+      "Type specimen preview section",
+      "Glyph alternates and features demonstration",
+      "Global usage credibility badge",
+      "Practical font licensing/download call-to-action",
+      "Footer with brand repetition"
+    ],
+    "narrative_storytelling": "Sequentially introduces the problem ('out with the old') and its solution (the 'Neue'). Demonstrates product strengths through bold visual variety and then social proof ('Already in use worldwide!'). The story moves from concept pitch, to playful detail, to proof, to practical action (download/license).",
+    "composition_grid": "Breaks traditional grids, favoring modular and sometimes chaotic arrangements. Uses large blocks of color, overlapping objects, and variable image placement, echoing grotesque font characteristics—structured, but with intentional asymmetry for creative tension.",
+    "spacing_rhythm": "Spacing is highly intentional—blocks either butt up or float with deliberate white/negative space. Alternating dense and airy sections provide dynamic rhythm. Generous margins around specimen previews, tight grouping on color blocks, and edge-to-edge color bands create visual stops and starts.",
+    "typography": "Typography is central: bold grotesque sans-serif headlines, paired with mono or light grotesque for details. Varied sizes throughout. Text often overlays images and color, reinforcing the foundational font's versatility and readability across contexts.",
+    "palette_contrast": "High-contrast palette: black backgrounds, neon and primary color accents, creamy beiges, and sharp white. Unapologetically vibrant rainbow blocks draw attention to key transitions, supporting creative energy and signaling adaptability.",
+    "media_treatment": "Imagery is urban, architectural, and documentary-like, with overlays of typographic elements. Color bands serve as both visual dividers and feature highlights. Specimen letters are oversized and isolated, emphasizing form. Photographs are often cropped unconventionally, intensifying focus on mood over place.",
+    "motion_interaction": "Evidence of motion is not visible in the screenshot, but the layered elements, playful arrangement of color bands, and floating objects likely imply subtle transitions and interactive hover effects.",
+    "cta_strategy": "CTAs are integrated as bold, colorful modules—the 'Already in Use, Worldwide!' badge and download/licensing invitation in loud orange/red stand out immediately after social proof. There is an explicit, visually distinct section for practical action.",
+    "desktop_behavior": "Desktop arranges elements across horizontal bands and columns, giving an expansive, editorial feel. Photographic elements and type specimens have more breathing room, and layered blocks are more pronounced.",
+    "mobile_behavior": "Mobile collapses navigation into a single column, stacking colored sections and letter previews. The visual hierarchy is preserved, but some grid breaks and overlapping elements are lost for linear clarity. Key CTAs and proof points are still immediately visible and distinct.",
+    "learn": [
+      "Break grid conventions thoughtfully for creative tension.",
+      "Use vibrant non-brand color bands to indicate modularity and adaptability, not identity.",
+      "Showcase product (font) in real-world, proof-driven modules, not abstract concept only.",
+      "Pair playful, colored headlines with monochrome or documentary images for contrast."
+    ],
+    "do_not_copy": [
+      "Do not replicate non-structured, modular layouts for brands needing strict hierarchy or traditional credibility.",
+      "Do not use primary/neon color banding for conservative or luxury audiences—it signals experimentalism.",
+      "Never overlay bold, whimsical type on detailed photographs for content requiring high readability."
+    ],
+    "reusable_cross_category_traits": [
+      "Emphasize product versatility visually throughout the page sequence.",
+      "Bring social proof (like global usage) directly before CTAs to prime action.",
+      "Use segmented color blocks for fast section recognition in a long-scroll experience."
+    ],
+    "traits": [
+      "Non-traditional, asymmetric grid.",
+      "Bold use of rainbow/primary accent blocks.",
+      "Typography-led storytelling.",
+      "Contrasting playful and minimal sections.",
+      "Product proof woven with call-to-action.",
+      "Flexible modular structure."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "e5144c91304623bafa7643c03f9f1541a0dddcf19c6b91c1a540489a825a5cb0",
+    "input_checksum": "d47b5b4c1c22317152f7894505e6d8eac2519242f50b99d767f3dcaa579d4d36",
+    "output_checksum": "24d2fefa1eca384d559da4ff1c907176fcdf814104c3b583abc5ed1e35c46ea5",
+    "timestamp": "2026-07-16T18:25:22.684512+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "82d972c140c4e5391e6d4bbafbdec1d7b53c603d1db83158a69995beff592456",
+      "repair_count": 0
+    }
+  },
+  "business_context": "The site promotes 'PP Neue Montreal,' a grotesque font designed by Pangram Pangram. Its primary business objective is to showcase and drive font licensing or downloads by demonstrating the font's versatility, usage, and global credibility. The brand aligns itself with modern, experimental type design for forward-thinking digital creatives and studios.",
+  "audience": "Target audience includes graphic designers, brand managers, creative directors, and digital professionals seeking innovative and flexible sans-serif fonts for branding, editorial, or interface projects.",
+  "conversion_goal": "The main conversion goal is to prompt users to license or download the Neue Montreal font, reinforced by 'Already in Use Worldwide!' and practical showcase content.",
+  "first_viewport_logic": "The first viewport uses asymmetrical composition and color pops to catch creative attention. A playful, multi-colored headline ('Out with the old, in with the Neue') overlays dark space beside minimal navigation and preview cards. Design signals modularity and creativity, which positions the brand as innovative and non-traditional.",
+  "information_architecture": [
+    "Header navigation (burger or logo left)",
+    "Tagline and concept pitch",
+    "Interactive font feature cards",
+    "Scrolling showcase imagery (rainbow stripes, urban environment)",
+    "Type specimen preview section",
+    "Glyph alternates and features demonstration",
+    "Global usage credibility badge",
+    "Practical font licensing/download call-to-action",
+    "Footer with brand repetition"
+  ],
+  "narrative_storytelling": "Sequentially introduces the problem ('out with the old') and its solution (the 'Neue'). Demonstrates product strengths through bold visual variety and then social proof ('Already in use worldwide!'). The story moves from concept pitch, to playful detail, to proof, to practical action (download/license).",
+  "composition_grid": "Breaks traditional grids, favoring modular and sometimes chaotic arrangements. Uses large blocks of color, overlapping objects, and variable image placement, echoing grotesque font characteristics—structured, but with intentional asymmetry for creative tension.",
+  "spacing_rhythm": "Spacing is highly intentional—blocks either butt up or float with deliberate white/negative space. Alternating dense and airy sections provide dynamic rhythm. Generous margins around specimen previews, tight grouping on color blocks, and edge-to-edge color bands create visual stops and starts.",
+  "typography": "Typography is central: bold grotesque sans-serif headlines, paired with mono or light grotesque for details. Varied sizes throughout. Text often overlays images and color, reinforcing the foundational font's versatility and readability across contexts.",
+  "palette_contrast": "High-contrast palette: black backgrounds, neon and primary color accents, creamy beiges, and sharp white. Unapologetically vibrant rainbow blocks draw attention to key transitions, supporting creative energy and signaling adaptability.",
+  "media_treatment": "Imagery is urban, architectural, and documentary-like, with overlays of typographic elements. Color bands serve as both visual dividers and feature highlights. Specimen letters are oversized and isolated, emphasizing form. Photographs are often cropped unconventionally, intensifying focus on mood over place.",
+  "motion_interaction": "Evidence of motion is not visible in the screenshot, but the layered elements, playful arrangement of color bands, and floating objects likely imply subtle transitions and interactive hover effects.",
+  "cta_strategy": "CTAs are integrated as bold, colorful modules—the 'Already in Use, Worldwide!' badge and download/licensing invitation in loud orange/red stand out immediately after social proof. There is an explicit, visually distinct section for practical action.",
+  "desktop_behavior": "Desktop arranges elements across horizontal bands and columns, giving an expansive, editorial feel. Photographic elements and type specimens have more breathing room, and layered blocks are more pronounced.",
+  "mobile_behavior": "Mobile collapses navigation into a single column, stacking colored sections and letter previews. The visual hierarchy is preserved, but some grid breaks and overlapping elements are lost for linear clarity. Key CTAs and proof points are still immediately visible and distinct.",
+  "learn": [
+    "Break grid conventions thoughtfully for creative tension.",
+    "Use vibrant non-brand color bands to indicate modularity and adaptability, not identity.",
+    "Showcase product (font) in real-world, proof-driven modules, not abstract concept only.",
+    "Pair playful, colored headlines with monochrome or documentary images for contrast."
+  ],
+  "do_not_copy": [
+    "Do not replicate non-structured, modular layouts for brands needing strict hierarchy or traditional credibility.",
+    "Do not use primary/neon color banding for conservative or luxury audiences—it signals experimentalism.",
+    "Never overlay bold, whimsical type on detailed photographs for content requiring high readability."
+  ],
+  "reusable_cross_category_traits": [
+    "Emphasize product versatility visually throughout the page sequence.",
+    "Bring social proof (like global usage) directly before CTAs to prime action.",
+    "Use segmented color blocks for fast section recognition in a long-scroll experience."
+  ],
+  "traits": [
+    "Non-traditional, asymmetric grid.",
+    "Bold use of rainbow/primary accent blocks.",
+    "Typography-led storytelling.",
+    "Contrasting playful and minimal sections.",
+    "Product proof woven with call-to-action.",
+    "Flexible modular structure."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "pp neue montreal",
+    "candidate_url": "https://www.awwwards.com/sites/pp-neue-montreal",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://neuemontreal.com/",
+    "resolution_source": "https://www.awwwards.com/sites/pp-neue-montreal",
+    "discovered_at": "2026-07-16T18:22:10.537981+00:00"
+  },
+  "content_hash": "45c07f19905981eb32dd3eac5f311562447f393bcc52cbbc87ca8e313bcb612c"
+}

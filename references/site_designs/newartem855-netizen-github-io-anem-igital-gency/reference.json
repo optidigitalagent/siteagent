@@ -1,0 +1,146 @@
+{
+  "id": "newartem855-netizen-github-io-anem-igital-gency",
+  "title": "PANEM — Digital Agency | SEO · Google Ads · SMM · Target",
+  "source_url": "https://newartem855-netizen.github.io/Panem-Digital-Agency/",
+  "normalized_url": "https://newartem855-netizen.github.io/Panem-Digital-Agency/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:11:11.999403+00:00",
+    "final_url": "https://newartem855-netizen.github.io/Panem-Digital-Agency/",
+    "screenshots": {
+      "desktop.png": "651518b6b9458be4eb9542cc1c68d8f78d566fccb896f42f3db60c28fdea24cd",
+      "mobile.png": "baa2935ba33723b113bb7ce1486e15078ff341d49f5bdb2f66855d17cb24d53b"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Digital marketing agency emphasizing SEO, Google Ads, SMM, and performance marketing for business growth—targeting companies seeking to improve online visibility and results.",
+    "audience": "Business owners, marketing managers, and company decision-makers looking to scale their digital presence.",
+    "conversion_goal": "Primary goal is to encourage visitors to request a free audit or consultation via prominent CTAs.",
+    "first_viewport_logic": "Hero section uses large, bold typography combined with a minimalist, high-contrast dark style to immediately communicate core value proposition ('Grow Faster'), supported by brief service descriptors above the fold. Navigation is immediate and fixed; CTA in header is visually distinct.",
+    "information_architecture": [
+      "Top navigation: Services, Cases, Projects, About Us, Blog, Contacts",
+      "Hero section with service proposition and headline",
+      "Service categories in a horizontal scroll/carousel",
+      "Selected case study or featured success metrics",
+      "List of services and performance results",
+      "Feature icons to highlight agency strengths",
+      "Footer with secondary navigation and legal info",
+      "Contact form section at the bottom"
+    ],
+    "narrative_storytelling": "Narrative centers on boosting client growth, using concise copy and a progression of social proof, success stats, and service clarity. Case study modules and visual stats reinforce results-driven outcomes.",
+    "composition_grid": "Strict modular grid with clear column/gutter structure. Design aligns left with center-columned content and visual sections spanning the full width for contrast breaks. Consistent separation between major bands of content.",
+    "spacing_rhythm": "Generous vertical whitespace between blocks provides a sense of calm and hierarchy. Section paddings are wide, enabling legibility and focus; content isn't crowded, but elements within bands (e.g., stats) are grouped tightly for association.",
+    "typography": "Bold, heavy sans-serif headlines contrast with lightweight, smaller navigation and body text. All-caps in hero for impact. Clear typographic scale differentiates headings, stats, and legal/footnote details. Minimal decorative fonts, strictly modern sans-serif family.",
+    "palette_contrast": "High-contrast dark background (black/deep gray) with white or near-white text. Call to actions (CTAs) use white or colored backgrounds for stand-out effect. The palette is stark, clean, and contemporary, with minimal accent coloring for links or action elements only.",
+    "media_treatment": "Minimal imagery—focus on text and blocks. Placeholder for case study image/video, set in a black or gray surround. Abstract or absent backgrounds avoid distraction; iconography in features follows a fine-outline, monochrome style for consistency.",
+    "motion_interaction": "Subtle hover effects on navigation and buttons (e.g., underline or highlight). Fixed/sticky header detail with CTA. Section transitions are likely simple fades or slides (not visible on static screenshot). Horizontal scrolling service menu hints at interactive behavior.",
+    "cta_strategy": "CTAs appear in the header (fixed position for immediate access), mid-page (case study box) and prominently in the contact section/final module. Designed with a stark contrasting background, centered, and large enough to be immediately actionable—language is direct ('Get a Free Audit').",
+    "desktop_behavior": "Persistent header with navigation and CTA. Wide lateral spacing; horizontal menu for services; large inline modules. Content flows in clear horizontal bands—no overlap or crowding. Background textures/grids are more visible on desktop due to size.",
+    "mobile_behavior": "Single-column flow; navigation collapses into a hamburger or top-strapped stack. All content stacks vertically with compressed, touch-friendly service menu. Spacing is reduced but remains readable. All CTAs and forms sized for easy touch without requiring zoom.",
+    "learn": [
+      "Hero sections can use heavy contrast and overlarge typography to anchor perception of brand strength and clarity.",
+      "Strict monochrome palettes build focus and communicate professionalism without visual clutter.",
+      "Persistent, visually-distinct CTAs in header and footer improve conversion accessibility across device types.",
+      "Case studies or stat blocks should be paired with quantitative measures to build credibility quickly."
+    ],
+    "do_not_copy": [
+      "Do not leave imagery blank—use a purposeful image or graphic where placeholders exist; blank blocks can reduce polish.",
+      "Avoid extreme text contrast without sufficient line height or whitespace; make sure readability remains high in all sections.",
+      "Do not bury or minimize CTAs in dense or low-contrast areas; they must always stand out and be accessible throughout the scroll."
+    ],
+    "reusable_cross_category_traits": [
+      "Bold typographic hero with immediate value statement.",
+      "Section-based, high-contrast monochrome backgrounds to segment journey.",
+      "Use of performance metrics/case studies as social proof anchors.",
+      "Persistent, always-accessible CTA regions."
+    ],
+    "traits": [
+      "Minimalist, high-impact aesthetic.",
+      "Emphasis on quantifiable results via case studies and stats.",
+      "Clear vertical sectioning and progressive content disclosure.",
+      "Mobile-first, with excellent stacking and touch targets.",
+      "Fixed navigation and easily locatable contact points."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "a6e37b82f94c169e399c084204127192a5eaa67031404f6db1da5321e665a99c",
+    "input_checksum": "f365198ddd7df6830befaed679e1a636400b2248691a452890dc0d3a649c254e",
+    "output_checksum": "2ae3f83093a659c9fb70c174e1a582c53b60dc8454fe6521f54fda885791ecd9",
+    "timestamp": "2026-07-16T17:11:53.293398+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "8b43a31256f853fcd172ec6742c37b195cdc17a33205ef3f00d64fec5afea9fc",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Digital marketing agency emphasizing SEO, Google Ads, SMM, and performance marketing for business growth—targeting companies seeking to improve online visibility and results.",
+  "audience": "Business owners, marketing managers, and company decision-makers looking to scale their digital presence.",
+  "conversion_goal": "Primary goal is to encourage visitors to request a free audit or consultation via prominent CTAs.",
+  "first_viewport_logic": "Hero section uses large, bold typography combined with a minimalist, high-contrast dark style to immediately communicate core value proposition ('Grow Faster'), supported by brief service descriptors above the fold. Navigation is immediate and fixed; CTA in header is visually distinct.",
+  "information_architecture": [
+    "Top navigation: Services, Cases, Projects, About Us, Blog, Contacts",
+    "Hero section with service proposition and headline",
+    "Service categories in a horizontal scroll/carousel",
+    "Selected case study or featured success metrics",
+    "List of services and performance results",
+    "Feature icons to highlight agency strengths",
+    "Footer with secondary navigation and legal info",
+    "Contact form section at the bottom"
+  ],
+  "narrative_storytelling": "Narrative centers on boosting client growth, using concise copy and a progression of social proof, success stats, and service clarity. Case study modules and visual stats reinforce results-driven outcomes.",
+  "composition_grid": "Strict modular grid with clear column/gutter structure. Design aligns left with center-columned content and visual sections spanning the full width for contrast breaks. Consistent separation between major bands of content.",
+  "spacing_rhythm": "Generous vertical whitespace between blocks provides a sense of calm and hierarchy. Section paddings are wide, enabling legibility and focus; content isn't crowded, but elements within bands (e.g., stats) are grouped tightly for association.",
+  "typography": "Bold, heavy sans-serif headlines contrast with lightweight, smaller navigation and body text. All-caps in hero for impact. Clear typographic scale differentiates headings, stats, and legal/footnote details. Minimal decorative fonts, strictly modern sans-serif family.",
+  "palette_contrast": "High-contrast dark background (black/deep gray) with white or near-white text. Call to actions (CTAs) use white or colored backgrounds for stand-out effect. The palette is stark, clean, and contemporary, with minimal accent coloring for links or action elements only.",
+  "media_treatment": "Minimal imagery—focus on text and blocks. Placeholder for case study image/video, set in a black or gray surround. Abstract or absent backgrounds avoid distraction; iconography in features follows a fine-outline, monochrome style for consistency.",
+  "motion_interaction": "Subtle hover effects on navigation and buttons (e.g., underline or highlight). Fixed/sticky header detail with CTA. Section transitions are likely simple fades or slides (not visible on static screenshot). Horizontal scrolling service menu hints at interactive behavior.",
+  "cta_strategy": "CTAs appear in the header (fixed position for immediate access), mid-page (case study box) and prominently in the contact section/final module. Designed with a stark contrasting background, centered, and large enough to be immediately actionable—language is direct ('Get a Free Audit').",
+  "desktop_behavior": "Persistent header with navigation and CTA. Wide lateral spacing; horizontal menu for services; large inline modules. Content flows in clear horizontal bands—no overlap or crowding. Background textures/grids are more visible on desktop due to size.",
+  "mobile_behavior": "Single-column flow; navigation collapses into a hamburger or top-strapped stack. All content stacks vertically with compressed, touch-friendly service menu. Spacing is reduced but remains readable. All CTAs and forms sized for easy touch without requiring zoom.",
+  "learn": [
+    "Hero sections can use heavy contrast and overlarge typography to anchor perception of brand strength and clarity.",
+    "Strict monochrome palettes build focus and communicate professionalism without visual clutter.",
+    "Persistent, visually-distinct CTAs in header and footer improve conversion accessibility across device types.",
+    "Case studies or stat blocks should be paired with quantitative measures to build credibility quickly."
+  ],
+  "do_not_copy": [
+    "Do not leave imagery blank—use a purposeful image or graphic where placeholders exist; blank blocks can reduce polish.",
+    "Avoid extreme text contrast without sufficient line height or whitespace; make sure readability remains high in all sections.",
+    "Do not bury or minimize CTAs in dense or low-contrast areas; they must always stand out and be accessible throughout the scroll."
+  ],
+  "reusable_cross_category_traits": [
+    "Bold typographic hero with immediate value statement.",
+    "Section-based, high-contrast monochrome backgrounds to segment journey.",
+    "Use of performance metrics/case studies as social proof anchors.",
+    "Persistent, always-accessible CTA regions."
+  ],
+  "traits": [
+    "Minimalist, high-impact aesthetic.",
+    "Emphasis on quantifiable results via case studies and stats.",
+    "Clear vertical sectioning and progressive content disclosure.",
+    "Mobile-first, with excellent stacking and touch targets.",
+    "Fixed navigation and easily locatable contact points."
+  ],
+  "content_hash": "b5f0142226524c0b8b7ff37ed7c85cc36abef353cb79a1c37eac4bc060e7f4bf"
+}

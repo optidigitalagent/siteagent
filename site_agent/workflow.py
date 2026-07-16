@@ -85,7 +85,35 @@ def selected_references(
     if not catalog.is_file():
         raise WorkflowConfigurationError("reference-input checkpoint blocked: references/site_designs/catalog.json is missing; run python -m site_agent.reference_import first.")
     data = json.loads(catalog.read_text(encoding="utf-8"))
-    usable = [item for item in data.get("references", []) if item.get("capture_status") == "captured" and item.get("analysis_status") == "completed" and len(item.get("screenshot_paths", [])) == 2]
+    captured_count = sum(1 for item in data.get("references", []) if item.get("capture_status") == "captured" and item.get("analysis_status") == "completed")
+    if captured_count < 3:
+        raise WorkflowConfigurationError("reference-input checkpoint blocked: at least three fully analysed captured trait references are required.")
+    decisions_path = root / str(data.get("decision_artifact", "reference_decisions.json"))
+    if not decisions_path.is_file():
+        raise WorkflowConfigurationError("reference-input checkpoint blocked: autonomous reference decisions are missing; run python -m site_agent.reference_import.")
+    decisions = json.loads(decisions_path.read_text(encoding="utf-8"))
+    active = {
+        str(item.get("reference_id")): item for item in decisions.get("decisions", [])
+        if item.get("decision") == "active" and int(item.get("confidence", 0)) >= 90
+    }
+    usable = []
+    for item in data.get("references", []):
+        item_id = str(item.get("id", ""))
+        if item_id not in active or item.get("capture_status") != "captured" or item.get("analysis_status") != "completed":
+            continue
+        paths = item.get("screenshot_paths", [])
+        if set(paths) != {"desktop.png", "mobile.png"}:
+            continue
+        try:
+            expected = item.get("capture", {}).get("screenshots", {})
+            if not all((root / item_id / name).is_file() and hashlib.sha256((root / item_id / name).read_bytes()).hexdigest() == expected.get(name) for name in paths):
+                continue
+        except OSError:
+            continue
+        copy = dict(item)
+        copy["scope_of_learning"] = active[item_id].get("scope_of_learning")
+        copy["autonomous_decision_confidence"] = active[item_id].get("confidence")
+        usable.append(copy)
     if len(usable) < 3:
         raise WorkflowConfigurationError("reference-input checkpoint blocked: at least three fully analysed captured trait references are required.")
     query = reference_query(business_research, design_brief)

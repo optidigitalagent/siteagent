@@ -1,0 +1,142 @@
+{
+  "id": "newartem855-netizen-github-io-auratop1",
+  "title": "Aura Event Hall — Кейтеринг та організація подій у Києві",
+  "source_url": "https://newartem855-netizen.github.io/auratop1/",
+  "normalized_url": "https://newartem855-netizen.github.io/auratop1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:10:33.428984+00:00",
+    "final_url": "https://newartem855-netizen.github.io/auratop1/",
+    "screenshots": {
+      "desktop.png": "1e2c0e0497cff2ea6556a6b42bb3fe8fe37df3ea13fd2be13886f2116ec214fd",
+      "mobile.png": "c5bdda332108d77e0163272e9cda723dd8d17abce706b03d6a4c91d6d758c4e0"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "Aura Event Hall provides catering and event organization services in Kyiv. The website is intended to present their venue and offerings as premium, stress-free, and elegant.",
+    "audience": "Clients seeking a high-end venue and catering for special events like weddings, corporate events, or private celebrations in Kyiv. Likely aimed at both individuals and businesses placing value on seamless and beautiful arrangements.",
+    "conversion_goal": "Prompt prospects to inquire or book the venue/catering services. The fixed \"Залишити заявку\" (Leave a request) CTA targets initial lead capture.",
+    "first_viewport_logic": "Both desktop and mobile views start with a visually impactful hero section with an inviting photo of the venue, an elegant headline, and subtle navigation. The main CTA is clearly visible top-right (desktop) and as a fixed element (mobile). There is an immediate focus on message clarity and ambience.",
+    "information_architecture": [
+      "Hero section with headline and tagline over photo",
+      "Top-level navigation (Home, About, Hall, Events, Menu, Contacts) remains discrete",
+      "Alternating color block structure throughout the scrolling page",
+      "Section blocks create rhythm: dark and light backgrounds likely used for segments such as services, details, testimonials, contact"
+    ],
+    "narrative_storytelling": "The site sets a refined, inviting tone immediately, promising to handle event organization 'beautifully, deliciously, and without hassle.' Visual tranquility and assured competence are foregrounded, with minimal distractions.",
+    "composition_grid": "Strong central alignment—text and CTAs are visually centered. Generous margins left and right. Content is locked into vertical, block-based sections, reinforcing clarity and hierarchy. Mobile stacks content vertically with no clutter.",
+    "spacing_rhythm": "Large, consistent vertical spacing between blocks distinguishes sections and improves scan-ability; comfortable line height and padding ensure readable, airy layouts. Generous use of white or dark negative space prevents visual fatigue.",
+    "typography": "Serif display fonts are used for hero headlines (emphasizing elegance), paired with lighter sans-serif or serif body text for readability. High contrast between text and background. Font sizing is ample, especially for headings.",
+    "palette_contrast": "A soft, cream/light beige pairs against deep black/dark brown, creating warm yet high-contrast color blocking. The gold/yellow accent for CTA and highlights signals premium quality without ostentation. There is clear legibility throughout.",
+    "media_treatment": "Hero image is atmospheric, slightly darkened for text contrast; images are used sparingly but purposefully to set ambience. No overwhelming galleries or carousels; image is a storytelling tool, not distraction.",
+    "motion_interaction": "No visible motion or animated elements in screenshots. The experience is intentional and calm, relying on static visual composition over kinetic energy.",
+    "cta_strategy": "CTA ('Залишити заявку') is highlighted in a gold button, always visible at the top (desktop) or pinned (mobile). Only a single, focused CTA per screen prevents decision fatigue. Microcopy is direct and action-oriented.",
+    "desktop_behavior": "Navigation and CTA are fixed and accessible. The layout is wide, keeping major action points and key text in view above the fold. Content blocks are clearly demarcated. Scroll experience is linear and predictable.",
+    "mobile_behavior": "All content is single-column and fully responsive with no text crowding. Navigation condenses to simple items. Primary CTA is fixed for constant thumb access. Images resize appropriately; spacing is maintained for readability.",
+    "learn": [
+      "Use high-contrast, premium color palettes (cream+black/gold) for upscale event brands.",
+      "Single centered hero image with prominent, elegant headline immediately communicates positioning.",
+      "Use fixed CTA in header for lead-gen sites—easy access drives conversions.",
+      "Block-based sectioning with generous negative space imparts calm and clarity.",
+      "Employ elegant serif typography for luxury signals; keep microcopy minimal and direct."
+    ],
+    "do_not_copy": [
+      "Avoid using excessive images or stock galleries—hero imagery should be purposeful, not decorative filler.",
+      "Do not clutter the top viewport with too many navigation items or mixed CTAs.",
+      "Don't use overly animated or lively UI for premium event/venue brands—a static composed look supports elegance.",
+      "Do not over-rely on single-color backgrounds; use colorblocking for rhythm and to guide the eye."
+    ],
+    "reusable_cross_category_traits": [
+      "Elegant block-and-space layout",
+      "Persistent, clear primary CTA",
+      "Hero section with centered prime message over ambience-setting background",
+      "Simple, rhythmical color blocking"
+    ],
+    "traits": [
+      "Serif & sans-serif contrast for text hierarchy",
+      "Luxurious but accessible palette",
+      "Strong vertical alignment",
+      "Lenient padding and sectioning",
+      "Minimalist navigation"
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "1c9355c090f89809ee02a1394f13990116a42bb8193dacee778ee4a27e6160fc",
+    "input_checksum": "79410f0404cb139fe5af12c180a2418daa783026f03d81acc188493afca5e3d0",
+    "output_checksum": "df75dd4f9047f7ec8abebe329425bc787f6c45c3acb66bbb9fceca2d46e2f967",
+    "timestamp": "2026-07-16T17:11:08.128070+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "666c53c5d99cedc2a73be28296229f1c976abcc450c3cddb671eaf48e01665d9",
+      "repair_count": 0
+    }
+  },
+  "business_context": "Aura Event Hall provides catering and event organization services in Kyiv. The website is intended to present their venue and offerings as premium, stress-free, and elegant.",
+  "audience": "Clients seeking a high-end venue and catering for special events like weddings, corporate events, or private celebrations in Kyiv. Likely aimed at both individuals and businesses placing value on seamless and beautiful arrangements.",
+  "conversion_goal": "Prompt prospects to inquire or book the venue/catering services. The fixed \"Залишити заявку\" (Leave a request) CTA targets initial lead capture.",
+  "first_viewport_logic": "Both desktop and mobile views start with a visually impactful hero section with an inviting photo of the venue, an elegant headline, and subtle navigation. The main CTA is clearly visible top-right (desktop) and as a fixed element (mobile). There is an immediate focus on message clarity and ambience.",
+  "information_architecture": [
+    "Hero section with headline and tagline over photo",
+    "Top-level navigation (Home, About, Hall, Events, Menu, Contacts) remains discrete",
+    "Alternating color block structure throughout the scrolling page",
+    "Section blocks create rhythm: dark and light backgrounds likely used for segments such as services, details, testimonials, contact"
+  ],
+  "narrative_storytelling": "The site sets a refined, inviting tone immediately, promising to handle event organization 'beautifully, deliciously, and without hassle.' Visual tranquility and assured competence are foregrounded, with minimal distractions.",
+  "composition_grid": "Strong central alignment—text and CTAs are visually centered. Generous margins left and right. Content is locked into vertical, block-based sections, reinforcing clarity and hierarchy. Mobile stacks content vertically with no clutter.",
+  "spacing_rhythm": "Large, consistent vertical spacing between blocks distinguishes sections and improves scan-ability; comfortable line height and padding ensure readable, airy layouts. Generous use of white or dark negative space prevents visual fatigue.",
+  "typography": "Serif display fonts are used for hero headlines (emphasizing elegance), paired with lighter sans-serif or serif body text for readability. High contrast between text and background. Font sizing is ample, especially for headings.",
+  "palette_contrast": "A soft, cream/light beige pairs against deep black/dark brown, creating warm yet high-contrast color blocking. The gold/yellow accent for CTA and highlights signals premium quality without ostentation. There is clear legibility throughout.",
+  "media_treatment": "Hero image is atmospheric, slightly darkened for text contrast; images are used sparingly but purposefully to set ambience. No overwhelming galleries or carousels; image is a storytelling tool, not distraction.",
+  "motion_interaction": "No visible motion or animated elements in screenshots. The experience is intentional and calm, relying on static visual composition over kinetic energy.",
+  "cta_strategy": "CTA ('Залишити заявку') is highlighted in a gold button, always visible at the top (desktop) or pinned (mobile). Only a single, focused CTA per screen prevents decision fatigue. Microcopy is direct and action-oriented.",
+  "desktop_behavior": "Navigation and CTA are fixed and accessible. The layout is wide, keeping major action points and key text in view above the fold. Content blocks are clearly demarcated. Scroll experience is linear and predictable.",
+  "mobile_behavior": "All content is single-column and fully responsive with no text crowding. Navigation condenses to simple items. Primary CTA is fixed for constant thumb access. Images resize appropriately; spacing is maintained for readability.",
+  "learn": [
+    "Use high-contrast, premium color palettes (cream+black/gold) for upscale event brands.",
+    "Single centered hero image with prominent, elegant headline immediately communicates positioning.",
+    "Use fixed CTA in header for lead-gen sites—easy access drives conversions.",
+    "Block-based sectioning with generous negative space imparts calm and clarity.",
+    "Employ elegant serif typography for luxury signals; keep microcopy minimal and direct."
+  ],
+  "do_not_copy": [
+    "Avoid using excessive images or stock galleries—hero imagery should be purposeful, not decorative filler.",
+    "Do not clutter the top viewport with too many navigation items or mixed CTAs.",
+    "Don't use overly animated or lively UI for premium event/venue brands—a static composed look supports elegance.",
+    "Do not over-rely on single-color backgrounds; use colorblocking for rhythm and to guide the eye."
+  ],
+  "reusable_cross_category_traits": [
+    "Elegant block-and-space layout",
+    "Persistent, clear primary CTA",
+    "Hero section with centered prime message over ambience-setting background",
+    "Simple, rhythmical color blocking"
+  ],
+  "traits": [
+    "Serif & sans-serif contrast for text hierarchy",
+    "Luxurious but accessible palette",
+    "Strong vertical alignment",
+    "Lenient padding and sectioning",
+    "Minimalist navigation"
+  ],
+  "content_hash": "a29e60d5a1a4f2f0225d7436772fe63683528a2e78bb07669a8080c3ad913f0f"
+}

@@ -1,0 +1,152 @@
+{
+  "id": "optidigitalagent-github-io-hereta",
+  "title": "HERETA DENTAL — Експертна стоматологія у Львові",
+  "source_url": "https://optidigitalagent.github.io/hereta/",
+  "normalized_url": "https://optidigitalagent.github.io/hereta/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:06:05.354114+00:00",
+    "final_url": "https://optidigitalagent.github.io/hereta/",
+    "screenshots": {
+      "desktop.png": "ff99d41597d6622cec99aee45b06c3ee42635b2679bce8b8b7f008629a865c11",
+      "mobile.png": "86647a53cc62fad3b277916db1856a6c8d9e51ad5e907457d13c1bd928d92ba5"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "A premium dental clinic in Lviv seeking to position itself as an expert, safe, and patient-centered practice. The branding and layout emphasize trust, comfort, and professional excellence.",
+    "audience": "Prospective dental patients (likely middle and upper-middle class), including individuals with dental anxiety, people prioritizing health and aesthetics, and family decision-makers seeking a reliable clinic.",
+    "conversion_goal": "Encourage users to book a consultation (evident from repeated strong CTAs such as 'Запишіться зараз!'), request a call-back, or reach out via the contact form.",
+    "first_viewport_logic": "Hero section directly addresses fear and trust in dentistry, pairing soft messaging with a studio-quality photo of clinic collateral. The primary CTA ('Записатись') is prominent and paired with secondary navigation inferring distinction between booking and call-back options.",
+    "information_architecture": [
+      "Hero (value and CTA)",
+      "Feature trust/benefit cards",
+      "Key services overview",
+      "Philosophy/value statement",
+      "Service details/approaches",
+      "For whom/services applications",
+      "Patient reviews/testimonials",
+      "Gallery of certifications",
+      "Instagram/social proof",
+      "Contact form and location details",
+      "Footer with site links and contacts"
+    ],
+    "narrative_storytelling": "Moves linearly from alleviating anxiety to presenting credentials, demonstrating gentle care, and building social proof, guiding the visitor through an emotional reassurance journey before actively prompting conversion.",
+    "composition_grid": "Consistent column grid (likely 12-col for desktop), with well-defined visual blocks. Content alternates between full-width and split blocks for rhythm, with separation through color blocking and white space for visual clarity.",
+    "spacing_rhythm": "Generous vertical padding and margins create a calm, premium feel. Ample whitespace minimizes cognitive load. Card components and image/content blocks are spaced to break monotony and aid scanability.",
+    "typography": "Sophisticated, readable serif and sans-serif pairings. Hero text uses large, slender serif for emphasis/brand tone. Supporting text, UI elements, and CTAs in crisp sans-serif. Hierarchy is clear: large headings, medium-weight subheads, high contrast body text.",
+    "palette_contrast": "Warm, muted browns and creams dominate; black used for drama in testimonial/CTA sections. Contrasts are soft but legible, reinforcing trust and calmness. Accent browns direct attention to CTAs without aggressive saturation.",
+    "media_treatment": "All media (images, cards, testimonials) are tastefully boxed or rounded, frequently with soft shadow or lifted effect. Clinic photos, patient testimonials, and certification cards appear authentic and coherent with the brand's palette.",
+    "motion_interaction": "Ostensibly minimal; possible subtle hover or button transitions visible via button effects/interactive card hints, but overall a tactile, gentle motion language. No distracting animation or aggressive parallax.",
+    "cta_strategy": "Multiple, context-aware CTAs. Primary CTA always in brand accent color, with text either 'Запишіться зараз!', 'Передзвоніть мені', or section-specific prompts. Placed above the fold, within testimonial/social proof sections, and sticky in mobile nav.",
+    "desktop_behavior": "Navigation is spread horizontally at top; sticky nav apparent, with logical section anchors. Split content sections leverage the wide layout, especially for service explanations and testimonials. Cards shift into columns; gallery is grid-based.",
+    "mobile_behavior": "Navigation condensed to hamburger; CTAs stack vertically. Cards and images go single-column, margins compress for fit, but spacing remains uncramped. Sticky booking CTA persists. All forms and contrast remain legible. Gallery and testimonials become swipeable or stack for vertical scroll.",
+    "learn": [
+      "Soft color-blocking can create a premium, calming atmosphere.",
+      "Clear narrative progression builds emotional trust (fear → approach → social proof → action).",
+      "Generous spacing and clear type hierarchy boost legibility and perceived quality.",
+      "Consistent CTA color and copy for recognizability.",
+      "Visual trust signals (certificates, testimonials) build credibility."
+    ],
+    "do_not_copy": [
+      "Brand colors, fonts, and clinic-branded images directly as these are identity-specific.",
+      "Direct carry-over of testimonial faces, client photos or certification/credentials layout.",
+      "Clinic-specific claim language (e.g., unique value propositions phrased identically)."
+    ],
+    "reusable_cross_category_traits": [
+      "Soft but assertive CTAs for reassurance-focused industries.",
+      "Grid-based layouts with clear modular sections.",
+      "Palette that supports both calm and trust (blend of warmth + neutrality)."
+    ],
+    "traits": [
+      "Patient reassurance emphasized visually and textually.",
+      "Strong, clear type hierarchy with standout hero headlines.",
+      "Multiple, strategically placed CTAs.",
+      "Balance of warm, inviting color blocks with clean whitespace.",
+      "Judicious use of testimonial and credential visuals for social proof."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "50c7d3451e451d6296060a034a62cb0029f019e0d5d9da92deabd16b594531c6",
+    "input_checksum": "af0a1fb60d61226d22b99d5c48e8d733b2de501a0b80b868101b4bb6e07b2bf9",
+    "output_checksum": "799d726a1313bc02139fb494fbb71aa023924d739ef4082eb9617ce92db23e74",
+    "timestamp": "2026-07-16T17:06:44.955184+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "8b8419e2dd1d97c96620b7c665ada7cf76ab85a26c8d3053baaebd1d86d03f96",
+      "repair_count": 0
+    }
+  },
+  "business_context": "A premium dental clinic in Lviv seeking to position itself as an expert, safe, and patient-centered practice. The branding and layout emphasize trust, comfort, and professional excellence.",
+  "audience": "Prospective dental patients (likely middle and upper-middle class), including individuals with dental anxiety, people prioritizing health and aesthetics, and family decision-makers seeking a reliable clinic.",
+  "conversion_goal": "Encourage users to book a consultation (evident from repeated strong CTAs such as 'Запишіться зараз!'), request a call-back, or reach out via the contact form.",
+  "first_viewport_logic": "Hero section directly addresses fear and trust in dentistry, pairing soft messaging with a studio-quality photo of clinic collateral. The primary CTA ('Записатись') is prominent and paired with secondary navigation inferring distinction between booking and call-back options.",
+  "information_architecture": [
+    "Hero (value and CTA)",
+    "Feature trust/benefit cards",
+    "Key services overview",
+    "Philosophy/value statement",
+    "Service details/approaches",
+    "For whom/services applications",
+    "Patient reviews/testimonials",
+    "Gallery of certifications",
+    "Instagram/social proof",
+    "Contact form and location details",
+    "Footer with site links and contacts"
+  ],
+  "narrative_storytelling": "Moves linearly from alleviating anxiety to presenting credentials, demonstrating gentle care, and building social proof, guiding the visitor through an emotional reassurance journey before actively prompting conversion.",
+  "composition_grid": "Consistent column grid (likely 12-col for desktop), with well-defined visual blocks. Content alternates between full-width and split blocks for rhythm, with separation through color blocking and white space for visual clarity.",
+  "spacing_rhythm": "Generous vertical padding and margins create a calm, premium feel. Ample whitespace minimizes cognitive load. Card components and image/content blocks are spaced to break monotony and aid scanability.",
+  "typography": "Sophisticated, readable serif and sans-serif pairings. Hero text uses large, slender serif for emphasis/brand tone. Supporting text, UI elements, and CTAs in crisp sans-serif. Hierarchy is clear: large headings, medium-weight subheads, high contrast body text.",
+  "palette_contrast": "Warm, muted browns and creams dominate; black used for drama in testimonial/CTA sections. Contrasts are soft but legible, reinforcing trust and calmness. Accent browns direct attention to CTAs without aggressive saturation.",
+  "media_treatment": "All media (images, cards, testimonials) are tastefully boxed or rounded, frequently with soft shadow or lifted effect. Clinic photos, patient testimonials, and certification cards appear authentic and coherent with the brand's palette.",
+  "motion_interaction": "Ostensibly minimal; possible subtle hover or button transitions visible via button effects/interactive card hints, but overall a tactile, gentle motion language. No distracting animation or aggressive parallax.",
+  "cta_strategy": "Multiple, context-aware CTAs. Primary CTA always in brand accent color, with text either 'Запишіться зараз!', 'Передзвоніть мені', or section-specific prompts. Placed above the fold, within testimonial/social proof sections, and sticky in mobile nav.",
+  "desktop_behavior": "Navigation is spread horizontally at top; sticky nav apparent, with logical section anchors. Split content sections leverage the wide layout, especially for service explanations and testimonials. Cards shift into columns; gallery is grid-based.",
+  "mobile_behavior": "Navigation condensed to hamburger; CTAs stack vertically. Cards and images go single-column, margins compress for fit, but spacing remains uncramped. Sticky booking CTA persists. All forms and contrast remain legible. Gallery and testimonials become swipeable or stack for vertical scroll.",
+  "learn": [
+    "Soft color-blocking can create a premium, calming atmosphere.",
+    "Clear narrative progression builds emotional trust (fear → approach → social proof → action).",
+    "Generous spacing and clear type hierarchy boost legibility and perceived quality.",
+    "Consistent CTA color and copy for recognizability.",
+    "Visual trust signals (certificates, testimonials) build credibility."
+  ],
+  "do_not_copy": [
+    "Brand colors, fonts, and clinic-branded images directly as these are identity-specific.",
+    "Direct carry-over of testimonial faces, client photos or certification/credentials layout.",
+    "Clinic-specific claim language (e.g., unique value propositions phrased identically)."
+  ],
+  "reusable_cross_category_traits": [
+    "Soft but assertive CTAs for reassurance-focused industries.",
+    "Grid-based layouts with clear modular sections.",
+    "Palette that supports both calm and trust (blend of warmth + neutrality)."
+  ],
+  "traits": [
+    "Patient reassurance emphasized visually and textually.",
+    "Strong, clear type hierarchy with standout hero headlines.",
+    "Multiple, strategically placed CTAs.",
+    "Balance of warm, inviting color blocks with clean whitespace.",
+    "Judicious use of testimonial and credential visuals for social proof."
+  ],
+  "content_hash": "d77c27c3a915307688952d1750880158880a94905b30dabc1bcfa59dd0140945"
+}

@@ -1,0 +1,136 @@
+{
+  "id": "zaffiraxis-github-io-margo-salon",
+  "title": "Марго Салон — Салон краси у Харкові",
+  "source_url": "https://zaffiraxis.github.io/margo-salon/",
+  "normalized_url": "https://zaffiraxis.github.io/margo-salon/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:15:37.340734+00:00",
+    "final_url": "https://zaffiraxis.github.io/margo-salon/",
+    "screenshots": {
+      "desktop.png": "0c498373c17231371f224725f9dbc0f8f06711daa9c6045d57c8b81cb450a467",
+      "mobile.png": "f57ed9d23ae702d47b243d05c276040406e10c0654a58287f6f9291ca10c0c79"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "A local beauty salon in Kharkiv, Ukraine, positioning itself as a refined and welcoming space for personal care services.",
+    "audience": "Primarily local women seeking beauty and wellness services, possibly in the middle to upper income bracket based on the sophisticated and minimal brand aesthetic.",
+    "conversion_goal": "Encourage salon visit bookings via clear CTAs and provide essential details to facilitate contact and visit planning.",
+    "first_viewport_logic": "Above-the-fold area focuses on brand introduction, atmospheric image of a styled woman, and a clear CTA button ('Записатися') that invites immediate action. Navigation is understated but visible at the top.",
+    "information_architecture": [
+      "Hero introduction and primary CTA",
+      "Large whitespace for visual breathing room",
+      "Service menu section with horizontal navigation tabs",
+      "Featured review or testimonial area",
+      "Footer with contact details, navigation links, social links"
+    ],
+    "narrative_storytelling": "The visual narrative opens with a close-cropped, intimate portrait, suggesting personal and attentive service. The muted palette and soft photography cues a premium, calm experience, while each section transitions smoothly with generous white space, reflecting clarity and trust.",
+    "composition_grid": "Strong use of a centered single-column grid, with most major content blocks occupying the central third. Strict alignment between text, buttons, and cards; justified left on desktop but center-stacked on mobile. Navigation and footers span full width but content remains boxed.",
+    "spacing_rhythm": "Consistent, very generous vertical spacing creates a relaxed reading rhythm, reinforcing the perception of luxury and calm. Section breaks use solid color fills (off-white, cream, brown). No crowding or element bleed.",
+    "typography": "High-contrast combination of refined serif and modern sans-serif fonts. Titles set in serif, lending elegance; supporting text uses easy-to-read sans, maintaining clarity. Letter spacing is open, and type is set large with crisp variability in hierarchy.",
+    "palette_contrast": "Soft, sophisticated palette dominated by browns, cream, and muted gold. Low-accent color use, but gold highlights for CTAs and navigational cues ensure sufficient CTA prominence. Text contrast is carefully balanced for readability against background tones.",
+    "media_treatment": "Hero image is soft, filtered, and fills the width while backgrounding the main message. No hard edges, lending a gentle feel. No clutter from secondary images or icons; minimalism prioritizes ambience over visual overload.",
+    "motion_interaction": "No evident animation, parallax, or transitions. Interaction is static, likely for clarity and to appeal to an audience seeking reliability and assurance. Navigation cues may have subtle hover states not visible in the screenshot, but nothing flashy.",
+    "cta_strategy": "Primary CTA ('Записатися') is visually distinct with gold fill and central placement early in the user journey. Secondary CTAs repeat in the service and footer sections for persistent access. All CTAs are clear and action-oriented.",
+    "desktop_behavior": "Content is horizontally anchored, with navigation and key info spread out in a readable, uncluttered layout. CTA prominent, spacing prioritizes aesthetics and comfort in scanning. Horizontal tabs for services on desktop leverage ample screen width.",
+    "mobile_behavior": "Stacked single-column presentation preserves clarity; CTAs maintain full-width prominence. Top navigation condenses. Area tap targets are preserved in size. All contact info remains easily accessible. Whitespace remains generous, keeping mobile feel premium.",
+    "learn": [
+      "How to use atmosphere and minimalism to signal luxury and calm.",
+      "Supporting CTAs with high visual contrast and strategic whitespace for conversion.",
+      "Synchronizing palette, typography, and photography for cohesive brand perception."
+    ],
+    "do_not_copy": [
+      "Leaving large sections of empty space without clear content, as it may feel incomplete or underdesigned outside of luxury/premium spa/salon contexts.",
+      "Over-reliance on muted or brown palettes without ample natural light/ambience, as it can risk feeling heavy instead of warm if misapplied."
+    ],
+    "reusable_cross_category_traits": [
+      "Single focus CTA with high prominence.",
+      "Hero photography that creates atmosphere and context, not just illustration.",
+      "Clear, easy-to-navigate layout with strong information hierarchy."
+    ],
+    "traits": [
+      "Minimalist structure emphasizing whitespace",
+      "Sophisticated serif/sans typography combination",
+      "Muted, rich earth-tone palette with gold accentuation",
+      "Centralized, legible CTA buttons",
+      "Photo-driven brand narrative",
+      "Well-spaced, single-column stacking on mobile"
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "ca56236c37b35b3572c9d3e473b60513715ed8186c98ff5693aff344459e4d81",
+    "input_checksum": "274e67fb43e8874e78b21eb9e7adb05bc836cfb06206e9804692ace2ba18195a",
+    "output_checksum": "13b3a9ed984d8755b327656a603e9126d116622ae745578b24576221d653b3a0",
+    "timestamp": "2026-07-16T17:16:02.339818+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "765e969430c65690bdccb9da54f03716742aeea00e43be63574604dd83cf6f7b",
+      "repair_count": 0
+    }
+  },
+  "business_context": "A local beauty salon in Kharkiv, Ukraine, positioning itself as a refined and welcoming space for personal care services.",
+  "audience": "Primarily local women seeking beauty and wellness services, possibly in the middle to upper income bracket based on the sophisticated and minimal brand aesthetic.",
+  "conversion_goal": "Encourage salon visit bookings via clear CTAs and provide essential details to facilitate contact and visit planning.",
+  "first_viewport_logic": "Above-the-fold area focuses on brand introduction, atmospheric image of a styled woman, and a clear CTA button ('Записатися') that invites immediate action. Navigation is understated but visible at the top.",
+  "information_architecture": [
+    "Hero introduction and primary CTA",
+    "Large whitespace for visual breathing room",
+    "Service menu section with horizontal navigation tabs",
+    "Featured review or testimonial area",
+    "Footer with contact details, navigation links, social links"
+  ],
+  "narrative_storytelling": "The visual narrative opens with a close-cropped, intimate portrait, suggesting personal and attentive service. The muted palette and soft photography cues a premium, calm experience, while each section transitions smoothly with generous white space, reflecting clarity and trust.",
+  "composition_grid": "Strong use of a centered single-column grid, with most major content blocks occupying the central third. Strict alignment between text, buttons, and cards; justified left on desktop but center-stacked on mobile. Navigation and footers span full width but content remains boxed.",
+  "spacing_rhythm": "Consistent, very generous vertical spacing creates a relaxed reading rhythm, reinforcing the perception of luxury and calm. Section breaks use solid color fills (off-white, cream, brown). No crowding or element bleed.",
+  "typography": "High-contrast combination of refined serif and modern sans-serif fonts. Titles set in serif, lending elegance; supporting text uses easy-to-read sans, maintaining clarity. Letter spacing is open, and type is set large with crisp variability in hierarchy.",
+  "palette_contrast": "Soft, sophisticated palette dominated by browns, cream, and muted gold. Low-accent color use, but gold highlights for CTAs and navigational cues ensure sufficient CTA prominence. Text contrast is carefully balanced for readability against background tones.",
+  "media_treatment": "Hero image is soft, filtered, and fills the width while backgrounding the main message. No hard edges, lending a gentle feel. No clutter from secondary images or icons; minimalism prioritizes ambience over visual overload.",
+  "motion_interaction": "No evident animation, parallax, or transitions. Interaction is static, likely for clarity and to appeal to an audience seeking reliability and assurance. Navigation cues may have subtle hover states not visible in the screenshot, but nothing flashy.",
+  "cta_strategy": "Primary CTA ('Записатися') is visually distinct with gold fill and central placement early in the user journey. Secondary CTAs repeat in the service and footer sections for persistent access. All CTAs are clear and action-oriented.",
+  "desktop_behavior": "Content is horizontally anchored, with navigation and key info spread out in a readable, uncluttered layout. CTA prominent, spacing prioritizes aesthetics and comfort in scanning. Horizontal tabs for services on desktop leverage ample screen width.",
+  "mobile_behavior": "Stacked single-column presentation preserves clarity; CTAs maintain full-width prominence. Top navigation condenses. Area tap targets are preserved in size. All contact info remains easily accessible. Whitespace remains generous, keeping mobile feel premium.",
+  "learn": [
+    "How to use atmosphere and minimalism to signal luxury and calm.",
+    "Supporting CTAs with high visual contrast and strategic whitespace for conversion.",
+    "Synchronizing palette, typography, and photography for cohesive brand perception."
+  ],
+  "do_not_copy": [
+    "Leaving large sections of empty space without clear content, as it may feel incomplete or underdesigned outside of luxury/premium spa/salon contexts.",
+    "Over-reliance on muted or brown palettes without ample natural light/ambience, as it can risk feeling heavy instead of warm if misapplied."
+  ],
+  "reusable_cross_category_traits": [
+    "Single focus CTA with high prominence.",
+    "Hero photography that creates atmosphere and context, not just illustration.",
+    "Clear, easy-to-navigate layout with strong information hierarchy."
+  ],
+  "traits": [
+    "Minimalist structure emphasizing whitespace",
+    "Sophisticated serif/sans typography combination",
+    "Muted, rich earth-tone palette with gold accentuation",
+    "Centralized, legible CTA buttons",
+    "Photo-driven brand narrative",
+    "Well-spaced, single-column stacking on mobile"
+  ],
+  "content_hash": "34bf1de21bfa633dbb7e2f20e0d208083853f9e2775bc104cbb7f8dfb2f55e86"
+}

@@ -1,0 +1,145 @@
+{
+  "id": "www-houseofhoney-com",
+  "title": "House of Honey | Interior Design Studio",
+  "source_url": "https://www.houseofhoney.com/",
+  "normalized_url": "https://www.houseofhoney.com/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T18:23:52.444171+00:00",
+    "final_url": "https://www.houseofhoney.com/",
+    "screenshots": {
+      "desktop.png": "5b19bd6750dc43391293bd697eabdabc6e13af9e1ad980c746308a983ff318fc",
+      "mobile.png": "6485345950dfcd978dcad21eea7241d0666d60d8184102dd0afd166062ccb56b"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "House of Honey is an interior design studio that showcases a distinct, playful, and craft-driven brand. The landing page aims to immediately evoke a sense of style and luxury with a creative twist, positioning themselves as experts in curated interiors and unique atmospheres.",
+    "audience": "Affluent homeowners, design enthusiasts, and potential clients seeking high-end, bespoke interior design services with a bold and artistic edge.",
+    "conversion_goal": "Encourage visitors to engage with the studio by exploring their portfolio or initiating contact via the 'Get in Touch' CTA. Brand inspiration and service enquiry are front-of-mind.",
+    "first_viewport_logic": "The hero section dominates with a full-width image of a vibrant, staged living space, bookended by playful copy ('INTERIORS, OBJECTS & ATMOSPHERES' / 'DESIGNED WITH PLEASURE'). The brand name is the visual anchor, expressed in a bold wordmark, with text and navigation positioned above. Immersion in the studio’s vibe is prioritized over immediate calls to action.",
+    "information_architecture": [
+      "Top nav: logo, clearly segmented links (Studio, Spaces, The Buzz, Dear Honey, Press Room), persistent 'Get in Touch' CTA.",
+      "Hero: Brand name, poetic sub-headlines, full-bleed hero image anchoring mood and style first.",
+      "Mobile: Nav collapses into hamburger; headline, tagline, and hero image stack vertically for compact, scroll-friendly clarity."
+    ],
+    "narrative_storytelling": "The composition tells a visual story of eclectic, joyful sophistication—lush florals, sculptural shapes, and curated curiosities convey a lived-in, yet elevated environment. The language ('Designed with Pleasure') humanizes the expertise with warmth and character, reinforcing that beauty and delight are integral to the studio’s ethos.",
+    "composition_grid": "Desktop uses a strong horizontal grid: logo/navigation above, hero headline on a dedicated soft pink strip, and a clear horizontal break to a staged interior image. Everything is centered and spaced for balance; text blocks frame the image at left/right. Mobile stacks everything, keeping margins tight but never cramped, retaining central image focus.",
+    "spacing_rhythm": "Generous, deliberate whitespace on desktop (e.g., wide padding around headlines and text blocks) creates rest for the eye and frames content luxuriously. On mobile, spacing is condensed but maintains clarity,—no crowded elements, and sufficient margins around typographic blocks prevent visual noise.",
+    "typography": "Hero wordmark: bold, geometric sans serif for 'HOUSE HONEY' with a contrasting, delicate serif for 'of', achieving dramatic branding. Supporting text uses a classic, all-caps serif, lending sophistication and gravitas. All text is well-sized for readability and impact.",
+    "palette_contrast": "Warm, dusty pink background creates softness, punctuated by deep, saturated brown for headline and nav—high legibility, inviting warmth. The hero image itself adds a burst of color: rich oranges, greens, and pinks, building emotional engagement. Palette is harmonious, not overwhelming, grounding creative visuals in a consistent identity.",
+    "media_treatment": "The hero image is editorial—professionally shot, full-color, high resolution, and carefully staged to demonstrate the studio’s philosophy. It avoids stock image tropes, focusing on layered textures, real objects, and expressive florals for authenticity. No heavy overlays or filters—photography is trusted to carry mood.",
+    "motion_interaction": "No visible motion or animation in first viewport—focus is on strong, still composition and immediate sense of place. Any transitions or interactive elements are restrained or off-canvas in this top section, avoiding distraction from initial impact.",
+    "cta_strategy": "'Get in Touch' is set in the top-right (desktop) as a discreet but accessible button—secondary to brand and image, signaling confidence and exclusivity. No in-your-face CTA in the hero ensures the studio’s image-led storytelling isn’t diluted by overt commercial prompts. Mobile stacks navigation and CTA into hamburger/menu for a clean entry.",
+    "desktop_behavior": "Maintains visual hierarchy and wide perspectives; nav and brand retain top prominence, hero image fills much of the viewport; browsing invites downward scroll. Hover state for 'Get in Touch' is subtle, in keeping with refined tone.",
+    "mobile_behavior": "Brand, nav icon, and hero text stack efficiently with tight vertical rhythm. Hamburger menu replaces full nav. Hero image is cropped to maintain central visual interest and avoid dead space on narrow screens. Interaction remains focused, thumb-friendly, and scannable—brand never lost off-screen.",
+    "learn": [
+      "Emotion-led hero layouts create instant brand immersion—audiences should 'feel' the brand before reading details.",
+      "Editorial photography of real, styled environments powerfully communicates design values and differentiates from commodity design offerings.",
+      "A restrained CTA can underscore confidence and prestige, especially in ultra-premium market segments."
+    ],
+    "do_not_copy": [
+      "Do not hide or diminish brand wordmarks in hero position—brand recall relies on clear first-impression hierarchy.",
+      "Avoid overwhelming users with CTAs or action prompts in initial viewport, particularly for luxury/interior brands where mood and aspiration are the primary product.",
+      "Do not rely on generic or sterile stock photos; impact is lost without curated, on-brand imagery."
+    ],
+    "reusable_cross_category_traits": [
+      "Strong wordmark with contrasting type weights for expressive branding.",
+      "Full-width, high-quality photography anchoring homepage mood.",
+      "Whitespace used to segment narrative, not just content blocks.",
+      "All-caps serif for secondary headlines, supporting hierarchy and drama."
+    ],
+    "traits": [
+      "Warm, editorial palette with a soft ground layer and deep accent hues.",
+      "Microcopy that blends expertise with playfulness ('Designed with Pleasure').",
+      "Responsive design with preserved image impact across devices.",
+      "Visually-led storytelling—details revealed as visitor scrolls past hero."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "0fa05f41005e5b415f0771409903e77c343eb3166362922f34fbf819702ef2ac",
+    "input_checksum": "1d0509a0e148b209b86a12c1943fd82cf1b819d306d7809d4f50345a4f94da65",
+    "output_checksum": "32acf3de22c79d5417ca7a7570932edaaf173024c14bb8c1336bc9f498c8fdf2",
+    "timestamp": "2026-07-16T18:24:20.000011+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "4ea74d3e1162caea2288300f76f0939ec2fc60caf254a182daa19cf6eaec9035",
+      "repair_count": 0
+    }
+  },
+  "business_context": "House of Honey is an interior design studio that showcases a distinct, playful, and craft-driven brand. The landing page aims to immediately evoke a sense of style and luxury with a creative twist, positioning themselves as experts in curated interiors and unique atmospheres.",
+  "audience": "Affluent homeowners, design enthusiasts, and potential clients seeking high-end, bespoke interior design services with a bold and artistic edge.",
+  "conversion_goal": "Encourage visitors to engage with the studio by exploring their portfolio or initiating contact via the 'Get in Touch' CTA. Brand inspiration and service enquiry are front-of-mind.",
+  "first_viewport_logic": "The hero section dominates with a full-width image of a vibrant, staged living space, bookended by playful copy ('INTERIORS, OBJECTS & ATMOSPHERES' / 'DESIGNED WITH PLEASURE'). The brand name is the visual anchor, expressed in a bold wordmark, with text and navigation positioned above. Immersion in the studio’s vibe is prioritized over immediate calls to action.",
+  "information_architecture": [
+    "Top nav: logo, clearly segmented links (Studio, Spaces, The Buzz, Dear Honey, Press Room), persistent 'Get in Touch' CTA.",
+    "Hero: Brand name, poetic sub-headlines, full-bleed hero image anchoring mood and style first.",
+    "Mobile: Nav collapses into hamburger; headline, tagline, and hero image stack vertically for compact, scroll-friendly clarity."
+  ],
+  "narrative_storytelling": "The composition tells a visual story of eclectic, joyful sophistication—lush florals, sculptural shapes, and curated curiosities convey a lived-in, yet elevated environment. The language ('Designed with Pleasure') humanizes the expertise with warmth and character, reinforcing that beauty and delight are integral to the studio’s ethos.",
+  "composition_grid": "Desktop uses a strong horizontal grid: logo/navigation above, hero headline on a dedicated soft pink strip, and a clear horizontal break to a staged interior image. Everything is centered and spaced for balance; text blocks frame the image at left/right. Mobile stacks everything, keeping margins tight but never cramped, retaining central image focus.",
+  "spacing_rhythm": "Generous, deliberate whitespace on desktop (e.g., wide padding around headlines and text blocks) creates rest for the eye and frames content luxuriously. On mobile, spacing is condensed but maintains clarity,—no crowded elements, and sufficient margins around typographic blocks prevent visual noise.",
+  "typography": "Hero wordmark: bold, geometric sans serif for 'HOUSE HONEY' with a contrasting, delicate serif for 'of', achieving dramatic branding. Supporting text uses a classic, all-caps serif, lending sophistication and gravitas. All text is well-sized for readability and impact.",
+  "palette_contrast": "Warm, dusty pink background creates softness, punctuated by deep, saturated brown for headline and nav—high legibility, inviting warmth. The hero image itself adds a burst of color: rich oranges, greens, and pinks, building emotional engagement. Palette is harmonious, not overwhelming, grounding creative visuals in a consistent identity.",
+  "media_treatment": "The hero image is editorial—professionally shot, full-color, high resolution, and carefully staged to demonstrate the studio’s philosophy. It avoids stock image tropes, focusing on layered textures, real objects, and expressive florals for authenticity. No heavy overlays or filters—photography is trusted to carry mood.",
+  "motion_interaction": "No visible motion or animation in first viewport—focus is on strong, still composition and immediate sense of place. Any transitions or interactive elements are restrained or off-canvas in this top section, avoiding distraction from initial impact.",
+  "cta_strategy": "'Get in Touch' is set in the top-right (desktop) as a discreet but accessible button—secondary to brand and image, signaling confidence and exclusivity. No in-your-face CTA in the hero ensures the studio’s image-led storytelling isn’t diluted by overt commercial prompts. Mobile stacks navigation and CTA into hamburger/menu for a clean entry.",
+  "desktop_behavior": "Maintains visual hierarchy and wide perspectives; nav and brand retain top prominence, hero image fills much of the viewport; browsing invites downward scroll. Hover state for 'Get in Touch' is subtle, in keeping with refined tone.",
+  "mobile_behavior": "Brand, nav icon, and hero text stack efficiently with tight vertical rhythm. Hamburger menu replaces full nav. Hero image is cropped to maintain central visual interest and avoid dead space on narrow screens. Interaction remains focused, thumb-friendly, and scannable—brand never lost off-screen.",
+  "learn": [
+    "Emotion-led hero layouts create instant brand immersion—audiences should 'feel' the brand before reading details.",
+    "Editorial photography of real, styled environments powerfully communicates design values and differentiates from commodity design offerings.",
+    "A restrained CTA can underscore confidence and prestige, especially in ultra-premium market segments."
+  ],
+  "do_not_copy": [
+    "Do not hide or diminish brand wordmarks in hero position—brand recall relies on clear first-impression hierarchy.",
+    "Avoid overwhelming users with CTAs or action prompts in initial viewport, particularly for luxury/interior brands where mood and aspiration are the primary product.",
+    "Do not rely on generic or sterile stock photos; impact is lost without curated, on-brand imagery."
+  ],
+  "reusable_cross_category_traits": [
+    "Strong wordmark with contrasting type weights for expressive branding.",
+    "Full-width, high-quality photography anchoring homepage mood.",
+    "Whitespace used to segment narrative, not just content blocks.",
+    "All-caps serif for secondary headlines, supporting hierarchy and drama."
+  ],
+  "traits": [
+    "Warm, editorial palette with a soft ground layer and deep accent hues.",
+    "Microcopy that blends expertise with playfulness ('Designed with Pleasure').",
+    "Responsive design with preserved image impact across devices.",
+    "Visually-led storytelling—details revealed as visitor scrolls past hero."
+  ],
+  "discovery": {
+    "source": "awwwards",
+    "source_url": "https://www.awwwards.com/websites/",
+    "award": "SOTD / Honorable Mention",
+    "year": null,
+    "title": "house of honey 1",
+    "candidate_url": "https://www.awwwards.com/sites/house-of-honey-1",
+    "score": null,
+    "status": "resolved",
+    "original_url": "https://www.houseofhoney.com/",
+    "resolution_source": "https://www.awwwards.com/sites/house-of-honey-1",
+    "discovered_at": "2026-07-16T18:22:10.026325+00:00"
+  },
+  "content_hash": "85a8ddf218a626f0cc7bb7c2200c83f880dd2ae6e7ab20f569a071e21be983c7"
+}

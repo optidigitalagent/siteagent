@@ -1,0 +1,88 @@
+{
+  "schema_version": 2,
+  "updated_at": "2026-07-16T18:33:49.940066+00:00",
+  "seed_count": 0,
+  "processed": 40,
+  "completed": [
+    "belladentclinik-kr-ua",
+    "bymonolog-com",
+    "coffee-tech-com",
+    "db-longbow-webflow-io",
+    "defolixx-github-io-un-ity",
+    "depoluxe-xyz",
+    "eurozet-ua",
+    "iodent-dental",
+    "neuemontreal-com",
+    "newartem855-netizen-github-io",
+    "newartem855-netizen-github-io-anem-igital-gency",
+    "newartem855-netizen-github-io-auratop1",
+    "optidigitalagent-github-io-atmosfera-site",
+    "optidigitalagent-github-io-dentistry-kievskaya1",
+    "optidigitalagent-github-io-dentistry-kievskaya2",
+    "optidigitalagent-github-io-eliz-de-fleur-site-20260711095843",
+    "optidigitalagent-github-io-hereta",
+    "optidigitalagent-github-io-hollywood1",
+    "optidigitalagent-github-io-hollywood2",
+    "optidigitalagent-github-io-kafespeka2",
+    "optidigitalagent-github-io-kirkovsky",
+    "optidigitalagent-github-io-orange-beauty-studio",
+    "optidigitalagent-github-io-orange1",
+    "optidigitalagent-github-io-orange2",
+    "optidigitalagent-github-io-yourdental1",
+    "optidigitalagent-github-io-yourdental2",
+    "parkrestaurant-kyiv-ua",
+    "shop-brunellocucinelli-com-en-gb-ai",
+    "vectrfl-com",
+    "www-21hrs-space",
+    "www-houseofhoney-com",
+    "www-juliencalot-com",
+    "zaffiraxis-github-io-margo-salon",
+    "zaffiraxis-github-io-silk-road-rent-car-index-html",
+    "zaffiraxis-github-io-status1"
+  ],
+  "analysis_failed": [],
+  "capture_failed": [
+    "optidigitalagent-github-io-drivepark",
+    "uniquerabbitstudios-com",
+    "webgoalz-com",
+    "www-hildenkaira-fi",
+    "www-risk-film"
+  ],
+  "not_started": [],
+  "failures": [
+    {
+      "id": "optidigitalagent-github-io-drivepark",
+      "stage": "capture",
+      "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://optidigitalagent.github.io/drivepark/\", waiting until \"networkidle\"\n"
+    },
+    {
+      "id": "uniquerabbitstudios-com",
+      "stage": "capture",
+      "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://uniquerabbitstudios.com/\", waiting until \"networkidle\"\n"
+    },
+    {
+      "id": "webgoalz-com",
+      "stage": "capture",
+      "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://webgoalz.com/\", waiting until \"networkidle\"\n"
+    },
+    {
+      "id": "www-hildenkaira-fi",
+      "stage": "capture",
+      "message": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://www.hildenkaira.fi/\", waiting until \"networkidle\"\n"
+    },
+    {
+      "id": "www-risk-film",
+      "stage": "capture",
+      "message": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+    }
+  ],
+  "retry_counts": {
+    "optidigitalagent-github-io-drivepark": 2,
+    "uniquerabbitstudios-com": 1,
+    "webgoalz-com": 1,
+    "www-hildenkaira-fi": 1,
+    "www-risk-film": 2
+  },
+  "cleanup_warnings": [],
+  "browser_restart_counts": {}
+}

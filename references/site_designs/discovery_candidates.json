@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T18:31:28.889325+00:00",
+  "candidates": [
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "coffeetech r",
+      "candidate_url": "https://www.awwwards.com/sites/coffeetech-r",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://coffee-tech.com/",
+      "resolution_source": "https://www.awwwards.com/sites/coffeetech-r",
+      "discovered_at": "2026-07-16T18:31:25.469332+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "risk",
+      "candidate_url": "https://www.awwwards.com/sites/risk",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://www.risk.film",
+      "resolution_source": "https://www.awwwards.com/sites/risk",
+      "discovered_at": "2026-07-16T18:31:25.954600+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "house of honey 1",
+      "candidate_url": "https://www.awwwards.com/sites/house-of-honey-1",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://www.houseofhoney.com/",
+      "resolution_source": "https://www.awwwards.com/sites/house-of-honey-1",
+      "discovered_at": "2026-07-16T18:31:26.466532+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "pp neue montreal",
+      "candidate_url": "https://www.awwwards.com/sites/pp-neue-montreal",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://neuemontreal.com/",
+      "resolution_source": "https://www.awwwards.com/sites/pp-neue-montreal",
+      "discovered_at": "2026-07-16T18:31:26.940063+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "longbow",
+      "candidate_url": "https://www.awwwards.com/sites/longbow",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://db-longbow.webflow.io/",
+      "resolution_source": "https://www.awwwards.com/sites/longbow",
+      "discovered_at": "2026-07-16T18:31:27.417440+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "vectr",
+      "candidate_url": "https://www.awwwards.com/sites/vectr",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://vectrfl.com/",
+      "resolution_source": "https://www.awwwards.com/sites/vectr",
+      "discovered_at": "2026-07-16T18:31:27.874362+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "21 hrs on the moon",
+      "candidate_url": "https://www.awwwards.com/sites/21-hrs-on-the-moon",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://www.21hrs.space/",
+      "resolution_source": "https://www.awwwards.com/sites/21-hrs-on-the-moon",
+      "discovered_at": "2026-07-16T18:31:28.393043+00:00"
+    },
+    {
+      "source": "awwwards",
+      "source_url": "https://www.awwwards.com/websites/",
+      "award": "SOTD / Honorable Mention",
+      "year": null,
+      "title": "brunello cucinelli ai e com",
+      "candidate_url": "https://www.awwwards.com/sites/brunello-cucinelli-ai-e-com",
+      "score": null,
+      "status": "resolved",
+      "original_url": "https://shop.brunellocucinelli.com/en-gb/ai",
+      "resolution_source": "https://www.awwwards.com/sites/brunello-cucinelli-ai-e-com",
+      "discovered_at": "2026-07-16T18:31:28.887940+00:00"
+    }
+  ]
+}

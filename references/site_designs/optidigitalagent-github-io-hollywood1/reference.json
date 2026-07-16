@@ -1,0 +1,130 @@
+{
+  "id": "optidigitalagent-github-io-hollywood1",
+  "title": "Beauty Studio Hollywood — салон краси, Запоріжжя",
+  "source_url": "https://optidigitalagent.github.io/hollywood1/",
+  "normalized_url": "https://optidigitalagent.github.io/hollywood1/",
+  "screenshot_paths": [
+    "desktop.png",
+    "mobile.png"
+  ],
+  "capture_status": "captured",
+  "analysis_status": "completed",
+  "capture": {
+    "captured_at": "2026-07-16T17:01:13.012464+00:00",
+    "final_url": "https://optidigitalagent.github.io/hollywood1/",
+    "screenshots": {
+      "desktop.png": "13f65160a3d469577b4f9ded43aebb91895f83d2450b48236f0cde9fa609b8ae",
+      "mobile.png": "453cf628fe6a16ef2efa7c5f681823d1d4cba313de6d4e5c3cd9d2e0078b7f4a"
+    },
+    "browser_viewports": {
+      "desktop": [
+        1440,
+        1100
+      ],
+      "mobile": [
+        390,
+        844
+      ]
+    }
+  },
+  "analysis": {
+    "business_context": "A beauty studio located in Zaporizhzhia, positioning itself as an elegant, premium local salon. The site serves as a digital business card, aiming to secure client inquiries and bookings.",
+    "audience": "Local women (and possibly men) seeking beauty treatments, likely skewing toward those valuing quality and aesthetics. Includes both new and returning clients looking for contact info, prices, and an impression of quality.",
+    "conversion_goal": "Primary: Encourage visitors to book an appointment (via CTA button titled 'Записатись онлайн' / 'Book online'). Secondary: Communicate price transparency and service offerings.",
+    "first_viewport_logic": "Instantly communicates brand identity with large, stylized typography. Business proposition ('beauty studio') and location are clear. Contact options and a price summary are above-the-fold and visually prioritized. Main CTA is prominent and colored for focus.",
+    "information_architecture": [
+      "Top navigation with logo, address, phone, Instagram and call-to-action button; main nav links in single row; hero with headline and brand type; supporting text validates offer; interactive price box; main action button; sequential vertical blocks (empty for visual pacing); footer with legal and contact sections."
+    ],
+    "narrative_storytelling": "Minimal direct storytelling; the proposition leans on maximum elegance and confidence rather than narrative. Brand name is visually dramatized (with star), suggesting Hollywood-glamour—this sets a tone of aspiration. Prices available without scrolling endorse transparency.",
+    "composition_grid": "Strong, vertically structured grid. The hero area is compartmentalized into informative modules (headline, explainer, price, CTA). Multi-column logic on desktop collapses neatly to a stacked, single-column layout on mobile. Abundant negative space enhances separation.",
+    "spacing_rhythm": "Exceptional use of vertical spacing; large padding/margin blocks create breathing room. Dense info (logo, nav, hero) is top-loaded, with generous whitespace following, establishing a sense of luxury and pacing down the scroll.",
+    "typography": "Elegant, serif-dominant hero font paired with a script for 'beauty studio.' Contrast between heavy display and light supporting text. Navigation uses clear, high legibility sans-serif. Font pairings elevate a premium, high-touch feel.",
+    "palette_contrast": "Cream background, deep brown and burgundy accents. Wine-red (burgundy) is used for CTA and highlights, cream for luxury/cleanliness, black/charcoal for footer. Sufficient contrast for readability; accent colors guide focus.",
+    "media_treatment": "Minimalistic—mainly typographic and vector elements in first view. No photographic content above-the-fold; instead, uses a price list as a functional graphic/component. Below-the-fold: a subtle spotlight vignette suggests environment/ambiance, respecting brand elegance.",
+    "motion_interaction": "Screenshots do not show motion, but evidence of interactive affordances: the 'book' button contrasts and likely animates on hover/tap; price block may be interactive, though no direct visual evidence. No distracting animation—focus stays on brand and info.",
+    "cta_strategy": "Single primary action above the fold, set in a burgundy button. Label is clear and action-oriented ('Записатись онлайн'). Careful color contrast draws attention; placement is natural for the scan path. Secondary info (prices) aids conversion credibility.",
+    "desktop_behavior": "Multi-column header for clear separation of contact, nav, and hero; price box floats in hero area. On desktop, key elements (headline/CTA/price) are left-aligned with spatial hierarchy respected. Much of page below the fold is whitespace, pacing attention.",
+    "mobile_behavior": "Header collapses to one narrow column; nav and actions stack; logo/type scales down. Price box remains visible and legible. Padding is retained to uphold brand spaciousness. CTA stays prominent. No cramping or overflow.",
+    "learn": [
+      "Convey luxury/high-touch through abundant whitespace and elegant serif typography.",
+      "Use color contrast to ensure main CTA is immediately visible.",
+      "Present top services/prices above the fold for transparency and trust.",
+      "Establish a strong visual identity in the first viewport without crowding with images."
+    ],
+    "do_not_copy": [
+      "Do not use empty or unpopulated vertical blocks below the fold unless they support a clear pacing or narrative purpose.",
+      "Avoid over-reliance on non-photographic hero for all service sites—only appropriate for strong brand-centric concepts.",
+      "Do not sacrifice accessibility when using pale backgrounds and light font weights; always check color contrast.",
+      "Do not hide key contact info—clarity and instant access are vital."
+    ],
+    "reusable_cross_category_traits": [
+      "Top-loaded clear navigation and instant-action CTA.",
+      "Minimalist, luxury-driven spacing logic.",
+      "Price or offers visible on first screen to support decision making.",
+      "Scalable column-to-stack responsive technique."
+    ],
+    "traits": [
+      "Elegant serif typography for hero; script accent for secondary title.",
+      "Strong color-blocking with cream/burgundy/black for branding and flow.",
+      "Dense above-fold, airy below-fold structure for a luxe, uncluttered feel."
+    ]
+  },
+  "analysis_provenance": {
+    "role": "Reference Analyst",
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "prompt_version": "reference-analyst-v2",
+    "prompt_checksum": "749220397d0df7da35e9f93ae40ab87cb62b2f4c01ecc26be581f21be1582cde",
+    "input_checksum": "c326fa95466a1c817a27400fc367aeb160bd2d4a269fd1053a5b5b6287038ccc",
+    "output_checksum": "8014c695e4875acffd2c4dffb76fc214482d270fdc5b963387e4f16ca135ce5a",
+    "timestamp": "2026-07-16T17:01:46.284225+00:00",
+    "used": true,
+    "repair_count": 0,
+    "raw_response_debug": {
+      "path": "analysis_raw_responses.json",
+      "sha256": "581df57db96266b99a7bcc2c49e6374c856a830cec0ad59912dd4521094c0b4f",
+      "repair_count": 0
+    }
+  },
+  "business_context": "A beauty studio located in Zaporizhzhia, positioning itself as an elegant, premium local salon. The site serves as a digital business card, aiming to secure client inquiries and bookings.",
+  "audience": "Local women (and possibly men) seeking beauty treatments, likely skewing toward those valuing quality and aesthetics. Includes both new and returning clients looking for contact info, prices, and an impression of quality.",
+  "conversion_goal": "Primary: Encourage visitors to book an appointment (via CTA button titled 'Записатись онлайн' / 'Book online'). Secondary: Communicate price transparency and service offerings.",
+  "first_viewport_logic": "Instantly communicates brand identity with large, stylized typography. Business proposition ('beauty studio') and location are clear. Contact options and a price summary are above-the-fold and visually prioritized. Main CTA is prominent and colored for focus.",
+  "information_architecture": [
+    "Top navigation with logo, address, phone, Instagram and call-to-action button; main nav links in single row; hero with headline and brand type; supporting text validates offer; interactive price box; main action button; sequential vertical blocks (empty for visual pacing); footer with legal and contact sections."
+  ],
+  "narrative_storytelling": "Minimal direct storytelling; the proposition leans on maximum elegance and confidence rather than narrative. Brand name is visually dramatized (with star), suggesting Hollywood-glamour—this sets a tone of aspiration. Prices available without scrolling endorse transparency.",
+  "composition_grid": "Strong, vertically structured grid. The hero area is compartmentalized into informative modules (headline, explainer, price, CTA). Multi-column logic on desktop collapses neatly to a stacked, single-column layout on mobile. Abundant negative space enhances separation.",
+  "spacing_rhythm": "Exceptional use of vertical spacing; large padding/margin blocks create breathing room. Dense info (logo, nav, hero) is top-loaded, with generous whitespace following, establishing a sense of luxury and pacing down the scroll.",
+  "typography": "Elegant, serif-dominant hero font paired with a script for 'beauty studio.' Contrast between heavy display and light supporting text. Navigation uses clear, high legibility sans-serif. Font pairings elevate a premium, high-touch feel.",
+  "palette_contrast": "Cream background, deep brown and burgundy accents. Wine-red (burgundy) is used for CTA and highlights, cream for luxury/cleanliness, black/charcoal for footer. Sufficient contrast for readability; accent colors guide focus.",
+  "media_treatment": "Minimalistic—mainly typographic and vector elements in first view. No photographic content above-the-fold; instead, uses a price list as a functional graphic/component. Below-the-fold: a subtle spotlight vignette suggests environment/ambiance, respecting brand elegance.",
+  "motion_interaction": "Screenshots do not show motion, but evidence of interactive affordances: the 'book' button contrasts and likely animates on hover/tap; price block may be interactive, though no direct visual evidence. No distracting animation—focus stays on brand and info.",
+  "cta_strategy": "Single primary action above the fold, set in a burgundy button. Label is clear and action-oriented ('Записатись онлайн'). Careful color contrast draws attention; placement is natural for the scan path. Secondary info (prices) aids conversion credibility.",
+  "desktop_behavior": "Multi-column header for clear separation of contact, nav, and hero; price box floats in hero area. On desktop, key elements (headline/CTA/price) are left-aligned with spatial hierarchy respected. Much of page below the fold is whitespace, pacing attention.",
+  "mobile_behavior": "Header collapses to one narrow column; nav and actions stack; logo/type scales down. Price box remains visible and legible. Padding is retained to uphold brand spaciousness. CTA stays prominent. No cramping or overflow.",
+  "learn": [
+    "Convey luxury/high-touch through abundant whitespace and elegant serif typography.",
+    "Use color contrast to ensure main CTA is immediately visible.",
+    "Present top services/prices above the fold for transparency and trust.",
+    "Establish a strong visual identity in the first viewport without crowding with images."
+  ],
+  "do_not_copy": [
+    "Do not use empty or unpopulated vertical blocks below the fold unless they support a clear pacing or narrative purpose.",
+    "Avoid over-reliance on non-photographic hero for all service sites—only appropriate for strong brand-centric concepts.",
+    "Do not sacrifice accessibility when using pale backgrounds and light font weights; always check color contrast.",
+    "Do not hide key contact info—clarity and instant access are vital."
+  ],
+  "reusable_cross_category_traits": [
+    "Top-loaded clear navigation and instant-action CTA.",
+    "Minimalist, luxury-driven spacing logic.",
+    "Price or offers visible on first screen to support decision making.",
+    "Scalable column-to-stack responsive technique."
+  ],
+  "traits": [
+    "Elegant serif typography for hero; script accent for secondary title.",
+    "Strong color-blocking with cream/burgundy/black for branding and flow.",
+    "Dense above-fold, airy below-fold structure for a luxe, uncluttered feel."
+  ],
+  "content_hash": "7d82ef20d9befa9caf807f3ee5ed85fd72121e69bd87c272ff4a88cb00d837f2"
+}
