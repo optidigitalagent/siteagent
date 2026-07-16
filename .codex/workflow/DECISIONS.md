@@ -18,3 +18,7 @@
   remains an audit/compatibility artifact, not a Studio rendering input.
 - `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` blocks production publishing after creative
   acceptance until a human reviews real local fixture screenshots.
+- Studio readiness is a pre-generation contract: full sites require an exact sourced product,
+  confirmed language, at least three distinct sourced content themes, and five to eight
+  deduplicated usable media assets. Sparse identified evidence is micro-site only; otherwise
+  generation is blocked.

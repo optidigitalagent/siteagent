@@ -22,7 +22,7 @@ from site_agent.commercial_usefulness import (
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
 from site_agent.skill_lock import directory_checksum, load_fingerprint_history, record_fingerprint, validate_skill_lock
 
-PIPELINE_SCHEMA_VERSION = 4
+PIPELINE_SCHEMA_VERSION = 5
 QUALITY_FLOORS = {
     "business": 82, "business_clarity": 85, "commercial_usefulness": 85,
     "ux": 80, "story": 78, "storytelling": 78, "copy": 82, "copy_quality": 80,
@@ -37,17 +37,28 @@ class EvidenceLevel(str, Enum):
     C = "C"
 
 
+class PageScope(str, Enum):
+    FULL = "full_site"
+    MICRO = "micro_site"
+    BLOCKED = "blocked"
+
+
 class EvidenceAssessment(BaseModel):
     pipeline_schema_version: int = PIPELINE_SCHEMA_VERSION
     level: EvidenceLevel
     score: int = Field(ge=0, le=100)
     checks: dict[str, bool]
+    page_scope: PageScope = PageScope.BLOCKED
+    exact_product: str = ""
+    content_theme_count: int = Field(default=0, ge=0)
+    usable_media_count: int = Field(default=0, ge=0)
+    required_concepts: int = Field(default=0, ge=0, le=3)
     reasons: list[str] = Field(default_factory=list)
     unresolved_questions: list[str] = Field(default_factory=list)
 
     @property
     def build_allowed(self) -> bool:
-        return self.level in {EvidenceLevel.A, EvidenceLevel.B}
+        return self.page_scope in {PageScope.FULL, PageScope.MICRO}
 
 
 class MediaManifestItem(BaseModel):
@@ -214,18 +225,87 @@ def meaningful_identity(value: str) -> bool:
     return clean_identity(value).lower() not in {"", "unknown", "n/a", "none"}
 
 
-def assess_evidence(research: ResearchBrief) -> EvidenceAssessment:
+_ABSTRACT_PRODUCT_TERMS = {
+    "experience", "experiences", "premium", "unique", "unforgettable", "quality",
+    "service", "services", "solution", "solutions", "approach", "lifestyle",
+}
+
+
+def _specific_product(research: ResearchBrief) -> str:
+    identity = research.product_identity
+    if identity is None or identity.confidence == "low" or not identity.evidence_sources:
+        return ""
+    value = clean_identity(identity.exact_product)
+    # Keep this gate language-agnostic; ASCII-only tokenisation would reject a
+    # fully evidenced Ukrainian (or any non-English) product by construction.
+    words = set(re.findall(r"[^\W\d_]+", value.lower(), flags=re.UNICODE))
+    if not value or (words and words <= _ABSTRACT_PRODUCT_TERMS):
+        return ""
+    # A phrase made solely of luxury/atmosphere adjectives is never a product.
+    concrete = words - _ABSTRACT_PRODUCT_TERMS - {"private", "evening", "modern", "live", "online", "guided"}
+    return value if concrete else ""
+
+
+def _usable_media(research: ResearchBrief) -> list:
+    unique = {}
+    for item in research.best_media:
+        url = item.url.strip()
+        if not url or url in unique:
+            continue
+        # A source, descriptive alt, intended role and practical dimensions are
+        # the minimum fixture-level proof that this is usable media, not a URL list.
+        if not (url.startswith(("https://", "http://")) and item.alt.strip() and item.recommended_use.strip() and item.width >= 900 and item.height >= 700):
+            continue
+        unique[url] = item
+    return list(unique.values())
+
+
+def assess_studio_readiness(research: ResearchBrief) -> EvidenceAssessment:
+    """Classify product evidence before strategy or creative work can begin.
+
+    Full sites require enough independently sourced material to earn a long
+    narrative. Sparse but identifiable businesses receive only a micro-site;
+    ambiguity blocks generation rather than becoming atmospheric copy.
+    """
+    product = _specific_product(research)
+    theme_keys = set()
+    valid_themes = []
+    for theme in research.content_themes:
+        label = re.sub(r"\s+", " ", theme.label.strip().lower())
+        if label and theme.evidence_sources and label not in theme_keys:
+            theme_keys.add(label)
+            valid_themes.append(theme)
+    media = _usable_media(research)
     checks = {
         "business_identified": meaningful_identity(research.business_name),
         "business_type": meaningful_identity(research.niche),
-        "offering": bool(research.sells or research.services_or_products),
+        "product_identified": bool(product),
+        "language_confirmed": bool(research.primary_language.strip()),
         "contact_path": bool(research.contacts) or bool(research.instagram_url),
-        "brand_signals": bool(research.brand_atmosphere or research.visual_style or research.colors),
-        "media_or_text_led": bool(research.best_media) or (meaningful_identity(research.business_name) and meaningful_identity(research.niche)),
+        "content_sufficient_for_full_site": len(valid_themes) >= 3,
+        "media_sufficient_for_full_site": 5 <= len(media) <= 8,
         "no_critical_contradiction": not any(token in " ".join(research.unknowns).lower() for token in ("contradict", "conflict", "different business")),
     }
-    level = EvidenceLevel.C if not (checks["business_identified"] and checks["business_type"] and checks["offering"] and checks["contact_path"] and checks["no_critical_contradiction"]) else (EvidenceLevel.A if checks["brand_signals"] else EvidenceLevel.B)
-    return EvidenceAssessment(level=level, score=min(sum(checks.values()) * 14, 100), checks=checks, reasons=[key.replace("_", " ") for key, value in checks.items() if not value], unresolved_questions=research.unknowns)
+    can_micro = all(checks[key] for key in ("business_identified", "business_type", "product_identified", "language_confirmed", "contact_path", "no_critical_contradiction")) and bool(valid_themes)
+    can_full = can_micro and checks["content_sufficient_for_full_site"] and checks["media_sufficient_for_full_site"]
+    scope = PageScope.FULL if can_full else (PageScope.MICRO if can_micro else PageScope.BLOCKED)
+    level = EvidenceLevel.A if scope is PageScope.FULL else (EvidenceLevel.B if scope is PageScope.MICRO else EvidenceLevel.C)
+    score = min(100, sum(checks.values()) * 12 + min(len(valid_themes), 3) * 2 + min(len(media), 8))
+    reasons = [key.replace("_", " ") for key, value in checks.items() if not value]
+    if scope is PageScope.MICRO:
+        reasons.append("full site is not allowed; only an intentional micro-site may be generated")
+    if scope is PageScope.BLOCKED:
+        reasons.append("product identification, confirmed language, and at least one sourced content theme are mandatory before generation")
+    return EvidenceAssessment(
+        level=level, score=score, checks=checks, page_scope=scope, exact_product=product,
+        content_theme_count=len(valid_themes), usable_media_count=len(media),
+        required_concepts=3 if scope is PageScope.FULL else (1 if scope is PageScope.MICRO else 0),
+        reasons=reasons, unresolved_questions=research.unknowns,
+    )
+
+
+def assess_evidence(research: ResearchBrief) -> EvidenceAssessment:
+    return assess_studio_readiness(research)
 
 
 def choose_pattern(category: str, offerings: list[str], level: EvidenceLevel) -> str:

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from site_agent.models import ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
+from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent.skill_lock import validate_studio_plugin_bundle
 from site_agent.studio import CodexStudioRunner, StudioError
 
@@ -15,10 +15,18 @@ def fixtures() -> tuple[ResearchBrief, StrategyBrief, SiteSpec]:
     research = ResearchBrief(
         instagram_url="https://www.instagram.com/fixture/",
         business_name="Fixture Studio",
+        primary_language="en",
         niche="independent experience business",
         sells=["evening experiences"],
         contacts=["Instagram Direct"],
         brand_atmosphere="night-time and cinematic",
+        product_identity=ProductIdentity(exact_product="guided evening harbour walk", evidence_sources=["fixture:product"], confidence="high"),
+        content_themes=[
+            ContentTheme(label="guided harbour walk", decision_role="offer", evidence_sources=["fixture:product"]),
+            ContentTheme(label="meeting preparation", decision_role="process", evidence_sources=["fixture:process"]),
+            ContentTheme(label="waterfront route studies", decision_role="proof", evidence_sources=["fixture:media"]),
+        ],
+        best_media=[MediaAsset(url=f"https://media.example/{index}.jpg", alt=f"Fixture scene {index}", recommended_use="narrative media", width=1600, height=1067) for index in range(6)],
         forbidden_claims=["best in town"],
     )
     strategy = StrategyBrief(
@@ -112,7 +120,7 @@ class CreativeStudioTests(unittest.TestCase):
                 run = next(Path("runs").glob("studio-test"))
                 source = run / "studio" / "selected" / "staging"
                 source.mkdir(parents=True, exist_ok=True)
-                (source / "index.html").write_text("<html><body><main class='case-file'><h1>Selected</h1><a href='https://instagram.com'>Message</a></main></body></html>" + " " * 160, encoding="utf-8")
+                (source / "index.html").write_text("<html><body><main class='case-file'><h1>Selected</h1><a href='https://instagram.com'>Message</a><section>Offer</section><section>Process</section><section>Proof</section><section>Contact</section></main></body></html>" + " " * 160, encoding="utf-8")
             return SimpleNamespace(returncode=0, stdout="", stderr="")
 
         research, strategy, spec = fixtures()

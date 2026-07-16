@@ -14,6 +14,7 @@ from site_agent.critic import CriticAgent
 from site_agent.design_quality import (
     BuilderContext,
     EvidenceAssessment,
+    PIPELINE_SCHEMA_VERSION,
     QualityReport,
     assess_evidence,
     audit_quality,
@@ -103,9 +104,12 @@ class SiteAgentOrchestrator:
         self._checkpoint(reports_dir, "research_completed")
 
         evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
-        if evidence is None:
+        if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
             evidence = assess_evidence(research)
             write_json(reports_dir / "01_evidence_assessment.json", evidence)
+        # The explicit readiness artifact prevents a cached optimistic score from
+        # silently authorising Studio work after a contract upgrade.
+        write_json(reports_dir / "01_studio_readiness.json", evidence)
         self._checkpoint(reports_dir, "evidence_completed", "media_analysis_completed")
         if settings.design_quality_pipeline_enabled and not evidence.build_allowed:
             raise GenerationBlocked("insufficient_evidence: " + "; ".join(evidence.reasons))
@@ -232,7 +236,8 @@ class SiteAgentOrchestrator:
                 guideline = self.skill_runtime.web_guidelines(site_dir / "index.html") if self.skill_runtime is not None else None
                 if guideline is not None:
                     write_json(reports_dir / f"web_guidelines_iteration_{iteration}.json", guideline.as_dict())
-                quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []))
+                html_text = (site_dir / "index.html").read_text(encoding="utf-8")
+                quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []), html_text=html_text)
                 write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
             if critique.approved_for_delivery and quality.approved:
                 acceptance = self.acceptance_auditor.audit(

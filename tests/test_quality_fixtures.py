@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from site_agent.design_quality import audit_quality, build_context
-from site_agent.models import ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
+from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 
 
 FIXTURES = {
@@ -17,7 +17,10 @@ FIXTURES = {
 
 def make_fixture(name: str):
     business, category, offers, cta = FIXTURES[name]
-    research = ResearchBrief(instagram_url=f"https://www.instagram.com/{name}/", business_name=business, niche=category, sells=offers, contacts=["Instagram"], brand_atmosphere="quiet and tactile" if name != "sparse" else "", colors=["blue"] if name != "sparse" else [])
+    research = ResearchBrief(instagram_url=f"https://www.instagram.com/{name}/", business_name=business, primary_language="en", niche=category, sells=offers, contacts=["Instagram"], brand_atmosphere="quiet and tactile" if name != "sparse" else "", colors=["blue"] if name != "sparse" else [], product_identity=ProductIdentity(exact_product=offers[0], evidence_sources=[f"fixture:{name}:product"], confidence="high"), content_themes=[ContentTheme(label=f"{name} offer", decision_role="offer", evidence_sources=[f"fixture:{name}:offer"]), ContentTheme(label=f"{name} process", decision_role="process", evidence_sources=[f"fixture:{name}:process"]), ContentTheme(label=f"{name} proof", decision_role="proof", evidence_sources=[f"fixture:{name}:proof"])], best_media=[MediaAsset(url=f"https://media.example/{name}/{index}.jpg", alt=f"{business} fixture {index}", recommended_use="narrative media", width=1600, height=1067) for index in range(6)])
+    if name == "sparse":
+        research.content_themes = [ContentTheme(label="sparse offer", decision_role="offer", evidence_sources=["fixture:sparse:offer"])]
+        research.best_media = [MediaAsset(url="https://media.example/sparse/0.jpg", alt="Sparse fixture", recommended_use="hero", width=1600, height=1067)]
     strategy = StrategyBrief(target_customer="prospective customer", reason_to_choose=offers or ["a direct conversation"], customer_questions_or_fears=["What is the right next step?"], niche_specific_sections=["decision"], primary_cta=cta, secondary_cta="Learn what to ask", tone="clear", color_direction="contextual", typography_direction="distinctive", business_logic="clarify and convert")
     spec = SiteSpec(language="en", title=business, meta_description=f"{business}: {category}", h1=f"{business} — {category}", hero_subtitle=f"A clear next step for {category} visitors.", primary_cta=cta, secondary_cta="Learn what to ask", sections=[SectionSpec(id=f"{name}-decision", title="Choose your next step", purpose="Answer the key question before contact.", content=[f"Ask about {offers[0] if offers else 'the current details'}."])], trust_points=["Current information is confirmed directly."], process_steps=["Start the conversation."], footer_note="Use the approved contact path.", no_fake_claims_checklist=[])
     return research, strategy, spec

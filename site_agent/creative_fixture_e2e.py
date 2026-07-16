@@ -8,7 +8,7 @@ import shutil
 import argparse
 from pathlib import Path
 
-from site_agent.models import MediaAsset, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
+from site_agent.models import ContentTheme, Evidence, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 from site_agent.config import settings
 from site_agent.studio import CodexStudioRunner, StudioError
 
@@ -42,7 +42,60 @@ def fixture_data():
         "modern_dental": _fixture("modern_dental", "modern dentistry", "Consultation-led dental care", "precise, calm, clinical", "Request a consultation", ["https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1600&q=80"]),
         "event_decorator": _fixture("event_decorator", "event decoration portfolio", "Spatial event decoration projects", "expressive, layered, tactile", "Discuss a project", ["https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1600&q=80"]),
         "online_school": _fixture("online_school", "online learning platform", "Live learning with a practical platform", "clear, focused, encouraging", "Ask about a course", ["https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80"]),
+        "botanika_form": rich_floral_fixture(),
     }
+
+
+def rich_floral_fixture():
+    """The controlled full-site calibration brief; every publishable detail is explicit."""
+    source = "controlled_fixture:botanika_form:2026-07"
+    media = [
+        MediaAsset(url="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=85", alt="Рожева квіткова композиція на святковому столі", recommended_use="hero: table florals", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=1600&q=85", alt="Квіти у скляних вазах у денному світлі", recommended_use="process: flower selection", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1600&q=85", alt="Букет польових квітів крупним планом", recommended_use="detail: seasonal texture", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1468327768560-75b778cbb551?auto=format&fit=crop&w=1600&q=85", alt="Квіти в саду з м’яким світлом", recommended_use="atmosphere: ceremony", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=85", alt="Зелена рослина та керамічний горщик", recommended_use="material: botanical palette", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1600&q=85", alt="Зелений ботанічний лист крупним планом", recommended_use="closing: botanical study", width=1600, height=1067),
+    ]
+    research = ResearchBrief(
+        instagram_url="https://www.instagram.com/botanika_form_fixture/", business_name="Botanika Form",
+        primary_language="uk", niche="флористична студія для подій",
+        sells=["весільні квіткові інсталяції", "квіти для приватних вечерь", "флористичне оформлення брендових подій"],
+        contacts=["Instagram Direct"], communication_style="спокійна, предметна українська", brand_atmosphere="жива ботаніка, м’яке світло, уважна ручна робота", visual_style="редакційна предметна зйомка", colors=["мох", "пудровий", "вершковий"], best_media=media,
+        product_identity=ProductIdentity(exact_product="флористичні інсталяції та квіти для весіль, приватних вечерь і брендових подій", evidence_sources=[source + ":product"], confidence="high"),
+        content_themes=[
+            ContentTheme(label="весільні квіткові інсталяції", decision_role="offer", evidence_sources=[source + ":weddings"]),
+            ContentTheme(label="квіти для приватних вечерь", decision_role="format", evidence_sources=[source + ":dinners"]),
+            ContentTheme(label="флористичне оформлення брендових подій", decision_role="format", evidence_sources=[source + ":brands"]),
+            ContentTheme(label="запит, референс і монтаж", decision_role="process", evidence_sources=[source + ":process"]),
+        ],
+        verified_facts=[
+            Evidence(source=source + ":language", value="Підтверджена мова fixture — українська", confidence="high"),
+            Evidence(source=source + ":product", value="Студія створює флористичні інсталяції та квіти для подій", confidence="high"),
+            Evidence(source=source + ":formats", value="Підтверджені формати: весілля, приватні вечері, брендові події", confidence="high"),
+            Evidence(source=source + ":process", value="Початок розмови — через Direct з датою, форматом та референсом", confidence="high"),
+        ],
+        unknowns=["Актуальну доступність, кошторис і локацію підтверджують у Direct."],
+        forbidden_claims=["Не стверджувати ціни, доступність, кількість гостей, локації, нагороди, команду або відгуки без нових доказів."],
+    )
+    strategy = StrategyBrief(
+        target_customer="людина або команда, що планує весілля, вечерю чи брендову подію", reason_to_choose=["одна студія для інсталяції, столу та деталей", "запит починається з формату події та референсу"],
+        customer_questions_or_fears=["Чи підходить формат моїй події?", "Що надіслати в першому повідомленні?"],
+        niche_specific_sections=["формати подій", "робочий ритм", "квіткові деталі"], primary_cta="Надіслати формат події", secondary_cta="Подивитися формати", tone="виразна, спокійна, конкретна", color_direction="мох, вершковий і пудровий із медіа", typography_direction="виразний serif для назв, нейтральний sans для рішень", business_logic="назвати точний формат, показати відмінні сценарії і відкрити змістовний Direct-запит",
+    )
+    spec = SiteSpec(
+        language="uk", title="Botanika Form — флористика для подій", meta_description="Флористичні інсталяції та квіти для весіль, вечерь і брендових подій.",
+        h1="Флористика, що збирає подію в один живий жест", hero_subtitle="Весільні інсталяції, квіти для приватних вечерь і брендових подій — починаємо з формату, дати та вашого референсу.",
+        primary_cta="Надіслати формат події", secondary_cta="Подивитися формати",
+        sections=[
+            SectionSpec(id="weddings", title="Весілля", purpose="Показати інсталяції для церемонії та святкового простору.", content=["Весільні квіткові інсталяції."]),
+            SectionSpec(id="dinners", title="Приватні вечері", purpose="Пояснити роль квітів у столі й атмосфері.", content=["Квіти для приватних вечерь."]),
+            SectionSpec(id="brands", title="Брендові події", purpose="Назвати формат для запусків і зустрічей бренду.", content=["Флористичне оформлення брендових подій."]),
+            SectionSpec(id="process", title="Від референсу до монтажу", purpose="Дати чесний перший крок до розмови.", content=["Надішліть у Direct формат події, дату й референс."]),
+        ], trust_points=["Підтверджені формати: весілля, приватні вечері, брендові події."], process_steps=["Надішліть формат події, дату й референс у Direct.", "У Direct підтверджують доступність, кошторис і локацію."], gallery_assets=media,
+        footer_note="Актуальні деталі підтверджують у Instagram Direct.", no_fake_claims_checklist=[],
+    )
+    return research, strategy, spec
 
 
 def run_all(root: Path = Path("runs/creative-studio-e2e"), *, clean: bool = False) -> dict:
@@ -172,6 +225,7 @@ def _write_calibration_package(run_dir: Path, selected: str, report: dict) -> di
     calibration = run_dir / "calibration"
     calibration.mkdir(parents=True, exist_ok=True)
     studio = run_dir / "studio"
+    business_name = json.loads((studio / "input" / "business_brief.json").read_text(encoding="utf-8"))["research"]["business_name"]
     selected_data = json.loads((studio / "concept_reviews" / "selected_concept.json").read_text(encoding="utf-8"))
     comparison = json.loads((studio / "concept_reviews" / "comparison.json").read_text(encoding="utf-8"))
     concepts = []
@@ -196,15 +250,15 @@ def _write_calibration_package(run_dir: Path, selected: str, report: dict) -> di
     if fixer_before.is_file() and fixer_after.is_file():
         fixer_block = "<h3>Creative fixer — before / after</h3><div class='pair'><img src='../studio/fixer_history/iteration_1/before/desktop.png' alt='Before fixer desktop'><img src='../studio/fixer_history/iteration_1/after/desktop.png' alt='After fixer desktop'></div><div class='pair'><img src='../studio/fixer_history/iteration_1/before/mobile.png' alt='Before fixer mobile'><img src='../studio/fixer_history/iteration_1/after/mobile.png' alt='After fixer mobile'></div>"
     page = """<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>Night Yacht — human calibration</title><style>body{margin:0;background:#111;color:#f3efe4;font:16px/1.5 system-ui}main{max-width:1600px;margin:auto;padding:32px}h1{font-size:clamp(2rem,5vw,5rem);line-height:1;margin:0 0 16px}.pair{display:grid;grid-template-columns:3fr 1fr;gap:16px}.pair img,.final img{width:100%;height:auto;border:1px solid #555;background:#222}section{border-top:1px solid #555;padding:28px 0}.final{display:grid;gap:16px}.note{color:#f98d5d}@media(max-width:760px){main{padding:18px}.pair{grid-template-columns:1fr}}</style><main>
-<p class='note'>Human calibration required — no Telegram or Cloudflare action was run.</p><h1>Night Yacht<br>Creative Studio review</h1>
+<title>__BUSINESS__ — human calibration</title><style>body{margin:0;background:#111;color:#f3efe4;font:16px/1.5 system-ui}main{max-width:1600px;margin:auto;padding:32px}h1{font-size:clamp(2rem,5vw,5rem);line-height:1;margin:0 0 16px}.pair{display:grid;grid-template-columns:3fr 1fr;gap:16px}.pair img,.final img{width:100%;height:auto;border:1px solid #555;background:#222}section{border-top:1px solid #555;padding:28px 0}.final{display:grid;gap:16px}.note{color:#f98d5d}@media(max-width:760px){main{padding:18px}.pair{grid-template-columns:1fr}}</style><main>
+<p class='note'>Human calibration required — no Telegram or Cloudflare action was run.</p><h1>__BUSINESS__<br>Creative Studio review</h1>
 <section><h2>Concept stage</h2><p>Selected: <strong>__SELECTED__</strong></p><ul>__REASONS__</ul>__CONCEPTS__</section>
 <section class='final'><h2>Final stage</h2><p>Selected concept before extension</p><img src='__BEFORE__' alt='Selected concept before full build'><p>Full build — desktop</p><img src='../studio/final_reviews/desktop.png' alt='Final desktop'><p>Full build — mobile</p><img src='../studio/final_reviews/mobile.png' alt='Final mobile'>__FIXER__<h3>Art Director</h3><p>Score: __SCORE__. __SUMMARY__</p><ul>__FINDINGS__</ul><h3>Unresolved medium/low issues</h3><pre>__UNRESOLVED__</pre></section>
-</main></html>""".replace("__SELECTED__", html.escape(selected)).replace("__REASONS__", reasons).replace("__CONCEPTS__", "".join(concepts)).replace("__BEFORE__", before).replace("__FIXER__", fixer_block).replace("__SCORE__", html.escape(str(report.get("score", "unscored")))).replace("__SUMMARY__", html.escape(str(report.get("summary", "")))).replace("__FINDINGS__", findings).replace("__UNRESOLVED__", html.escape(json.dumps(report.get("unresolved_issues", []), ensure_ascii=False, indent=2)))
+</main></html>""".replace("__BUSINESS__", html.escape(business_name)).replace("__SELECTED__", html.escape(selected)).replace("__REASONS__", reasons).replace("__CONCEPTS__", "".join(concepts)).replace("__BEFORE__", before).replace("__FIXER__", fixer_block).replace("__SCORE__", html.escape(str(report.get("score", "unscored")))).replace("__SUMMARY__", html.escape(str(report.get("summary", "")))).replace("__FINDINGS__", findings).replace("__UNRESOLVED__", html.escape(json.dumps(report.get("unresolved_issues", []), ensure_ascii=False, indent=2)))
     index = calibration / "index.html"
     index.write_text(page, encoding="utf-8")
     from playwright.sync_api import sync_playwright
-    png = calibration / "night_yacht_calibration.png"
+    png = calibration / f"{run_dir.name}_calibration.png"
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         try:

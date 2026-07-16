@@ -25,6 +25,7 @@ from site_agent.commercial_usefulness import (
 )
 from site_agent.critic import TechnicalInspector
 from site_agent.config import settings
+from site_agent.design_quality import EvidenceAssessment, PageScope, assess_studio_readiness
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
 from site_agent.skill_lock import directory_checksum
 
@@ -88,7 +89,10 @@ class CodexStudioRunner:
         checkpoints: Callable[..., None],
     ) -> StudioResult:
         studio = run_dir / "studio"
-        self._prepare_input(studio, job_id, research, strategy, spec, evidence)
+        readiness = assess_studio_readiness(research)
+        if readiness.page_scope is PageScope.BLOCKED:
+            raise StudioError("Studio readiness blocked generation: " + "; ".join(readiness.reasons))
+        self._prepare_input(studio, job_id, research, strategy, spec, readiness)
         checkpoints("studio_input_prepared")
 
         missing = [name for name in CONCEPTS if not (studio / "concepts" / name / "index.html").is_file()]
@@ -131,6 +135,7 @@ class CodexStudioRunner:
         promotion_source = source_workspace if use_fixed_source else staging_source
         self._require_static_site(promotion_source)
         self._validate_static_site(promotion_source)
+        self._validate_scope_compliance(studio, promotion_source, readiness)
         initial_dir = studio / "selected" / "initial_validation"
         gate, _ = self.inspector.inspect(promotion_source / "index.html", initial_dir)
         if not gate.passed:
@@ -224,6 +229,19 @@ class CodexStudioRunner:
         media = [item.model_dump() for item in (spec.gallery_assets or research.best_media)]
         evidence_payload = evidence.model_dump() if hasattr(evidence, "model_dump") else dict(evidence or {})
         self._write_json(input_dir / "evidence.json", {"assessment": evidence_payload, "verified_facts": [item.model_dump() for item in research.verified_facts]})
+        self._write_json(input_dir / "scope_decision.json", {
+            "scope": evidence_payload.get("page_scope", "blocked"),
+            "exact_product": evidence_payload.get("exact_product", ""),
+            "confirmed_language": research.primary_language,
+            "content_theme_count": evidence_payload.get("content_theme_count", 0),
+            "usable_media_count": evidence_payload.get("usable_media_count", 0),
+            "required_concepts": evidence_payload.get("required_concepts", 0),
+            "rules": {
+                "full_site": "Three materially different concepts and a content-led full build are allowed.",
+                "micro_site": "One concise concept only; no more than three semantic sections and no padded gallery or repeated caveat.",
+                "blocked": "No creative output may be produced.",
+            },
+        })
         self._write_json(input_dir / "business_brief.json", {"job_id": job_id, "instagram_url": research.instagram_url, "research": research.model_dump(), "strategy": strategy.model_dump(), "site_spec": spec.model_dump()})
         self._write_json(input_dir / "media_manifest.json", {"media": media, "note": "Only verified supplied media may be used; classify missing dimensions/quality as unknown."})
         self._write_json(input_dir / "prohibited_claims.json", {"prohibited_claims": prohibited, "missing_information": research.unknowns})
@@ -244,10 +262,10 @@ class CodexStudioRunner:
     def _concept_prompt(self, run_dir: Path, missing: list[str]) -> str:
         return (
             "Use $siteagent-web-studio. This is a SiteAgent creative production task. Read only the "
-            f"bounded input package in {self._relative(run_dir / 'studio' / 'input')}. Create the missing "
+            f"bounded input package in {self._relative(run_dir / 'studio' / 'input')}, especially scope_decision.json. Create the missing "
             f"runnable HTML concepts {', '.join(missing)} under {self._relative(run_dir / 'studio' / 'concepts')}. "
             "Use the project-local guidance referenced by skill_guidance.json. Do not use a category template, "
-            "Jinja, secrets, Telegram, Cloudflare or external publishing. Each concept must have a distinct "
+            "Jinja, secrets, Telegram, Cloudflare or external publishing. Obey the selected scope exactly; a micro-site must never be expanded into a long page. Each concept must have a distinct "
             "central idea, composition, hero, density, media strategy, typography, CTA and signature element. "
             "Write a concise concept.md beside each index.html."
         )
@@ -268,7 +286,7 @@ class CodexStudioRunner:
         return (
             "Use $siteagent-web-studio to expand the selected concept without changing its central creative idea. "
             f"Read {self._relative(run_dir / 'studio' / 'concept_reviews' / 'selected_concept.json')} and the selected "
-            f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)}. Write a complete static responsive "
+            f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)} and scope contract at {self._relative(run_dir / 'studio' / 'input' / 'scope_decision.json')}. Write a complete static responsive "
             f"HTML/CSS/JS site to the staging workspace {self._relative(run_dir / 'studio' / 'selected' / 'staging')}. Preserve its signature "
             "element and composition language. Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )
@@ -482,6 +500,30 @@ class CodexStudioRunner:
                 raise StudioError(f"Static studio output escapes its asset root: {value}") from exc
             if not target.exists():
                 raise StudioError(f"Static studio output references a missing local asset: {value}")
+
+    def _validate_scope_compliance(self, studio: Path, folder: Path, readiness: EvidenceAssessment) -> None:
+        """Persist a checkable scope decision before any final screenshot approval."""
+        html_text = (folder / "index.html").read_text(encoding="utf-8")
+        section_count = len(__import__("re").findall(r"<section\b", html_text, flags=__import__("re").I))
+        image_urls = __import__("re").findall(r"<img\b[^>]*\bsrc=[\"']([^\"']+)", html_text, flags=__import__("re").I)
+        reasons: list[str] = []
+        if readiness.page_scope is PageScope.MICRO and section_count > 3:
+            reasons.append(f"micro-site has {section_count} sections; maximum is 3")
+        if readiness.page_scope is PageScope.MICRO and len(image_urls) > 2:
+            reasons.append(f"micro-site has {len(image_urls)} image treatments; maximum is 2")
+        if readiness.page_scope is PageScope.FULL and section_count < 4:
+            reasons.append("full-site lacks enough sections to express its approved themes")
+        report = {
+            "scope": readiness.page_scope.value,
+            "exact_product": readiness.exact_product,
+            "section_count": section_count,
+            "image_treatments": len(image_urls),
+            "approved": not reasons,
+            "reasons": reasons,
+        }
+        self._write_json(studio / "scope_compliance_report.json", report)
+        if reasons:
+            raise StudioError("Page scope compliance failed: " + "; ".join(reasons))
 
     @staticmethod
     def _selected_id(selected: dict[str, Any]) -> str:

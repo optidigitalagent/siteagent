@@ -46,6 +46,8 @@ class AcceptanceAuditor:
                 studio_dir / "commercial_usefulness_report.json",
                 studio_dir / "language_fit_report.json",
                 studio_dir / "semantic_repetition_report.json",
+                studio_dir / "input" / "scope_decision.json",
+                studio_dir / "scope_compliance_report.json",
             )
             missing = [str(item.relative_to(studio_dir)) for item in required if not item.is_file()]
             if missing:
@@ -58,9 +60,12 @@ class AcceptanceAuditor:
                     commercial = json.loads((studio_dir / "commercial_usefulness_report.json").read_text(encoding="utf-8"))
                     if commercial.get("approved") is not True or commercial.get("score", 0) < 85:
                         reasons.append("Commercial usefulness did not pass the mandatory 85-point gate.")
+                    scope = json.loads((studio_dir / "scope_compliance_report.json").read_text(encoding="utf-8"))
+                    if scope.get("approved") is not True or scope.get("scope") not in {"full_site", "micro_site"}:
+                        reasons.append("Studio page scope did not pass the mandatory readiness contract.")
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")
-                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition"])
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
 
         return AcceptanceAuditResult(
             approved=not reasons,

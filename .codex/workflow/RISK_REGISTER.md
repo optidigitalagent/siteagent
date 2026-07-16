@@ -13,3 +13,4 @@
 | Oversized or sensitive file in site output | Broken upload or data exposure | Preflight every file, reject traversal, secrets, reports, and files over 25 MiB |
 | Deterministic Pages name collides | Another project could be overwritten | Stable URL marker ownership check and bounded hash-suffix retry |
 | Public queue exposes client links | Privacy risk | Use private repo for `website-agent` inbox |
+| Studio child invocation can hang after partial artifacts | A stale `running` task state can mask an incomplete build | Preserve concepts/selection, stop only the known child process, require a separate staged build plus fresh technical and independent visual review before promotion |

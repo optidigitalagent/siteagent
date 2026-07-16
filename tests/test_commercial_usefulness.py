@@ -7,7 +7,7 @@ from pathlib import Path
 
 from site_agent.commercial_usefulness import semantic_repetition_report
 from site_agent.design_quality import EvidenceLevel, assess_evidence, audit_quality, build_context
-from site_agent.models import ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
+from site_agent.models import ContentTheme, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 from site_agent.studio import CodexStudioRunner
 
 
@@ -16,9 +16,12 @@ def research(**changes) -> ResearchBrief:
         instagram_url="https://www.instagram.com/example/",
         business_name="Night Example",
         niche="private water experience",
+        primary_language="en",
         sells=["private evening water experiences"],
         contacts=["Instagram Direct"],
         brand_atmosphere="reflective water at dusk",
+        product_identity=ProductIdentity(exact_product="private yacht charter", evidence_sources=["fixture:product"], confidence="high"),
+        content_themes=[ContentTheme(label="private charter request", decision_role="offer", evidence_sources=["fixture:product"])],
     )
     values.update(changes)
     return ResearchBrief(**values)

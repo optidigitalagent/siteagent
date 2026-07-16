@@ -10,18 +10,26 @@ from site_agent.design_quality import (
     build_context,
     validate_skill_lock,
 )
-from site_agent.models import ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
+from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 
 
 def complete_research(**changes) -> ResearchBrief:
     values = dict(
         instagram_url="https://www.instagram.com/example/",
         business_name="Example Kitchen",
+        primary_language="en",
         niche="restaurant",
         sells=["seasonal lunch"],
         contacts=["Instagram Direct"],
         brand_atmosphere="warm, ingredient-led",
         colors=["olive"],
+        product_identity=ProductIdentity(exact_product="seasonal lunch at a neighbourhood restaurant", evidence_sources=["fixture:product"], confidence="high"),
+        content_themes=[
+            ContentTheme(label="seasonal lunch menu", decision_role="offer", evidence_sources=["fixture:menu"]),
+            ContentTheme(label="table requests", decision_role="process", evidence_sources=["fixture:booking"]),
+            ContentTheme(label="ingredient-led kitchen", decision_role="proof", evidence_sources=["fixture:story"]),
+        ],
+        best_media=[MediaAsset(url=f"https://media.example/{index}.jpg", alt=f"Kitchen fixture {index}", recommended_use="editorial media", width=1600, height=1067) for index in range(6)],
     )
     values.update(changes)
     return ResearchBrief(**values)
@@ -38,7 +46,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(assessment.build_allowed)
 
     def test_sparse_but_identified_business_is_level_b(self) -> None:
-        assessment = assess_evidence(complete_research(brand_atmosphere="", colors=[]))
+        assessment = assess_evidence(complete_research(content_themes=[ContentTheme(label="seasonal lunch menu", decision_role="offer", evidence_sources=["fixture:menu"])], best_media=[MediaAsset(url="https://media.example/one.jpg", alt="Kitchen fixture", recommended_use="hero", width=1600, height=1067)]))
         self.assertEqual(assessment.level, EvidenceLevel.B)
         self.assertTrue(assessment.build_allowed)
 
@@ -46,6 +54,26 @@ class EvidenceTests(unittest.TestCase):
         assessment = assess_evidence(complete_research(business_name="Unknown (inferred)", niche="Unknown"))
         self.assertEqual(assessment.level, EvidenceLevel.C)
         self.assertFalse(assessment.build_allowed)
+
+    def test_generic_unproven_night_yacht_is_blocked_before_scope(self) -> None:
+        assessment = assess_evidence(ResearchBrief(
+            instagram_url="https://instagram.com/night_yacht", business_name="Night Yacht", niche="night yacht experience",
+            sells=["Private evening water experiences"], contacts=["Instagram Direct"], brand_atmosphere="cinematic",
+        ))
+        self.assertEqual(assessment.level, EvidenceLevel.C)
+        self.assertEqual(assessment.page_scope.value, "blocked")
+        self.assertFalse(assessment.checks["product_identified"])
+
+    def test_duplicate_themes_and_media_cannot_unlock_full_scope(self) -> None:
+        repeated = MediaAsset(url="https://media.example/repeated.jpg", alt="Repeated kitchen fixture", recommended_use="hero", width=1600, height=1067)
+        assessment = assess_evidence(complete_research(
+            content_themes=[ContentTheme(label="seasonal lunch", decision_role="offer", evidence_sources=["fixture:menu"])] * 3,
+            best_media=[repeated] * 6,
+        ))
+        self.assertEqual(assessment.level, EvidenceLevel.B)
+        self.assertEqual(assessment.content_theme_count, 1)
+        self.assertEqual(assessment.usable_media_count, 1)
+        self.assertEqual(assessment.page_scope.value, "micro_site")
 
 
 class QualityGateTests(unittest.TestCase):

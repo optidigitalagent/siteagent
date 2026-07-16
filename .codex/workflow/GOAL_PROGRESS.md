@@ -177,3 +177,35 @@ Live end-to-end verification requires local runtime credentials:
 - Verified `python -m unittest discover -s tests -v` (64 passed, 1 opt-in Cloudflare smoke
   skipped), `python -m compileall -q site_agent scripts tests`, `python -m pip check`,
   `python scripts/smoke_build.py`, and `git diff --check`.
+
+## Product Readiness and Botanika Form Calibration (2026-07-15)
+
+- Added product identity, confirmed-language, sourced-theme, usable-media, and page-scope gates.
+  Full scope now requires an exact sourced product, confirmed language, at least three distinct
+  sourced themes, and five to eight deduplicated media assets. Micro scope is concise by
+  contract; insufficient evidence blocks before Studio generation.
+- Reclassified the rejected Night Yacht fixture as blocked/insufficient evidence. It has no
+  exact product, language evidence, sourced themes, or adequate media, so it cannot create a
+  replacement long page.
+- Added the rich controlled `botanika_form` fixture: Ukrainian event floristry for weddings,
+  private dinners, and branded events, with four sourced themes and six verified media URLs.
+  All six URLs returned image responses during fixture preparation.
+- Created and rendered materially different A/B/C concepts. Rejected A for tablet overflow and
+  repeated editorial cadence, and B for a wedding-biased/operational read. Selected C,
+  `Форма події`, for its clear product path, botanical collage, circular flower-mark and
+  equal Roman-numeral treatment of all three formats.
+- The first full-build child process timed out after concepts/selection without writing staging;
+  its known child process was stopped and the selected concept was materially implemented in a
+  separate staged build. The final revision enlarged CTA targets, controlled tablet collage
+  collisions, preserved the selected signatures, and was promoted atomically to `site/`.
+- Main-agent and independent screenshot review approved the final for human calibration: no
+  critical/high issues; technical gate passes desktop/tablet/mobile with no overflow, failed
+  assets, console/network errors, broken links, or small targets. One medium mobile media-pause
+  rhythm note remains, recorded in `studio/art_director_report.json`.
+- Generated the human-calibration comparison package under
+  `runs/creative-studio-e2e/botanika_form/calibration/`. The fixture reports
+  `completed_human_calibration_required`; no `go`, Telegram, Cloudflare, or deployment action
+  was run. `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED` remains true.
+- Regression evidence: `python -m unittest discover -s tests -v` -> 80 passed, 1 opt-in
+  Cloudflare smoke skipped; `python -m compileall -q site_agent scripts tests`,
+  `python -m pip check`, `python scripts/smoke_build.py`, and `git diff --check` pass.

@@ -20,7 +20,7 @@ from site_agent.critic import TechnicalInspector
 from site_agent.design_quality import EvidenceLevel, assess_evidence, audit_quality, build_context, composition_similarity, meaningful_phrases
 from site_agent.external_skills import LocalSkillRuntime
 from site_agent.json_io import write_json
-from site_agent.models import CritiqueReport, MediaAsset, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
+from site_agent.models import ContentTheme, CritiqueReport, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
 
 
 def fixture_data() -> dict[str, tuple[ResearchBrief, StrategyBrief, SiteSpec]]:
@@ -33,12 +33,13 @@ def fixture_data() -> dict[str, tuple[ResearchBrief, StrategyBrief, SiteSpec]]:
     }
     result = {}
     for key, (name, niche, offers, cta, second, ids, atmosphere) in raw.items():
-        research = ResearchBrief(instagram_url=f"https://instagram.com/{key}", business_name=name, niche=niche, sells=offers, contacts=["Instagram Direct"], brand_atmosphere=atmosphere, visual_style="documentary", colors=["ink", "paper"], verified_facts=[], best_media=[])
+        research = ResearchBrief(instagram_url=f"https://instagram.com/{key}", business_name=name, primary_language="en", niche=niche, sells=offers, contacts=["Instagram Direct"], brand_atmosphere=atmosphere, visual_style="documentary", colors=["ink", "paper"], verified_facts=[], product_identity=ProductIdentity(exact_product=offers[0], evidence_sources=[f"fixture:{key}:product"], confidence="high"), content_themes=[ContentTheme(label=section_id, decision_role=role, evidence_sources=[f"fixture:{key}:{section_id}"]) for section_id, role in zip(ids, ("offer", "process", "proof"))], best_media=[MediaAsset(url=f"https://media.example/{key}/{index}.jpg", alt=f"{name} controlled media {index}", recommended_use="narrative media", width=1600, height=1067) for index in range(6)])
         if key == "sparse_level_b":
             research.brand_atmosphere = ""
             research.visual_style = ""
             research.colors = []
-            research.best_media = [MediaAsset(url="fixture://onda-feed", alt="verified monochrome feed", recommended_use="visual reference")]
+            research.content_themes = [ContentTheme(label="editorial art prints", decision_role="offer", evidence_sources=["fixture:onda:prints"])]
+            research.best_media = [MediaAsset(url="https://media.example/onda-feed.jpg", alt="verified monochrome feed", recommended_use="visual reference", width=1200, height=900)]
         strategy = StrategyBrief(target_customer={"restaurant":"nearby lunch guest","dental":"new patient","decorator":"homeowner with a project","school":"adult language learner","sparse_level_b":"print collector"}[key], reason_to_choose=offers, customer_questions_or_fears=["What happens next?"], niche_specific_sections=ids, primary_cta=cta, secondary_cta=second, tone="specific and calm", color_direction="category-specific", typography_direction="distinctive", business_logic=f"Make the {offers[0]} decision clear before contact.")
         sections = [SectionSpec(id=section_id, title=title, purpose=f"A useful {title} decision.", content=[f"Ask about {offers[min(index, len(offers)-1)]}."]) for index, (section_id, title) in enumerate(zip(ids, ["What is on the table", "How the visit works", "Start the right conversation"]))]
         spec = SiteSpec(language="en", title=name, meta_description=f"{name}: {niche}", h1=f"{name} for {strategy.target_customer}", hero_subtitle=f"A direct, specific way to explore {offers[0]}.", primary_cta=cta, secondary_cta=second, sections=sections, trust_points=[f"Verified: {offer}." for offer in offers], process_steps=["Choose the relevant detail.", "Send the focused request."], footer_note="Use Instagram Direct for current details.", no_fake_claims_checklist=["No unverified claims."], gallery_assets=[])

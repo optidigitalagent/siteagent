@@ -17,6 +17,24 @@ class MediaAsset(BaseModel):
     kind: Literal["image", "video", "unknown"] = "image"
     alt: str = ""
     recommended_use: str = ""
+    width: int = 0
+    height: int = 0
+
+
+class ProductIdentity(BaseModel):
+    """A concrete offering whose wording and provenance are safe to publish."""
+
+    exact_product: str
+    evidence_sources: list[str] = Field(default_factory=list)
+    confidence: Literal["high", "medium", "low"] = "medium"
+
+
+class ContentTheme(BaseModel):
+    """One non-overlapping decision, proof, or offer theme for the page."""
+
+    label: str
+    decision_role: Literal["offer", "format", "process", "proof", "audience", "conversion"]
+    evidence_sources: list[str] = Field(default_factory=list)
 
 
 class ResearchBrief(BaseModel):
@@ -36,6 +54,8 @@ class ResearchBrief(BaseModel):
     colors: list[str] = Field(default_factory=list)
     best_media: list[MediaAsset] = Field(default_factory=list)
     verified_facts: list[Evidence] = Field(default_factory=list)
+    product_identity: ProductIdentity | None = None
+    content_themes: list[ContentTheme] = Field(default_factory=list)
     unknowns: list[str] = Field(default_factory=list)
     forbidden_claims: list[str] = Field(default_factory=list)
 

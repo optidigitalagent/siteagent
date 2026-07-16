@@ -55,6 +55,22 @@ Lesson:
 - The first mobile viewport must include the offer and CTA.
 - Human rejection overrides internal scores and must create regression coverage.
 
+## Readiness-gate follow-up (2026-07-15)
+
+- A business name, broad niche, one atmospheric offer, one image, and a chosen
+  language are not enough for a full SiteAgent page. Night Yacht is insufficient
+  evidence, not a micro-site: it lacks an exact product, confirmed language,
+  sourced content themes, and media fit.
+- Full-site readiness now requires a sourced exact product, confirmed language,
+  at least three distinct sourced themes, and five to eight deduplicated usable
+  media assets. Sparse but identified evidence may only receive a concise
+  micro-site; anything weaker blocks before Studio work.
+- The Botanika Form controlled fixture establishes the next calibration bar:
+  Ukrainian event floristry, four sourced themes, six media, product/CTA in the
+  first viewport, materially distinct A/B/C concepts, and an independent
+  screenshot-led acceptance. Its remaining mobile media-pause note is medium
+  and non-blocking.
+
 ## Working preference
 
 The user wants the main Codex agent to act as a demanding Project Director:
