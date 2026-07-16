@@ -21,8 +21,8 @@ class LLMError(RuntimeError):
 
 
 class LLMClient:
-    def __init__(self, model: str | None = None) -> None:
-        self.provider = settings.llm_provider.strip().lower()
+    def __init__(self, model: str | None = None, provider: str | None = None) -> None:
+        self.provider = (provider or settings.llm_provider).strip().lower()
         if self.provider == "auto":
             self.provider = "openai" if settings.openai_api_key else "codex"
 
@@ -45,7 +45,7 @@ class LLMClient:
             self.model = model or settings.codex_model
             return
 
-        raise LLMError(f"Unsupported LLM_PROVIDER: {settings.llm_provider}")
+        raise LLMError(f"Unsupported LLM provider: {self.provider}")
 
     def structured(self, *, system: str, user: str, schema: type[T]) -> T:
         if self.provider == "codex":

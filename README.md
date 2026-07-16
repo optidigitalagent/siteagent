@@ -218,9 +218,10 @@ python -m unittest tests.test_cloudflare_smoke -v
 When the user says only `го` or `go`, Codex runs `python -m site_agent.cli go` and does not ask for the Instagram URL again.
 # Creative build modes
 
-New local production jobs default to `SITE_BUILDER=codex_studio`. The Python control plane
-prepares bounded evidence, runs the repository-owned `$siteagent-web-studio` workflow, validates
-the rendered output and then uses the existing publisher/Telegram delivery path. The optional IDE
+New local production jobs default to `SITE_BUILDER=codex_studio`. The Python control plane first
+creates cited research, an authorised Cloudinary media manifest, trait-selected reference rationale
+and a Design Director implementation brief; Codex receives the immutable package, validates the
+rendered output and then uses the existing publisher/Telegram delivery path. The optional IDE
 plugin lives in `plugins/siteagent-web-studio`; its source of truth remains `.agents/skills`, so
 runtime never depends on a manual Codex IDE install.
 
@@ -232,3 +233,18 @@ concepts, screenshots, comparison, selected build and provenance.
 The rollout default `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` blocks production publishing
 after creative acceptance until a human has reviewed the real fixture comparison evidence. It does
 not affect the bot-only Railway runtime, which must not receive Codex/browser/Cloudflare settings.
+
+## Strategy and media prerequisites
+
+`RESEARCH_STRATEGIST_PROVIDER=openai`, `DESIGN_DIRECTOR_PROVIDER=openai`, and
+`SITE_BUILDER_PROVIDER=codex` are separate required roles. Studio work fails closed unless
+`runs/<job>/media_input/manifest.json` declares local business media with both
+`user_authorized` and `allowed_for_public_site` set to `true`; accepted assets are uploaded to
+Cloudinary before Design Director runs. Scraped Instagram/CDN URLs, stock and fixture media are
+never acceptable production media.
+
+Import the approved reference library locally before calibration:
+
+```powershell
+python -m site_agent.reference_import
+```

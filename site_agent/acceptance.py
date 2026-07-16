@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -48,6 +49,8 @@ class AcceptanceAuditor:
                 studio_dir / "semantic_repetition_report.json",
                 studio_dir / "input" / "scope_decision.json",
                 studio_dir / "scope_compliance_report.json",
+                studio_dir / "input" / "implementation_package.json",
+                studio_dir / "input" / "media_manifest.json",
             )
             missing = [str(item.relative_to(studio_dir)) for item in required if not item.is_file()]
             if missing:
@@ -63,9 +66,24 @@ class AcceptanceAuditor:
                     scope = json.loads((studio_dir / "scope_compliance_report.json").read_text(encoding="utf-8"))
                     if scope.get("approved") is not True or scope.get("scope") not in {"full_site", "micro_site"}:
                         reasons.append("Studio page scope did not pass the mandatory readiness contract.")
+                    package = json.loads((studio_dir / "input" / "implementation_package.json").read_text(encoding="utf-8"))
+                    manifest = json.loads((studio_dir / "input" / "media_manifest.json").read_text(encoding="utf-8"))
+                    if not package.get("sha256") or not package.get("design_implementation_brief"):
+                        reasons.append("Studio implementation package is incomplete or lacks an integrity checksum.")
+                    else:
+                        canonical = dict(package)
+                        supplied = canonical.pop("sha256")
+                        canonical.pop("studio_input_sha256", None)
+                        canonical.pop("contract", None)
+                        actual = hashlib.sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+                        if supplied != actual:
+                            reasons.append("Studio implementation package checksum does not match its content.")
+                    used = [item for item in manifest.get("media", []) if item.get("url")]
+                    if any(item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True or not str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in used):
+                        reasons.append("Studio media manifest contains media without authorised Cloudinary business provenance.")
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")
-                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
 
         return AcceptanceAuditResult(
             approved=not reasons,

@@ -65,6 +65,48 @@ class ResearchBrief(BaseModel):
     forbidden_claims: list[str] = Field(default_factory=list)
 
 
+class BusinessResearch(BaseModel):
+    """Cited strategist artifact; it is richer than the renderer compatibility data."""
+
+    research: ResearchBrief
+    target_audience: str = ""
+    buying_context: str = ""
+    business_level: str = ""
+    positioning: list[str] = Field(default_factory=list)
+    differentiators: list[str] = Field(default_factory=list)
+    customer_questions: list[str] = Field(default_factory=list)
+    trust_signals: list[str] = Field(default_factory=list)
+    brand_media_signals: list[str] = Field(default_factory=list)
+    recommended_scope: Literal["full_site", "micro_site", "blocked"] = "blocked"
+    citations: list[Evidence] = Field(default_factory=list)
+
+
+class DesignImplementationBrief(BaseModel):
+    """The complete non-template contract handed to Codex Studio."""
+
+    central_idea: str
+    page_structure: list[str]
+    narrative: str
+    first_viewport: str
+    typography: str
+    palette: str
+    spacing_grid: str
+    media_treatment: str
+    motion: str
+    cta_logic: str
+    responsive_behavior: str
+    copy_direction: str
+    section_requirements: list[str] = Field(default_factory=list)
+    anti_patterns: list[str] = Field(default_factory=list)
+    selected_references: list[dict[str, str]] = Field(default_factory=list)
+    reference_rationale: str = ""
+    do_not_copy: list[str] = Field(default_factory=list)
+    # Compatibility data is validation-only; Studio is explicitly told not to
+    # infer its composition from it.
+    strategy: "StrategyBrief"
+    site_spec: "SiteSpec"
+
+
 class StrategyBrief(BaseModel):
     target_customer: str
     reason_to_choose: list[str]
@@ -209,3 +251,6 @@ class DeploymentResult(BaseModel):
 
 
 PublishResult = DeploymentResult
+
+# Resolve the validation-only forward references in DesignImplementationBrief.
+DesignImplementationBrief.model_rebuild()

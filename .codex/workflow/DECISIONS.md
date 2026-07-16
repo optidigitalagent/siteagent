@@ -27,3 +27,10 @@
   verified Botanika Form work. Selected `fixture_stock` or `stock` media must independently block
   production promotion, regardless of the global calibration switch; a valid production build
   must never contain calibration-only disclosure/footer text.
+- The replacement workflow separates `RESEARCH_STRATEGIST_PROVIDER=openai`,
+  `DESIGN_DIRECTOR_PROVIDER=openai`, and `SITE_BUILDER_PROVIDER=codex`. Codex receives an
+  immutable implementation package; legacy strategy/SiteSpec/PageComposition data is
+  validation-only and Jinja remains explicit compatibility mode.
+- Selected production media must be authorised business media uploaded to Cloudinary. Missing
+  media authorisation or Cloudinary configuration blocks at media-input; no stock, fixture,
+  Instagram CDN, or scraped URL fallback is permitted.

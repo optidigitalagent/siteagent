@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from site_agent.acceptance import AcceptanceAuditor
-from site_agent.agents import FixerAgent, ResearchAgent, SiteSpecAgent, StrategyAgent
+from site_agent.agents import DesignDirector, FixerAgent, ResearchAgent, ResearchStrategist, SiteSpecAgent, StrategyAgent
 from site_agent.builder import SiteBuilder
 from site_agent.config import settings
 from site_agent.critic import CriticAgent
@@ -25,6 +25,7 @@ from site_agent.design_quality import (
 from site_agent.external_skills import LocalSkillRuntime
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
+from site_agent.media import MediaInputBlocked, MediaPreparer
 from site_agent.models import (
     AcceptanceAuditResult,
     CritiqueReport,
@@ -36,6 +37,7 @@ from site_agent.models import (
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
 from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
+from site_agent.workflow import WorkflowConfigurationError, implementation_package, selected_references, validate_role_providers, write_markdown
 
 
 class GenerationBlocked(RuntimeError):
@@ -68,6 +70,9 @@ class SiteAgentOrchestrator:
         self.publisher = publisher or Publisher()
         self.skill_runtime = LocalSkillRuntime() if settings.external_skills_enabled else None
         self.studio_runner = CodexStudioRunner() if settings.site_builder == "codex_studio" else None
+        self.research_strategist: ResearchStrategist | None = None
+        self.design_director: DesignDirector | None = None
+        self.media_preparer = MediaPreparer()
 
     def run(
         self,
@@ -97,11 +102,58 @@ class SiteAgentOrchestrator:
         if recovered is not None:
             return recovered
 
-        research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
-        if research is None or research.instagram_url != instagram_url:
-            research = self.research_agent.run(instagram_url)
-            write_json(reports_dir / "01_research.json", research)
-        self._checkpoint(reports_dir, "research_completed")
+        builder_mode = settings.site_builder.strip().lower()
+        if builder_mode not in {"codex_studio", "legacy_template"}:
+            raise GenerationBlocked("Unsupported SITE_BUILDER. Use codex_studio or legacy_template explicitly.")
+        package: dict | None = None
+        if builder_mode == "codex_studio":
+            try:
+                validate_role_providers()
+                business = self._read_json(reports_dir / "01_business_research.json")
+                if business is None or business.get("research", {}).get("instagram_url") != instagram_url:
+                    if self.research_strategist is None:
+                        self.research_strategist = ResearchStrategist(LLMClient(provider=settings.research_strategist_provider))
+                    result = self.research_strategist.run(instagram_url)
+                    business = result.model_dump()
+                    write_json(reports_dir / "01_business_research.json", business)
+                    write_markdown(reports_dir / "business_research.md", "Business research", business)
+                research = ResearchBrief.model_validate(business["research"])
+                write_json(reports_dir / "01_research.json", research)
+                self._checkpoint(reports_dir, "research_strategist_completed", "research_completed")
+                media_path = run_dir / "media_input" / "manifest.json"
+                media_manifest = self._read_json(reports_dir / "02_authorised_media_manifest.json")
+                if media_manifest is None:
+                    candidates = self.media_preparer.load_candidates(media_path)
+                    media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
+                    write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
+                self._checkpoint(reports_dir, "media_prepared", "media_input_completed")
+                references = selected_references()
+                write_json(reports_dir / "02_selected_references.json", {"references": references})
+                self._checkpoint(reports_dir, "references_selected")
+                design = self._read_json(reports_dir / "03_design_implementation_brief.json")
+                if design is None:
+                    if self.design_director is None:
+                        self.design_director = DesignDirector(LLMClient(provider=settings.design_director_provider))
+                    design = self.design_director.run(
+                        __import__("site_agent.models", fromlist=["BusinessResearch"]).BusinessResearch.model_validate(business),
+                        media_manifest, references,
+                    ).model_dump()
+                    write_json(reports_dir / "03_design_implementation_brief.json", design)
+                    write_markdown(reports_dir / "design_implementation_brief.md", "Design implementation brief", design)
+                strategy = StrategyBrief.model_validate(design["strategy"])
+                spec = SiteSpec.model_validate(design["site_spec"])
+                package = implementation_package(business_research=business, media_manifest=media_manifest, design_brief=design, references=references)
+                write_json(reports_dir / "04_implementation_package.json", package)
+                self._checkpoint(reports_dir, "design_director_completed", "implementation_package_prepared", "generation_completed")
+            except (WorkflowConfigurationError, MediaInputBlocked, KeyError, ValueError) as exc:
+                self._checkpoint(reports_dir, "media_input_blocked")
+                raise GenerationBlocked(str(exc)) from exc
+        else:
+            research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
+            if research is None or research.instagram_url != instagram_url:
+                research = self.research_agent.run(instagram_url)
+                write_json(reports_dir / "01_research.json", research)
+            self._checkpoint(reports_dir, "research_completed")
 
         evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
         if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
@@ -114,16 +166,17 @@ class SiteAgentOrchestrator:
         if settings.design_quality_pipeline_enabled and not evidence.build_allowed:
             raise GenerationBlocked("insufficient_evidence: " + "; ".join(evidence.reasons))
 
-        strategy = self._read_model(reports_dir / "02_strategy.json", StrategyBrief)
-        if strategy is None:
-            strategy = self.strategy_agent.run(research)
-            write_json(reports_dir / "02_strategy.json", strategy)
-        self._checkpoint(reports_dir, "strategy_completed")
+        if builder_mode == "legacy_template":
+            strategy = self._read_model(reports_dir / "02_strategy.json", StrategyBrief)
+            if strategy is None:
+                strategy = self.strategy_agent.run(research)
+                write_json(reports_dir / "02_strategy.json", strategy)
+            self._checkpoint(reports_dir, "strategy_completed")
 
         skill_executions = self._read_json(reports_dir / "03_external_skill_executions.json")
         if skill_executions is None:
             skill_executions = []
-            if self.skill_runtime is not None:
+            if builder_mode == "legacy_template" and self.skill_runtime is not None:
                 frontend = self.skill_runtime.frontend_design_brief(
                     category=research.niche, audience=strategy.target_customer,
                     goal=strategy.business_logic, atmosphere=research.brand_atmosphere,
@@ -139,8 +192,9 @@ class SiteAgentOrchestrator:
             skill_executions = skill_executions.get("executions", [])
         self._checkpoint(reports_dir, "external_skills_completed")
 
-        spec = self._read_model(reports_dir / "03_site_spec_initial.json", SiteSpec)
-        if spec is None:
+        if builder_mode == "legacy_template":
+            spec = self._read_model(reports_dir / "03_site_spec_initial.json", SiteSpec)
+        if builder_mode == "legacy_template" and spec is None:
             spec = self._normalize_sparse_instagram_spec(
                 research,
                 self.site_spec_agent.run(
@@ -151,9 +205,6 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "03_site_spec_initial.json", spec)
         self._checkpoint(reports_dir, "generation_completed")
 
-        builder_mode = settings.site_builder.strip().lower()
-        if builder_mode not in {"codex_studio", "legacy_template"}:
-            raise GenerationBlocked("Unsupported SITE_BUILDER. Use codex_studio or legacy_template explicitly.")
         studio_dir: Path | None = None
         if builder_mode == "codex_studio":
             assert self.studio_runner is not None
@@ -166,6 +217,7 @@ class SiteAgentOrchestrator:
                     strategy=strategy,
                     spec=spec,
                     evidence=evidence,
+                    implementation_package=package,
                     checkpoints=lambda *names: self._checkpoint(reports_dir, *names),
                 )
             except StudioError as exc:
@@ -174,8 +226,8 @@ class SiteAgentOrchestrator:
 
         # This compatibility context is extracted for audit artifacts only after a Studio build.
         # It is never passed to a Studio renderer or allowed to choose its composition.
-        context = self._read_model(reports_dir / "04_builder_context.json", BuilderContext)
-        if context is None or builder_mode == "codex_studio":
+        context = self._read_model(reports_dir / "04_builder_context.json", BuilderContext) if builder_mode == "legacy_template" else None
+        if builder_mode == "legacy_template" and context is None:
             context = build_context(research, strategy, spec, skill_executions)
             write_json(reports_dir / "04_builder_context.json", context)
             write_json(reports_dir / "04_business_brief.json", context.business_brief)
@@ -187,7 +239,8 @@ class SiteAgentOrchestrator:
             design_dir = run_dir / "design"
             design_dir.mkdir(parents=True, exist_ok=True)
             write_json(design_dir / "page_composition.json", context.page_composition)
-        self._checkpoint(reports_dir, "strategy_artifacts_completed", "builder_context_completed")
+        if builder_mode == "legacy_template":
+            self._checkpoint(reports_dir, "strategy_artifacts_completed", "builder_context_completed")
 
         final_critique: CritiqueReport | None = None
         for iteration in range(1, settings.max_fix_iterations + 1):
@@ -230,8 +283,8 @@ class SiteAgentOrchestrator:
             self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
             if builder_mode == "codex_studio":
                 self._checkpoint(reports_dir, "art_director_review_completed")
-            quality = self._read_model(reports_dir / f"quality_report_iteration_{iteration}.json", QualityReport)
-            if quality is None:
+            quality = self._read_model(reports_dir / f"quality_report_iteration_{iteration}.json", QualityReport) if builder_mode == "legacy_template" else None
+            if builder_mode == "legacy_template" and quality is None:
                 history = load_fingerprint_history(settings.runs_dir / "design_fingerprint_history.json", limit=settings.quality_history_limit) if settings.anti_template_enabled else []
                 guideline = self.skill_runtime.web_guidelines(site_dir / "index.html") if self.skill_runtime is not None else None
                 if guideline is not None:
@@ -239,7 +292,7 @@ class SiteAgentOrchestrator:
                 html_text = (site_dir / "index.html").read_text(encoding="utf-8")
                 quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []), html_text=html_text)
                 write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
-            if critique.approved_for_delivery and quality.approved:
+            if critique.approved_for_delivery and (quality is None or quality.approved):
                 acceptance = self.acceptance_auditor.audit(
                     critique=critique,
                     site_dir=site_dir,
@@ -270,7 +323,8 @@ class SiteAgentOrchestrator:
                     production=production,
                 )
                 write_json(reports_dir / "publish_result.json", publish)
-                record_fingerprint(settings.runs_dir / "design_fingerprint_history.json", quality.fingerprint, limit=settings.quality_history_limit)
+                if quality is not None:
+                    record_fingerprint(settings.runs_dir / "design_fingerprint_history.json", quality.fingerprint, limit=settings.quality_history_limit)
                 self._checkpoint(reports_dir, "deployment_completed")
                 return JobResult(
                     job_id=job_id,
@@ -281,12 +335,13 @@ class SiteAgentOrchestrator:
             next_spec = self._read_model(
                 reports_dir / f"site_spec_iteration_{iteration + 1}.json", SiteSpec
             )
-            spec = next_spec or self._fix(research, strategy, spec, critique)
-            context = build_context(research, strategy, spec, skill_executions)
-            write_json(reports_dir / "04_builder_context.json", context)
-            design_dir = run_dir / "design"
-            design_dir.mkdir(parents=True, exist_ok=True)
-            write_json(design_dir / "page_composition.json", context.page_composition)
+            if builder_mode == "legacy_template":
+                spec = next_spec or self._fix(research, strategy, spec, critique)
+                context = build_context(research, strategy, spec, skill_executions)
+                write_json(reports_dir / "04_builder_context.json", context)
+                design_dir = run_dir / "design"
+                design_dir.mkdir(parents=True, exist_ok=True)
+                write_json(design_dir / "page_composition.json", context.page_composition)
             self._checkpoint(reports_dir, "fixer_completed")
 
         assert final_critique is not None

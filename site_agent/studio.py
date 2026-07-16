@@ -85,8 +85,13 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
         url = str(record.get("url", ""))
         record["rendered_uses"] = rendered_html.count(url) if url else 0
         record["status"] = "used" if record["rendered_uses"] else "not_used"
-        record["portfolio_safe"] = record.get("source_kind") == "business"
-        if record["rendered_uses"] and record.get("source_kind") in UNVERIFIED_PRODUCTION_MEDIA_KINDS:
+        record["portfolio_safe"] = (
+            record.get("source_kind") == "business"
+            and record.get("user_authorized") is True
+            and record.get("allowed_for_public_site") is True
+            and str(record.get("url", "")).startswith("https://res.cloudinary.com/")
+        )
+        if record["rendered_uses"] and not record["portfolio_safe"]:
             blocked.append({
                 "asset_id": record.get("asset_id") or url,
                 "source_kind": record.get("source_kind", "unknown"),
@@ -103,7 +108,7 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
         "blocked_selected_media": blocked,
         "used_asset_count": sum(item["rendered_uses"] for item in assets),
         "assets": assets,
-        "rationale": "Fixture, stock, or unverified media is explicit calibration material and must never be represented as a business portfolio or promoted to production without authorised business-media provenance.",
+        "rationale": "Only authorised business media delivered from Cloudinary may be promoted; fixture, stock, scraped, or unverified media is never production-safe.",
     }
 
 
@@ -171,13 +176,14 @@ class CodexStudioRunner:
         strategy: StrategyBrief,
         spec: SiteSpec,
         evidence: Any,
+        implementation_package: dict[str, Any] | None = None,
         checkpoints: Callable[..., None],
     ) -> StudioResult:
         studio = run_dir / "studio"
         readiness = assess_studio_readiness(research)
         if readiness.page_scope is PageScope.BLOCKED:
             raise StudioError("Studio readiness blocked generation: " + "; ".join(readiness.reasons))
-        self._prepare_input(studio, job_id, research, strategy, spec, readiness)
+        self._prepare_input(studio, job_id, research, strategy, spec, readiness, implementation_package)
         checkpoints("studio_input_prepared")
 
         missing = [name for name in CONCEPTS if not (studio / "concepts" / name / "index.html").is_file()]
@@ -307,13 +313,16 @@ class CodexStudioRunner:
         return self._read_json(report_path)
 
     def _prepare_input(
-        self, studio: Path, job_id: str, research: ResearchBrief, strategy: StrategyBrief, spec: SiteSpec, evidence: Any
+        self, studio: Path, job_id: str, research: ResearchBrief, strategy: StrategyBrief,
+        spec: SiteSpec, evidence: Any, implementation_package: dict[str, Any] | None = None,
     ) -> None:
         input_dir = studio / "input"
         for folder in (input_dir, studio / "concepts", studio / "concept_reviews", studio / "selected"):
             folder.mkdir(parents=True, exist_ok=True)
         prohibited = list(dict.fromkeys(research.forbidden_claims + ["Do not invent prices, reviews, staff, guarantees, results, addresses, or contact details."]))
         media = [item.model_dump() for item in (spec.gallery_assets or research.best_media)]
+        if implementation_package is not None:
+            media = list(implementation_package.get("authorised_media_manifest", {}).get("media", []))
         evidence_payload = evidence.model_dump() if hasattr(evidence, "model_dump") else dict(evidence or {})
         self._write_json(input_dir / "evidence.json", {"assessment": evidence_payload, "verified_facts": [item.model_dump() for item in research.verified_facts]})
         self._write_json(input_dir / "scope_decision.json", {
@@ -330,10 +339,18 @@ class CodexStudioRunner:
             },
         })
         self._write_json(input_dir / "business_brief.json", {"job_id": job_id, "instagram_url": research.instagram_url, "research": research.model_dump(), "strategy": strategy.model_dump(), "site_spec": spec.model_dump()})
-        self._write_json(input_dir / "media_manifest.json", {"media": media, "note": "Only verified supplied media may be used; classify missing dimensions/quality as unknown."})
+        self._write_json(input_dir / "media_manifest.json", {"media": media, "note": "Only authorised business media with Cloudinary secure URLs may be rendered."})
         self._write_json(input_dir / "prohibited_claims.json", {"prohibited_claims": prohibited, "missing_information": research.unknowns})
         self._write_json(input_dir / "previous_site_constraints.json", {"recent_fingerprints": [], "avoid": ["category templates", "generic narrow-column landing page", "palette-only concept variants"]})
         self._write_json(input_dir / "skill_guidance.json", {"source": ".agents/skills", "skills": self._skill_snapshot()})
+        if implementation_package is not None:
+            package = dict(implementation_package)
+            # Preserve the orchestrator's canonical package checksum. The
+            # Studio-specific field covers the additional local contract text.
+            serialized = json.dumps(package, ensure_ascii=False, sort_keys=True).encode("utf-8")
+            package["studio_input_sha256"] = hashlib.sha256(serialized).hexdigest()
+            package["contract"] = "Codex must implement this package directly; legacy SiteSpec/PageComposition are validation-only."
+            self._write_json(input_dir / "implementation_package.json", package)
 
     def _skill_snapshot(self) -> list[dict[str, str]]:
         root = self.project_root / ".agents" / "skills"
@@ -349,9 +366,9 @@ class CodexStudioRunner:
     def _concept_prompt(self, run_dir: Path, missing: list[str]) -> str:
         return (
             "Use $siteagent-web-studio. This is a SiteAgent creative production task. Read only the "
-            f"bounded input package in {self._relative(run_dir / 'studio' / 'input')}, especially scope_decision.json. Create the missing "
+            f"bounded input package in {self._relative(run_dir / 'studio' / 'input')}, especially implementation_package.json and scope_decision.json. Create the missing "
             f"runnable HTML concepts {', '.join(missing)} under {self._relative(run_dir / 'studio' / 'concepts')}. "
-            "Use the project-local guidance referenced by skill_guidance.json. Do not use a category template, "
+            "The implementation package is the creative source of truth; legacy business_brief/site_spec files are validation-only. Use the project-local guidance referenced by skill_guidance.json. Do not use a category template, "
             "Jinja, secrets, Telegram, Cloudflare or external publishing. Obey the selected scope exactly; a micro-site must never be expanded into a long page. Each concept must have a distinct "
             "central idea, composition, hero, density, media strategy, typography, CTA and signature element. "
             "Write a concise concept.md beside each index.html."
@@ -373,7 +390,7 @@ class CodexStudioRunner:
         return (
             "Use $siteagent-web-studio to expand the selected concept without changing its central creative idea. "
             f"Read {self._relative(run_dir / 'studio' / 'concept_reviews' / 'selected_concept.json')} and the selected "
-            f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)} and scope contract at {self._relative(run_dir / 'studio' / 'input' / 'scope_decision.json')}. Write a complete static responsive "
+            f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)}, implementation package at {self._relative(run_dir / 'studio' / 'input' / 'implementation_package.json')} and scope contract at {self._relative(run_dir / 'studio' / 'input' / 'scope_decision.json')}. Write a complete static responsive "
             f"HTML/CSS/JS site to the staging workspace {self._relative(run_dir / 'studio' / 'selected' / 'staging')}. Preserve its signature "
             "element and composition language. Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )

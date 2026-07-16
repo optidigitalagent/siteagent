@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     openai_model: str = Field(default="gpt-4.1", alias="OPENAI_MODEL")
     codex_command: str = Field(default="codex", alias="CODEX_COMMAND")
     codex_model: str = Field(default="", alias="CODEX_MODEL")
+    # The strategy plane is deliberately separate from the Codex implementation
+    # plane.  Keep these explicit so a future provider change cannot silently
+    # collapse research, art direction, and implementation back into one role.
+    research_strategist_provider: str = Field(default="openai", alias="RESEARCH_STRATEGIST_PROVIDER")
+    design_director_provider: str = Field(default="openai", alias="DESIGN_DIRECTOR_PROVIDER")
+    site_builder_provider: str = Field(default="codex", alias="SITE_BUILDER_PROVIDER")
     # Studio phases have independent budgets. A timeout leaves its artifacts in a
     # retryable state so resume never needs to redo the concept pass.
     codex_concept_generation_timeout_seconds: int = Field(default=900, alias="CODEX_CONCEPT_GENERATION_TIMEOUT_SECONDS")
@@ -75,6 +81,11 @@ class Settings(BaseSettings):
     # New production jobs use the Codex-owned creative plane.  Jinja remains an
     # explicit compatibility path only; a Studio failure must not fall back to it.
     site_builder: str = Field(default="codex_studio", alias="SITE_BUILDER")
+    cloudinary_cloud_name: str = Field(default="", alias="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str = Field(default="", alias="CLOUDINARY_API_KEY")
+    cloudinary_api_secret: str = Field(default="", alias="CLOUDINARY_API_SECRET")
+    cloudinary_upload_preset: str = Field(default="", alias="CLOUDINARY_UPLOAD_PRESET")
+    media_input_dir: Path = Field(default=Path("media_input"), alias="MEDIA_INPUT_DIR")
     creative_studio_human_calibration_required: bool = Field(
         default=True, alias="CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED"
     )

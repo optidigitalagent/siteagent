@@ -64,14 +64,15 @@ class StubInspector:
 
 class CreativeStudioTests(unittest.TestCase):
     def _write_provenance_workspace(
-        self, root: Path, *, source_kind: str, body: str, url: str = "https://media.example/image.jpg"
+        self, root: Path, *, source_kind: str, body: str, url: str = "https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg"
     ) -> tuple[Path, Path]:
         studio = root / "studio"
         site = root / "site"
         (studio / "input").mkdir(parents=True)
         site.mkdir()
         (studio / "input" / "media_manifest.json").write_text(
-            json.dumps({"media": [{"asset_id": "selected-media", "url": url, "source_kind": source_kind}]}),
+            json.dumps({"media": [{"asset_id": "selected-media", "url": url, "source_kind": source_kind,
+                                   "user_authorized": source_kind == "business", "allowed_for_public_site": source_kind == "business"}]}),
             encoding="utf-8",
         )
         (site / "index.html").write_text(body, encoding="utf-8")
@@ -83,7 +84,7 @@ class CreativeStudioTests(unittest.TestCase):
         for source_kind in ("fixture_stock", "stock"):
             with self.subTest(source_kind=source_kind), tempfile.TemporaryDirectory() as temp:
                 studio, site = self._write_provenance_workspace(
-                    Path(temp), source_kind=source_kind, body='<img src="https://media.example/image.jpg">'
+                    Path(temp), source_kind=source_kind, body='<img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg">'
                 )
                 with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
                     assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
@@ -91,7 +92,7 @@ class CreativeStudioTests(unittest.TestCase):
     def test_verified_business_media_permits_production_promotion(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             studio, site = self._write_provenance_workspace(
-                Path(temp), source_kind="business", body='<img src="https://media.example/image.jpg">'
+                Path(temp), source_kind="business", body='<img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg">'
             )
             assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
 
@@ -100,7 +101,7 @@ class CreativeStudioTests(unittest.TestCase):
             studio, site = self._write_provenance_workspace(
                 Path(temp),
                 source_kind="fixture_stock",
-                body='<main><img src="https://media.example/image.jpg"><p>Customer-facing copy only.</p></main>',
+                body='<main><img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg"><p>Customer-facing copy only.</p></main>',
             )
             with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
                 assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
@@ -110,7 +111,7 @@ class CreativeStudioTests(unittest.TestCase):
             studio, site = self._write_provenance_workspace(
                 Path(temp),
                 source_kind="business",
-                body='<footer>Fixture-only calibration artifact; do not publish.</footer><img src="https://media.example/image.jpg">',
+                body='<footer>Fixture-only calibration artifact; do not publish.</footer><img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg">',
             )
             with self.assertRaisesRegex(StudioError, "calibration-only disclosure leaked"):
                 assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
