@@ -319,3 +319,20 @@ Live end-to-end verification requires local runtime credentials:
   credential-gated Cloudflare smoke skipped; `compileall`, `pip check`, smoke build
   and `git diff --check` passed. No `go`, Telegram, Cloudflare deployment, publishing
   or Orange/Bella calibration ran. Stop state: `READY_FOR_CREDENTIALLED_REFERENCE_IMPORT`.
+
+## Reference-library importer recovery (2026-07-16)
+
+- Audited the interrupted import without deleting its records or screenshots. Six captured
+  records were resumable analysis failures, one was a capture failure, and no catalog had
+  been finalized because browser cleanup could abort the old importer.
+- Hardened the importer with bounded browser restart/recovery, cleanup warnings, atomic
+  catalog/report finalization from durable records, checksum-aware resume, and a strict
+  screenshot-analysis schema with a single validation-repair retry and safe raw-response
+  debug artifacts. The code and regression suite were committed and pushed as `d717b46`.
+- The resumed import finished all 28 seeds: 25 completed screenshot analyses, 0 analysis
+  failures, 3 isolated `networkidle` capture timeouts (Drivepark, Unique Rabbit Studios,
+  Webgoalz), and no cleanup warning. All completed capture hashes were revalidated against
+  their records. `references/site_designs/import_report.json` reports
+  `REFERENCE_LIBRARY_IMPORTED_READY_FOR_HUMAN_REVIEW`.
+- No `go`, Telegram, Cloudflare, publishing, Orange Beauty Studio, Bella Dent Clinic, or
+  human-calibration-gate action was performed.

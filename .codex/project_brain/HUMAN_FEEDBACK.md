@@ -117,3 +117,13 @@ repeat the same brief in every chat.
   warning, and must not contain calibration-only footer/disclosure text.
 - Keep `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` globally. Human approval
   of one fixture never authorises a production rollout or publication.
+
+## Reference importer crash-recovery lesson (2026-07-16)
+
+- A browser/driver cleanup error must never be allowed to discard saved screenshot work or
+  suppress catalog finalization. Resume logic must distinguish a checksum-valid completed
+  analysis, a captured record needing analysis only, and a capture failure needing a fresh
+  browser.
+- Screenshot-analysis output needs a strict complete schema, Pydantic validation, bounded
+  repair, and safely retained raw responses. A model choosing its own field names is a
+  failed analysis, never a reason to invent empty values or mark a record complete.
