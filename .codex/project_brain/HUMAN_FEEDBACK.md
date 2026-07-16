@@ -91,3 +91,19 @@ repeat the same brief in every chat.
   checksum with used/not-used status, and visibly disclosed. It is never business
   portfolio proof and blocks production reuse until rights and authorised
   business-media provenance exist.
+
+## Botanika Form human calibration decision (2026-07-16)
+
+- The human calibration record approves Botanika Form Concept C and passes the
+  creative-quality calibration only. This decision preserves the concept and its
+  calibration artifacts; it is not production approval.
+- Every displayed Botanika Form portfolio/media asset is controlled fixture or
+  stock material, not verified Botanika Form work. Production promotion must
+  deterministically remain blocked while any selected/rendered asset has
+  `fixture_stock` or `stock` provenance, even if the global human-calibration
+  gate is later cleared.
+- The fixture-only disclosure belongs solely to calibration evidence. A valid
+  production build must reject fixture media rather than removing or hiding that
+  warning, and must not contain calibration-only footer/disclosure text.
+- Keep `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` globally. Human approval
+  of one fixture never authorises a production rollout or publication.

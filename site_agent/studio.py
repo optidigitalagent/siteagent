@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable
@@ -48,6 +49,90 @@ CONCEPTS = ("concept_a", "concept_b", "concept_c")
 
 class StudioError(RuntimeError):
     """A retryable creative-plane failure; callers must never silently use Jinja."""
+
+
+CALIBRATION_ONLY_TEXT = (
+    "human calibration required",
+    "fixture-only",
+    "fixture/stock",
+    "controlled fixture stock",
+    "calibration-only",
+)
+UNVERIFIED_PRODUCTION_MEDIA_KINDS = frozenset({"fixture_stock", "stock", "unknown"})
+
+
+def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, Any]:
+    """Describe media actually rendered by one exact static-site revision.
+
+    The report deliberately follows final HTML usage rather than trusting a
+    concept's broader media manifest: unused stock cannot block a build, while
+    a rendered fixture can never be hidden by removing its visible disclaimer.
+    """
+    source = site_dir / "index.html"
+    manifest_path = studio_dir / "input" / "media_manifest.json"
+    if not source.is_file() or not manifest_path.is_file():
+        raise StudioError("Media provenance requires final HTML and media_manifest.json.")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise StudioError("Media provenance manifest is unreadable.") from exc
+
+    rendered_html = unescape(source.read_text(encoding="utf-8"))
+    assets: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
+    for item in manifest.get("media", []):
+        record = dict(item)
+        url = str(record.get("url", ""))
+        record["rendered_uses"] = rendered_html.count(url) if url else 0
+        record["status"] = "used" if record["rendered_uses"] else "not_used"
+        record["portfolio_safe"] = record.get("source_kind") == "business"
+        if record["rendered_uses"] and record.get("source_kind") in UNVERIFIED_PRODUCTION_MEDIA_KINDS:
+            blocked.append({
+                "asset_id": record.get("asset_id") or url,
+                "source_kind": record.get("source_kind", "unknown"),
+                "rendered_uses": record["rendered_uses"],
+            })
+        assets.append(record)
+    return {
+        "schema_version": 2,
+        "final_html_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "final_html": str(source),
+        "fixture_only": bool(assets) and all(item.get("source_kind") == "fixture_stock" for item in assets),
+        "production_media_blocked": bool(blocked),
+        "production_promotion_allowed": not blocked,
+        "blocked_selected_media": blocked,
+        "used_asset_count": sum(item["rendered_uses"] for item in assets),
+        "assets": assets,
+        "rationale": "Fixture, stock, or unverified media is explicit calibration material and must never be represented as a business portfolio or promoted to production without authorised business-media provenance.",
+    }
+
+
+def assert_production_promotion_allowed(*, studio_dir: Path, site_dir: Path) -> None:
+    """Fail closed before a Studio artifact may be promoted to production."""
+    report_path = studio_dir / "media_provenance_report.json"
+    if not report_path.is_file():
+        raise StudioError("Production promotion blocked: media provenance report is missing.")
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise StudioError("Production promotion blocked: media provenance report is unreadable.") from exc
+
+    current = _media_provenance_report(studio_dir=studio_dir, site_dir=site_dir)
+    if report.get("final_html_sha256") != current["final_html_sha256"]:
+        raise StudioError("Production promotion blocked: media provenance does not match final HTML.")
+    if current["production_media_blocked"]:
+        labels = ", ".join(
+            f"{item['asset_id']} ({item['source_kind']})" for item in current["blocked_selected_media"]
+        )
+        raise StudioError("Production promotion blocked: selected fixture/stock/unverified media: " + labels)
+
+    content = (site_dir / "index.html").read_text(encoding="utf-8").lower()
+    leaked = [text for text in CALIBRATION_ONLY_TEXT if text in content]
+    if leaked:
+        raise StudioError(
+            "Production promotion blocked: calibration-only disclosure leaked into static site: "
+            + ", ".join(leaked)
+        )
 
 
 @dataclass(frozen=True)
@@ -166,7 +251,7 @@ class CodexStudioRunner:
         self._mark_task(studio, "art_director", "completed")
         checkpoints("full_build_visuals_completed")
         checkpoints("art_director_review_completed")
-        self._write_provenance(studio, chosen)
+        self._write_provenance(studio, chosen, selected_source.parent)
         self._atomic_promote(selected_source.parent, site_dir)
         return StudioResult(index_path=site_dir / "index.html", selected_concept=chosen, studio_dir=studio)
 
@@ -192,6 +277,8 @@ class CodexStudioRunner:
             self._mark_task(studio, "creative_fixer", "retryable", "fixer returned without changing selected source")
             raise StudioError("Creative fixer returned without changing the selected source; preserved state is retryable.")
         self.inspector.inspect(studio / "selected" / "source" / "index.html", studio / "final_reviews")
+        selected = self._selected_id(self._read_json(studio / "concept_reviews" / "selected_concept.json"))
+        self._write_provenance(studio, selected, studio / "selected" / "source")
         self._atomic_promote(studio / "selected" / "source", site_dir)
         self._mark_task(studio, "creative_fixer", "completed")
         checkpoints(f"creative_fixer_iteration_{iteration}_completed")
@@ -461,8 +548,12 @@ class CodexStudioRunner:
             else:
                 shutil.move(str(staged), str(destination))
 
-    def _write_provenance(self, studio: Path, selected: str) -> None:
+    def _write_provenance(self, studio: Path, selected: str, final_source: Path) -> None:
         self._write_json(studio / "build_provenance.json", {"schema_version": 1, "selected_concept": selected, "skill_versions": self._skill_snapshot(), "codex_command": "codex exec", "created_at": datetime.now(timezone.utc).isoformat()})
+        self._write_json(
+            studio / "media_provenance_report.json",
+            _media_provenance_report(studio_dir=studio, site_dir=final_source),
+        )
 
     @staticmethod
     def _require_static_site(folder: Path) -> None:

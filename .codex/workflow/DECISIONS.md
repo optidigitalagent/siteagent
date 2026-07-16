@@ -22,3 +22,8 @@
   confirmed language, at least three distinct sourced content themes, and five to eight
   deduplicated usable media assets. Sparse identified evidence is micro-site only; otherwise
   generation is blocked.
+- Botanika Form Concept C is human-calibration approved with creative quality passed, but it is
+  fixture-only and never production-ready: all displayed media is fixture/stock rather than
+  verified Botanika Form work. Selected `fixture_stock` or `stock` media must independently block
+  production promotion, regardless of the global calibration switch; a valid production build
+  must never contain calibration-only disclosure/footer text.

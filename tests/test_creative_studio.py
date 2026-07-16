@@ -6,10 +6,18 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from site_agent.creative_fixture_e2e import _write_media_provenance_report, rich_floral_fixture
+from playwright.sync_api import sync_playwright
+
+from site_agent.creative_fixture_e2e import _write_media_provenance_report, rich_dental_fixture, rich_floral_fixture
+from site_agent.design_quality import PageScope, assess_studio_readiness
 from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent.skill_lock import validate_studio_plugin_bundle
-from site_agent.studio import CodexStudioRunner, StudioError
+from site_agent.studio import (
+    CodexStudioRunner,
+    StudioError,
+    _media_provenance_report,
+    assert_production_promotion_allowed,
+)
 
 
 def fixtures() -> tuple[ResearchBrief, StrategyBrief, SiteSpec]:
@@ -55,6 +63,84 @@ class StubInspector:
 
 
 class CreativeStudioTests(unittest.TestCase):
+    def _write_provenance_workspace(
+        self, root: Path, *, source_kind: str, body: str, url: str = "https://media.example/image.jpg"
+    ) -> tuple[Path, Path]:
+        studio = root / "studio"
+        site = root / "site"
+        (studio / "input").mkdir(parents=True)
+        site.mkdir()
+        (studio / "input" / "media_manifest.json").write_text(
+            json.dumps({"media": [{"asset_id": "selected-media", "url": url, "source_kind": source_kind}]}),
+            encoding="utf-8",
+        )
+        (site / "index.html").write_text(body, encoding="utf-8")
+        report = _media_provenance_report(studio_dir=studio, site_dir=site)
+        (studio / "media_provenance_report.json").write_text(json.dumps(report), encoding="utf-8")
+        return studio, site
+
+    def test_fixture_or_stock_media_blocks_production_promotion(self) -> None:
+        for source_kind in ("fixture_stock", "stock"):
+            with self.subTest(source_kind=source_kind), tempfile.TemporaryDirectory() as temp:
+                studio, site = self._write_provenance_workspace(
+                    Path(temp), source_kind=source_kind, body='<img src="https://media.example/image.jpg">'
+                )
+                with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
+                    assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
+
+    def test_verified_business_media_permits_production_promotion(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            studio, site = self._write_provenance_workspace(
+                Path(temp), source_kind="business", body='<img src="https://media.example/image.jpg">'
+            )
+            assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
+
+    def test_fixture_media_cannot_be_promoted_by_removing_its_provenance_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            studio, site = self._write_provenance_workspace(
+                Path(temp),
+                source_kind="fixture_stock",
+                body='<main><img src="https://media.example/image.jpg"><p>Customer-facing copy only.</p></main>',
+            )
+            with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
+                assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
+
+    def test_production_promotion_rejects_calibration_only_footer_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            studio, site = self._write_provenance_workspace(
+                Path(temp),
+                source_kind="business",
+                body='<footer>Fixture-only calibration artifact; do not publish.</footer><img src="https://media.example/image.jpg">',
+            )
+            with self.assertRaisesRegex(StudioError, "calibration-only disclosure leaked"):
+                assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
+
+    def test_intermediate_responsive_hero_keeps_type_clear_of_media_and_next_band(self) -> None:
+        """A 960px breakpoint must stack the care-map hero without collisions."""
+        with tempfile.TemporaryDirectory() as temp:
+            page_path = Path(temp) / "index.html"
+            page_path.write_text("""<!doctype html><style>
+              *{box-sizing:border-box}body{margin:0;font:16px Arial}.hero{padding:32px;background:#101b27;color:#fff}
+              .grid{display:grid;grid-template-columns:1fr 1fr;gap:48px}.hero h1{margin:0;font-size:76px;line-height:.9;max-width:9ch}.media{height:420px;background:#1649e8}.next{margin-top:48px;padding-top:24px;border-top:1px solid #789}
+              @media(max-width:960px){.grid{grid-template-columns:1fr;gap:42px}.hero h1{font-size:clamp(43px,6.1vw,70px);max-width:12ch}.media{height:330px}}
+            </style><main class="hero"><div class="grid"><h1>Dental care starts with the right next question.</h1><div class="media"></div></div><p class="next">Your question comes first.</p></main>""", encoding="utf-8")
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.launch()
+                try:
+                    page = browser.new_page(viewport={"width": 960, "height": 1024})
+                    page.goto(page_path.resolve().as_uri())
+                    heading = page.locator("h1").bounding_box()
+                    media = page.locator(".media").bounding_box()
+                    next_band = page.locator(".next").bounding_box()
+                    self.assertIsNotNone(heading)
+                    self.assertIsNotNone(media)
+                    self.assertIsNotNone(next_band)
+                    self.assertLessEqual(heading["y"] + heading["height"], media["y"])
+                    self.assertLessEqual(media["y"] + media["height"], next_band["y"])
+                    self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth + 1"))
+                finally:
+                    browser.close()
+
     def test_relative_accepts_a_workspace_relative_path_for_resume_prompts(self) -> None:
         runner = CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())
         self.assertEqual(
@@ -169,6 +255,21 @@ class CreativeStudioTests(unittest.TestCase):
             self.assertTrue(media.source_url.startswith("https://unsplash.com/photos/"))
             self.assertIn("not Botanika Form portfolio", media.provenance_note)
             self.assertFalse(media.portfolio_claim)
+
+    def test_harbour_dental_is_a_rich_english_fixture_not_a_production_media_candidate(self) -> None:
+        research, strategy, spec = rich_dental_fixture()
+        readiness = assess_studio_readiness(research)
+        self.assertEqual(readiness.page_scope, PageScope.FULL)
+        self.assertEqual(research.primary_language, "en")
+        self.assertIn("routine hygiene", research.product_identity.exact_product)
+        self.assertGreaterEqual(len(research.content_themes), 5)
+        self.assertEqual(len(research.best_media), 6)
+        self.assertEqual(spec.primary_cta, "Request a consultation")
+        self.assertNotIn("Botanika Form", spec.h1)
+        self.assertTrue(all(item.source_kind == "fixture_stock" for item in research.best_media))
+        self.assertTrue(all(not item.portfolio_claim for item in research.best_media))
+        self.assertTrue(all("not Harbour Dental clinical work" in item.provenance_note for item in research.best_media))
+        self.assertIn("Controlled fixture only", spec.footer_note)
 
     def test_media_provenance_report_tracks_used_fixture_assets_by_final_hash(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

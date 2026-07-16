@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "fixture": "botanika_form",
+  "business_name": "Botanika Form",
+  "decision_date": "2026-07-16",
+  "human_calibration": {
+    "human_calibration_status": "approved",
+    "creative_quality_calibration": "passed",
+    "selected_concept": "concept_c"
+  },
+  "production": {
+    "production_ready": false,
+    "promotion_blocked": true,
+    "production_blocker": "All displayed portfolio/media assets are fixture/stock references and are not verified Botanika Form work.",
+    "required_before_promotion": "Replace every selected fixture/stock asset with authorised, verified Botanika Form business media and rerun provenance, acceptance, and production checks.",
+    "deterministic_gate": "site_agent.studio.assert_production_promotion_allowed"
+  },
+  "calibration_disclosure": {
+    "fixture_only": true,
+    "must_remain_visible_for_fixture_artifacts": true,
+    "must_not_appear_in_valid_production_build": true,
+    "fixture_media_warning": "Every displayed image is controlled fixture/stock material for calibration only; it is not Botanika Form portfolio work."
+  },
+  "global_human_calibration_gate": {
+    "CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED": true,
+    "status": "remains_enabled"
+  },
+  "preserved_artifacts": [
+    "studio/concept_reviews/selected_concept.json",
+    "studio/concept_reviews/comparison.json",
+    "studio/media_provenance_report.json",
+    "studio/build_provenance.json",
+    "studio/final_reviews/",
+    "site/index.html",
+    "calibration/index.html",
+    "calibration/artifacts/"
+  ]
+}

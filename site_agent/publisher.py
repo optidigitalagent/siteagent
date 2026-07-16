@@ -18,6 +18,7 @@ from site_agent.config import Settings, settings
 from site_agent.identifiers import cloudflare_project_name, stable_business_id
 from site_agent.json_io import write_json
 from site_agent.models import DeploymentResult
+from site_agent.studio import StudioError, assert_production_promotion_allowed
 
 
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
@@ -62,6 +63,15 @@ class Publisher:
     ) -> DeploymentResult:
         provider = self.config.hosting_provider.strip().lower()
         try:
+            # The orchestrator is the usual gate owner, but callers can invoke
+            # this facade directly during recovery.  Recheck when this is a
+            # Studio run so a resume cannot upload fixture media around it.
+            studio_dir = run_dir / "studio"
+            if production and (studio_dir / "input" / "media_manifest.json").is_file():
+                try:
+                    assert_production_promotion_allowed(studio_dir=studio_dir, site_dir=site_dir)
+                except StudioError as exc:
+                    raise PublisherConfigurationError(str(exc)) from exc
             if production and provider != "cloudflare_pages":
                 raise PublisherConfigurationError(
                     "Telegram production jobs require HOSTING_PROVIDER=cloudflare_pages. "

@@ -23,6 +23,7 @@ from site_agent.publisher import (
     SiteValidationError,
     validate_site_directory,
 )
+from site_agent.studio import _media_provenance_report
 from site_agent.telegram_notify import TelegramNotifier
 
 
@@ -458,6 +459,27 @@ class LiveVerificationTests(unittest.TestCase):
 
 
 class ProviderAndDeliveryTests(unittest.TestCase):
+    def test_direct_production_facade_rechecks_studio_fixture_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            site = make_site(root)
+            studio = root / "studio"
+            (studio / "input").mkdir(parents=True)
+            image = "https://media.example/fixture.jpg"
+            (site / "index.html").write_text(f'<img src="{image}">', encoding="utf-8")
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": [{"asset_id": "fixture", "url": image, "source_kind": "fixture_stock"}]}),
+                encoding="utf-8",
+            )
+            (studio / "media_provenance_report.json").write_text(
+                json.dumps(_media_provenance_report(studio_dir=studio, site_dir=site)), encoding="utf-8"
+            )
+            publisher = Publisher(config(HOSTING_PROVIDER="local", PUBLISH_REQUIRED=False))
+            with self.assertRaisesRegex(PublisherConfigurationError, "selected fixture/stock/unverified media"):
+                publisher.publish(
+                    run_dir=root, site_dir=site, instagram_url=INSTAGRAM_URL, production=True
+                )
+
     def test_telegram_production_never_returns_file_url(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

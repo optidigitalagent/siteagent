@@ -256,3 +256,37 @@ Live end-to-end verification requires local runtime credentials:
 - Regression evidence: `python -m unittest discover -s tests -v` -> 84 passed,
   1 opt-in Cloudflare smoke skipped; `compileall`, `pip check`, `smoke_build`,
   and `git diff --check` passed.
+
+## Botanika approval and Harbour Dental calibration (2026-07-16)
+
+- Recorded the human decision for Botanika Form Concept C: `approved` human
+  calibration and `passed` creative-quality calibration, but `production_ready:
+  false`. All displayed Botanika media is fixture/stock reference material rather
+  than verified Botanika Form work. The dedicated calibration metadata, project
+  brain and workflow state preserve this distinction; the global human-calibration
+  gate remains enabled.
+- Hardened Studio promotion: rendered `fixture_stock`, `stock`, or `unknown`
+  media fails closed from the normal orchestration path, delivery recovery, and
+  direct publisher facade. The provenance report is bound to the final HTML hash;
+  removal of a visible warning does not permit fixture media through, while any
+  calibration-only footer/disclosure blocks an otherwise production-safe build.
+- Added the controlled English `harbour_dental` full-site fixture: consultation-led
+  adult dental care with routine hygiene, restorative planning and urgent
+  consultation routes; decision-support proof; six classified fixture-stock media
+  assets; and a Direct consultation CTA. It does not reuse Botanika’s floral
+  editorial composition, palette, hero, collage, CTA, rhythm or signature.
+- Created and screenshot-reviewed three materially different dental concepts.
+  Independent criticism rejected B for tablet overflow and C for tablet/mobile
+  breakdown; selected Concept A’s cobalt/graphite wayfinding system was materially
+  revised after an undersized-control failure. Fresh 1440px, 768px, 390px and
+  960px evidence has no overflow, failed media, console/network errors, broken
+  links, small tap targets or hero collision. The independent critic approves it
+  only for the next human-calibration package.
+- Harbour Dental remains production-blocked because three rendered images are
+  fixture-stock media. Its local package is under
+  `runs/creative-studio-e2e/harbour_dental/calibration/`; no Telegram, Cloudflare
+  or `go` action was performed.
+- Verification for this change: `python -m unittest discover -s tests -v` ->
+  91 passed, 1 opt-in Cloudflare smoke skipped; `python -m compileall -q
+  site_agent scripts tests`, `python -m pip check`, `python scripts/smoke_build.py`,
+  and `git diff --check` passed.

@@ -15,3 +15,7 @@
 | Cloudflare credentials available | Opt-in smoke publishes static fixture and verifies stable HTTPS URL | smoke test output |
 | Railway deploy | Bot starts with `python -m site_agent.telegram_bot` | Railway logs |
 | Git inbox sync enabled | Bot commits queue change, Codex pulls before claim | git history |
+| Selected Studio media includes fixture/stock provenance | Production promotion fails deterministically; no publisher call | focused provenance-promotion test |
+| Selected Studio media is verified business media | Promotion remains eligible, subject to other gates | focused provenance-promotion test |
+| Fixture media remains but its provenance disclosure is removed | Production validation fails; warning cannot be silently stripped | focused provenance-integrity test |
+| Production build is otherwise valid | Calibration-only fixture footer/disclosure is absent | focused production-output test |

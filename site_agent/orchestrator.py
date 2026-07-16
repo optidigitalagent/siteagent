@@ -35,7 +35,7 @@ from site_agent.models import (
 )
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
-from site_agent.studio import CodexStudioRunner, StudioError
+from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
 
 
 class GenerationBlocked(RuntimeError):
@@ -254,6 +254,11 @@ class SiteAgentOrchestrator:
                 self._checkpoint(reports_dir, "acceptance_completed")
                 if builder_mode == "codex_studio":
                     self._checkpoint(reports_dir, "creative_acceptance_completed")
+                    if production:
+                        try:
+                            assert_production_promotion_allowed(studio_dir=studio_dir, site_dir=site_dir)
+                        except StudioError as exc:
+                            raise GenerationBlocked(str(exc)) from exc
                     if production and settings.creative_studio_human_calibration_required:
                         raise GenerationBlocked(
                             "creative_studio_human_calibration_required: fixture evidence must be approved before production rollout."
@@ -326,6 +331,18 @@ class SiteAgentOrchestrator:
             write_json(reports_dir / "acceptance_audit.json", acceptance)
         if not acceptance.approved:
             return None
+
+        if production and settings.site_builder == "codex_studio":
+            try:
+                assert_production_promotion_allowed(
+                    studio_dir=run_dir / "studio", site_dir=site_dir
+                )
+            except StudioError as exc:
+                raise GenerationBlocked(str(exc)) from exc
+            if settings.creative_studio_human_calibration_required:
+                raise GenerationBlocked(
+                    "creative_studio_human_calibration_required: fixture evidence must be approved before production rollout."
+                )
 
         deployment = self._read_model(run_dir / "deployment.json", PublishResult)
         if deployment is not None and deployment.is_verified_production:
