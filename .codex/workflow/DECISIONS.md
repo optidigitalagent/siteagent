@@ -34,3 +34,11 @@
 - Selected production media must be authorised business media uploaded to Cloudinary. Missing
   media authorisation or Cloudinary configuration blocks at media-input; no stock, fixture,
   Instagram CDN, or scraped URL fallback is permitted.
+- Reference import is screenshot-led through the explicit OpenAI Reference Analyst role. Every
+  record stores capture hashes, analysis/provenance and individual failure state; selection ranks
+  the complete analysed catalog by cross-category traits, never catalog order or niche alone.
+- Business research and Design Director Markdown outputs are readable handoff documents; JSON
+  remains the machine-readable artifact. Role provenance stores checksums and never secrets.
+- Instagram media preparation preserves originals, records crop confidence/coordinates, leaves
+  ambiguous crop candidates untouched for manual review, writes a contact sheet and accepts an
+  existing Cloudinary delivery URL only with explicit authorisation, business linkage and origin.

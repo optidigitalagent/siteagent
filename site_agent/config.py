@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     # plane.  Keep these explicit so a future provider change cannot silently
     # collapse research, art direction, and implementation back into one role.
     research_strategist_provider: str = Field(default="openai", alias="RESEARCH_STRATEGIST_PROVIDER")
+    reference_analyst_provider: str = Field(default="openai", alias="REFERENCE_ANALYST_PROVIDER")
     design_director_provider: str = Field(default="openai", alias="DESIGN_DIRECTOR_PROVIDER")
     site_builder_provider: str = Field(default="codex", alias="SITE_BUILDER_PROVIDER")
     # Studio phases have independent budgets. A timeout leaves its artifacts in a

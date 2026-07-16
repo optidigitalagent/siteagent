@@ -78,6 +78,16 @@ remember the product goal, inspect what subagents actually made, criticize weak
 results, order material rework, and persist lessons so the user does not have to
 repeat the same brief in every chat.
 
+## Manual-workflow rebuild recovery (2026-07-16)
+
+- A recovered architectural skeleton is not evidence that the manual-equivalent
+  workflow exists. Before calibrations, require screenshot-led reference analysis,
+  trait-based cross-category retrieval, auditable non-destructive Instagram media
+  preparation, readable research/design handoffs, and role/prompt provenance.
+- Never treat catalog order, DOM headings, or generic placeholder analysis as a
+  creative reference decision. Individual reference failures are recoverable; they
+  must not silently lower the standard for successful records.
+
 ## Botanika Form calibration follow-up (2026-07-16)
 
 - An approved commercial or art-direction report may never retain a failed check

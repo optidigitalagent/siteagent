@@ -290,3 +290,32 @@ Live end-to-end verification requires local runtime credentials:
   91 passed, 1 opt-in Cloudflare smoke skipped; `python -m compileall -q
   site_agent scripts tests`, `python -m pip check`, `python scripts/smoke_build.py`,
   and `git diff --check` passed.
+
+## Manual workflow rebuild and crash recovery (2026-07-16)
+
+- Crash-recovery audit found `HEAD`, `origin/main`, and the confirmed remote commit
+  `a970f25` identical, with no staged work and no merge/rebase/cherry-pick state.
+  The sole untracked artifact was the supplied manual-workflow requirements document;
+  it was preserved and adopted as the implementation contract.
+- Replaced DOM-count/placeholder reference notes with a resumable screenshot-led
+  Reference Analyst workflow. Desktop/mobile captures have byte hashes, per-record
+  capture/analysis failure state, atomic catalog/checkpoint writes, and provider,
+  model, prompt/input/output checksum provenance. Reference selection scores the
+  entire analysed catalog using business, audience, level, atmosphere, conversion,
+  media, emotion and structure traits, with a category-only cap and per-reference
+  rationale.
+- Replaced JSON-in-Markdown handoffs with readable cited business research and
+  section-level Design Director documents. Research, Design Director and
+  implementation-package records now contain role/input/output provenance.
+- Hardened media preparation: source originals are retained, Instagram-chrome crop
+  candidates expose coordinates/confidence/manual-review state, non-destructive
+  contact sheets are produced, raw and prepared checksums dedupe inputs, quality
+  and use classification are recorded, and explicitly authorised existing
+  Cloudinary assets can be reused without reupload. Final Studio provenance now
+  blocks any rendered external media URL missing from the authorised manifest.
+- Added focused coverage for screenshot-analysis artifacts/provenance, trait ranking
+  without first-six selection, readable Markdown, crop safety, contact sheets and
+  authorised existing Cloudinary reuse. Verification: 102 tests passed, one
+  credential-gated Cloudflare smoke skipped; `compileall`, `pip check`, smoke build
+  and `git diff --check` passed. No `go`, Telegram, Cloudflare deployment, publishing
+  or Orange/Bella calibration ran. Stop state: `READY_FOR_CREDENTIALLED_REFERENCE_IMPORT`.

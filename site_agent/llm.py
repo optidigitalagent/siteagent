@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import base64
 import shutil
 import subprocess
 import tempfile
@@ -51,6 +52,30 @@ class LLMClient:
         if self.provider == "codex":
             return self._codex_structured(system=system, user=user, schema=schema)
         return self._openai_structured(system=system, user=user, schema=schema)
+
+    def multimodal_structured(self, *, system: str, user: str, image_paths: list[Path], schema: type[T]) -> T:
+        """Run a structured visual analysis against local screenshots.
+
+        This deliberately supports the configured OpenAI role only.  Codex owns
+        implementation; it is not a substitute for the Reference Analyst.
+        """
+        if self.provider != "openai":
+            raise LLMError("Screenshot-led analysis requires the configured OpenAI provider.")
+        content: list[dict] = [{"type": "text", "text": user + f"\n\nReturn only valid JSON matching {schema.__name__}."}]
+        for path in image_paths:
+            suffix = path.suffix.lower().lstrip(".") or "png"
+            encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+            content.append({"type": "image_url", "image_url": {"url": f"data:image/{suffix};base64,{encoded}", "detail": "high"}})
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
+            response_format={"type": "json_object"},
+        )
+        text = response.choices[0].message.content or ""
+        try:
+            return schema.model_validate_json(text)
+        except (ValidationError, json.JSONDecodeError) as exc:
+            raise LLMError(f"Model returned invalid {schema.__name__}: {exc}") from exc
 
     def _openai_structured(self, *, system: str, user: str, schema: type[T]) -> T:
         response = self.client.chat.completions.create(

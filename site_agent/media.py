@@ -1,15 +1,18 @@
-"""Authorised media preparation for the strategy-to-Studio handoff."""
+"""Authorised, non-destructive media preparation for the strategy-to-Studio handoff."""
 from __future__ import annotations
 
 import hashlib
-import io
+import json
+import math
+import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlparse
 
 import requests
-from PIL import Image, ImageChops
+from PIL import Image, ImageDraw, ImageFilter, ImageStat
 
 from site_agent.config import Settings, settings
 
@@ -20,100 +23,172 @@ class MediaInputBlocked(RuntimeError):
 
 @dataclass(frozen=True)
 class MediaCandidate:
-    path: Path
+    path: Path | None = None
     source_url: str = ""
     user_authorized: bool = False
     allowed_for_public_site: bool = False
     source_kind: str = "business"
+    existing_cloudinary_url: str = ""
+    cloudinary_public_id: str = ""
+    cloudinary_asset_id: str = ""
+    business_id: str = ""
+    original_origin: str = ""
 
 
 class CloudinaryUploader:
     def __init__(self, config: Settings = settings, post=requests.post) -> None:
         self.config, self.post = config, post
 
-    def upload(self, path: Path, *, public_id: str) -> str:
+    def upload(self, path: Path, *, public_id: str) -> dict:
         if not (self.config.cloudinary_cloud_name and self.config.cloudinary_api_key and self.config.cloudinary_api_secret):
             raise MediaInputBlocked("Cloudinary is not configured (CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET are required).")
         timestamp = str(int(time.time()))
-        signature_source = f"public_id={public_id}&timestamp={timestamp}{self.config.cloudinary_api_secret}"
-        signature = hashlib.sha1(signature_source.encode("utf-8")).hexdigest()
+        signature = hashlib.sha1(f"public_id={public_id}&timestamp={timestamp}{self.config.cloudinary_api_secret}".encode("utf-8")).hexdigest()
         endpoint = f"https://api.cloudinary.com/v1_1/{self.config.cloudinary_cloud_name}/image/upload"
         with path.open("rb") as handle:
-            response = self.post(endpoint, data={"api_key": self.config.cloudinary_api_key, "timestamp": timestamp, "public_id": public_id, "signature": signature}, files={"file": handle}, timeout=60)
-        response.raise_for_status()
-        url = str(response.json().get("secure_url", ""))
-        if not url.startswith("https://"):
-            raise MediaInputBlocked("Cloudinary upload returned no secure URL.")
-        return url
+            response = self.post(endpoint, data={"api_key": self.config.cloudinary_api_key, "timestamp": timestamp, "public_id": public_id, "signature": signature, **({"upload_preset": self.config.cloudinary_upload_preset} if self.config.cloudinary_upload_preset else {})}, files={"file": handle}, timeout=60)
+        response.raise_for_status(); payload = response.json(); url = str(payload.get("secure_url", ""))
+        if not self._is_own_cloudinary_url(url):
+            raise MediaInputBlocked("Cloudinary upload returned an unexpected secure URL.")
+        return {"url": url, "cloudinary_public_id": str(payload.get("public_id", public_id)), "cloudinary_asset_id": str(payload.get("asset_id", "")), "cloudinary_version": str(payload.get("version", ""))}
+
+    def _is_own_cloudinary_url(self, url: str) -> bool:
+        host = urlparse(url).hostname or ""
+        return url.startswith("https://") and host == "res.cloudinary.com" and f"/{self.config.cloudinary_cloud_name}/" in url
 
 
 class MediaPreparer:
     def __init__(self, config: Settings = settings, uploader: CloudinaryUploader | None = None) -> None:
-        self.config = config
-        self.uploader = uploader or CloudinaryUploader(config)
+        self.config, self.uploader = config, uploader or CloudinaryUploader(config)
 
     def prepare(self, candidates: Iterable[MediaCandidate], output_dir: Path) -> dict:
-        output_dir.mkdir(parents=True, exist_ok=True)
-        accepted: list[dict] = []
-        missing: list[str] = []
-        seen: set[str] = set()
-        for candidate in candidates:
-            if candidate.source_kind != "business" or not candidate.user_authorized or not candidate.allowed_for_public_site:
-                missing.append(f"{candidate.path.name}: requires source_kind=business, user_authorized=true and allowed_for_public_site=true")
-                continue
-            if not candidate.path.is_file():
-                missing.append(f"{candidate.path}: file is unavailable")
-                continue
-            raw = candidate.path.read_bytes()
-            checksum = hashlib.sha256(raw).hexdigest()
-            if checksum in seen:
-                continue
-            seen.add(checksum)
-            prepared = self._prepare_image(candidate.path, output_dir / f"{checksum[:16]}.jpg")
-            with Image.open(prepared) as image:
-                width, height = image.size
-            orientation = "landscape" if width > height * 1.15 else ("portrait" if height > width * 1.15 else "square")
-            quality = "high" if min(width, height) >= 1200 else ("usable" if min(width, height) >= 720 else "low")
-            if quality == "low":
-                missing.append(f"{candidate.path.name}: resolution {width}x{height} is below the 720px minimum")
-                continue
-            use = "hero" if not accepted and orientation == "landscape" else ("gallery" if len(accepted) < 6 else "detail")
-            url = self.uploader.upload(prepared, public_id=f"siteagent/{checksum[:24]}")
-            accepted.append({"asset_id": checksum[:24], "url": url, "source_url": candidate.source_url, "local_checksum": checksum, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, "width": width, "height": height, "orientation": orientation, "quality": quality, "recommended_use": use, "prepared_file": prepared.name})
+        output_dir.mkdir(parents=True, exist_ok=True); originals = output_dir / "originals"; originals.mkdir(exist_ok=True)
+        accepted, diagnostics, missing, seen_raw, seen_prepared = [], [], [], set(), set()
+        for index, candidate in enumerate(candidates):
+            try:
+                item, diagnostic = self._prepare_candidate(candidate, output_dir, originals, index)
+                diagnostics.append(diagnostic)
+                if item["raw_checksum"] in seen_raw:
+                    diagnostic["dedupe_status"] = "duplicate_raw"; continue
+                seen_raw.add(item["raw_checksum"])
+                if item["prepared_checksum"] in seen_prepared:
+                    diagnostic["dedupe_status"] = "duplicate_prepared"; continue
+                seen_prepared.add(item["prepared_checksum"])
+                accepted.append(item)
+            except MediaInputBlocked as exc:
+                missing.append(str(exc)); diagnostics.append({"candidate": str(candidate.path or candidate.existing_cloudinary_url), "status": "blocked", "reason": str(exc)})
+        self._assign_use_cases(accepted)
+        sheet = self._contact_sheet(output_dir, diagnostics)
         if missing or not accepted:
-            detail = "; ".join(missing or ["no authorised media candidates were supplied"])
-            raise MediaInputBlocked("media-input checkpoint blocked: " + detail)
-        return {"schema_version": 1, "media": accepted, "deduplicated_count": len(accepted), "provenance_policy": "selected media must be authorised business media with a Cloudinary secure URL"}
+            raise MediaInputBlocked("media-input checkpoint blocked: " + "; ".join(missing or ["no authorised media candidates were supplied"]))
+        return {"schema_version": 2, "media": accepted, "deduplicated_count": len(accepted), "raw_candidate_count": len(diagnostics), "contact_sheet": sheet.name, "provenance_policy": "selected media must be authorised business media with a Cloudinary secure URL; low-confidence Instagram crops are never destructive and require manual review."}
+
+    def _prepare_candidate(self, candidate: MediaCandidate, output_dir: Path, originals: Path, index: int) -> tuple[dict, dict]:
+        if candidate.source_kind != "business" or not candidate.user_authorized or not candidate.allowed_for_public_site:
+            raise MediaInputBlocked(f"{candidate.path or candidate.existing_cloudinary_url}: requires source_kind=business, user_authorized=true and allowed_for_public_site=true")
+        if candidate.existing_cloudinary_url:
+            if not candidate.business_id or not candidate.original_origin:
+                raise MediaInputBlocked(f"{candidate.existing_cloudinary_url}: existing Cloudinary media requires business_id and original_origin.")
+            if not self.uploader._is_own_cloudinary_url(candidate.existing_cloudinary_url):
+                raise MediaInputBlocked(f"{candidate.existing_cloudinary_url}: not an authorised asset in the configured Cloudinary account.")
+            digest = hashlib.sha256(candidate.existing_cloudinary_url.encode()).hexdigest()
+            item = {"asset_id": candidate.cloudinary_asset_id or digest[:24], "url": candidate.existing_cloudinary_url, "source_url": candidate.source_url, "original_origin": candidate.original_origin, "business_id": candidate.business_id, "raw_checksum": digest, "prepared_checksum": digest, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, "cloudinary_public_id": candidate.cloudinary_public_id, "cloudinary_asset_id": candidate.cloudinary_asset_id, "cloudinary_version": "existing", "crop": {"method": "existing_authorised_cloudinary", "coordinates": None, "confidence": 1.0, "manual_review_required": False}, "orientation": "unknown", "quality": "authorised_existing", "quality_score": None, "prepared_file": ""}
+            return item, {"candidate": candidate.existing_cloudinary_url, "status": "reused", "asset_id": item["asset_id"], "crop": item["crop"]}
+        if candidate.path is None or not candidate.path.is_file():
+            raise MediaInputBlocked(f"{candidate.path}: file is unavailable")
+        raw = candidate.path.read_bytes(); raw_checksum = hashlib.sha256(raw).hexdigest(); suffix = candidate.path.suffix or ".bin"
+        original_copy = originals / f"{raw_checksum}{suffix.lower()}"; shutil.copy2(candidate.path, original_copy)
+        try:
+            with Image.open(candidate.path) as source:
+                image = source.convert("RGB")
+        except Exception as exc:
+            raise MediaInputBlocked(f"{candidate.path.name}: unsupported media; supply a still image or a manually prepared video frame.") from exc
+        crop = self._instagram_crop(image)
+        prepared = output_dir / f"{raw_checksum[:16]}.jpg"
+        if crop["coordinates"] and not crop["manual_review_required"]:
+            image = image.crop(tuple(crop["coordinates"]))
+        image.save(prepared, format="JPEG", quality=92, optimize=True)
+        prepared_checksum = hashlib.sha256(prepared.read_bytes()).hexdigest(); width, height = image.size
+        if min(width, height) < 720:
+            raise MediaInputBlocked(f"{candidate.path.name}: resolution {width}x{height} is below the 720px minimum")
+        quality_score = self._quality_score(image)
+        if quality_score < 0.30:
+            raise MediaInputBlocked(f"{candidate.path.name}: image quality is too low ({quality_score:.2f}); supply a sharper exposure.")
+        upload = self.uploader.upload(prepared, public_id=f"siteagent/{raw_checksum[:24]}")
+        # Keep the narrow uploader seam backwards compatible for deterministic
+        # tests and integrations that previously returned just a secure URL.
+        if isinstance(upload, str):
+            upload = {"url": upload, "cloudinary_public_id": f"siteagent/{raw_checksum[:24]}", "cloudinary_asset_id": "", "cloudinary_version": ""}
+        orientation = "landscape" if width > height * 1.15 else ("portrait" if height > width * 1.15 else "square")
+        item = {"asset_id": upload["cloudinary_asset_id"] or raw_checksum[:24], "url": upload["url"], "source_url": candidate.source_url, "original_origin": candidate.original_origin or str(candidate.path), "business_id": candidate.business_id, "raw_checksum": raw_checksum, "prepared_checksum": prepared_checksum, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, **upload, "width": width, "height": height, "orientation": orientation, "quality": "high" if quality_score >= .65 else "usable", "quality_score": round(quality_score, 3), "crop": crop, "prepared_file": prepared.name, "original_file": str(original_copy.relative_to(output_dir))}
+        return item, {"candidate": candidate.path.name, "status": "prepared", "asset_id": item["asset_id"], "crop": crop, "quality_score": item["quality_score"], "dimensions": [width, height], "prepared_file": prepared.name}
+
+    @staticmethod
+    def _quality_score(image: Image.Image) -> float:
+        gray = image.convert("L"); variance = ImageStat.Stat(gray).var[0] / (255**2)
+        edges = ImageStat.Stat(gray.filter(ImageFilter.FIND_EDGES)).mean[0] / 255
+        resolution = min(image.size) / 1200
+        return min(1.0, .45 * min(1, resolution) + .35 * min(1, variance * 8) + .20 * min(1, edges * 3))
+
+    @staticmethod
+    def _instagram_crop(image: Image.Image) -> dict:
+        """Conservatively identify full-width light/dark Instagram UI bands.
+
+        Ambiguous bands are recorded for review but are never cropped automatically.
+        """
+        width, height = image.size; pixels = image.convert("L")
+        def band(end: str) -> tuple[int, float]:
+            max_band = min(int(height * .22), 260); rows = range(max_band) if end == "top" else range(height - 1, height - max_band - 1, -1)
+            count = 0
+            for y in rows:
+                values = [pixels.getpixel((x, y)) for x in range(0, width, max(1, width // 80))]
+                mean = sum(values) / len(values); spread = max(values) - min(values)
+                if (mean > 228 or mean < 28) and spread < 45: count += 1
+                else: break
+            return count, min(1.0, count / 70)
+        top, top_score = band("top"); bottom, bottom_score = band("bottom")
+        if top < 20 and bottom < 20:
+            return {"method": "no_detected_instagram_chrome", "coordinates": None, "confidence": .95, "manual_review_required": False}
+        confidence = round((top_score + bottom_score) / 2, 2)
+        coords = [0, top, width, height - bottom]
+        high = (top >= 28 or bottom >= 28) and confidence >= .55 and (height - top - bottom) >= height * .62
+        return {"method": "instagram_chrome_heuristic", "coordinates": coords, "confidence": confidence, "manual_review_required": not high, "detected_bands": {"top": top, "bottom": bottom}}
+
+    @staticmethod
+    def _assign_use_cases(media: list[dict]) -> None:
+        ranked = sorted(media, key=lambda item: ((item.get("quality_score") or .7), item.get("width", 0) * item.get("height", 0)), reverse=True)
+        for index, item in enumerate(ranked):
+            item["recommended_use"] = "hero" if index == 0 else ("gallery" if index < 6 else "detail")
+
+    @staticmethod
+    def _contact_sheet(output_dir: Path, diagnostics: list[dict]) -> Path:
+        cell_w, cell_h = 640, 150; canvas = Image.new("RGB", (cell_w, max(cell_h, cell_h * len(diagnostics))), "white"); draw = ImageDraw.Draw(canvas)
+        for index, item in enumerate(diagnostics):
+            y = index * cell_h
+            preview = output_dir / str(item.get("prepared_file", ""))
+            if preview.is_file():
+                with Image.open(preview) as image:
+                    image.thumbnail((190, 134)); canvas.paste(image.convert("RGB"), (8, y + 8))
+            text = f"{item.get('status', 'unknown')} | {item.get('candidate', '')}\n{item.get('asset_id', '')} | {item.get('dimensions', '')}\n{item.get('crop', {})}\n{item.get('reason', '')}"
+            draw.text((210, y + 8), text[:650], fill="black")
+        path = output_dir / "preview_contact_sheet.jpg"; canvas.save(path, quality=88); return path
 
     @staticmethod
     def load_candidates(manifest_path: Path) -> list[MediaCandidate]:
         if not manifest_path.is_file():
-            raise MediaInputBlocked(f"media-input checkpoint blocked: provide {manifest_path} with authorised local media entries.")
-        import json
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
-        candidates = []
+            raise MediaInputBlocked(f"media-input checkpoint blocked: provide {manifest_path} with authorised media entries.")
+        data = json.loads(manifest_path.read_text(encoding="utf-8")); candidates = []
         for item in data.get("media", []):
-            candidates.append(MediaCandidate(
-                path=Path(item.get("path", "")), source_url=str(item.get("source_url", "")),
-                user_authorized=bool(item.get("user_authorized")),
-                allowed_for_public_site=bool(item.get("allowed_for_public_site")),
-                source_kind=str(item.get("source_kind", "unknown")),
-            ))
+            raw_path = str(item.get("path", "")).strip()
+            candidates.append(MediaCandidate(path=Path(raw_path) if raw_path else None, source_url=str(item.get("source_url", "")), user_authorized=bool(item.get("user_authorized")), allowed_for_public_site=bool(item.get("allowed_for_public_site")), source_kind=str(item.get("source_kind", "unknown")), existing_cloudinary_url=str(item.get("existing_cloudinary_url", item.get("url", ""))), cloudinary_public_id=str(item.get("cloudinary_public_id", "")), cloudinary_asset_id=str(item.get("cloudinary_asset_id", item.get("asset_id", ""))), business_id=str(item.get("business_id", "")), original_origin=str(item.get("original_origin", ""))))
         return candidates
 
-    @staticmethod
-    def _prepare_image(source: Path, destination: Path) -> Path:
-        """Trim uniform screenshot borders; preserve the photo when no UI crop is reliable."""
-        with Image.open(source) as original:
-            image = original.convert("RGB")
-            border = Image.new("RGB", image.size, image.getpixel((0, 0)))
-            diff = ImageChops.difference(image, border)
-            bbox = diff.getbbox()
-            # Only apply a conservative crop. This handles framed screenshots
-            # without guessing away content from a real photograph.
-            if bbox and bbox[0] <= image.width * .08 and bbox[1] <= image.height * .08:
-                left, top, right, bottom = bbox
-                if right - left >= image.width * .65 and bottom - top >= image.height * .65:
-                    image = image.crop(bbox)
-            image.save(destination, format="JPEG", quality=90, optimize=True)
-        return destination
+    def validate_manifest(self, manifest: dict) -> None:
+        media = manifest.get("media", [])
+        if not media:
+            raise MediaInputBlocked("media-input checkpoint blocked: cached media manifest has no authorised media.")
+        for item in media:
+            if item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True:
+                raise MediaInputBlocked("media-input checkpoint blocked: cached manifest contains unauthorised media.")
+            if not self.uploader._is_own_cloudinary_url(str(item.get("url", ""))):
+                raise MediaInputBlocked("media-input checkpoint blocked: cached manifest contains a non-Cloudinary or wrong-account URL.")

@@ -37,7 +37,7 @@ from site_agent.models import (
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
 from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
-from site_agent.workflow import WorkflowConfigurationError, implementation_package, selected_references, validate_role_providers, write_markdown
+from site_agent.workflow import WorkflowConfigurationError, checksum, implementation_package, role_provenance, selected_references, validate_role_providers, write_markdown
 
 
 class GenerationBlocked(RuntimeError):
@@ -110,28 +110,30 @@ class SiteAgentOrchestrator:
             try:
                 validate_role_providers()
                 business = self._read_json(reports_dir / "01_business_research.json")
-                if business is None or business.get("research", {}).get("instagram_url") != instagram_url:
+                if business is None or business.get("research", {}).get("instagram_url") != instagram_url or not (reports_dir / "01_business_research.provenance.json").is_file():
                     if self.research_strategist is None:
                         self.research_strategist = ResearchStrategist(LLMClient(provider=settings.research_strategist_provider))
                     result = self.research_strategist.run(instagram_url)
                     business = result.model_dump()
                     write_json(reports_dir / "01_business_research.json", business)
                     write_markdown(reports_dir / "business_research.md", "Business research", business)
+                    write_json(reports_dir / "01_business_research.provenance.json", role_provenance(role="Research Strategist", provider=self.research_strategist.llm.provider, model=self.research_strategist.llm.model, prompt_version="research-strategist-v1", prompt={"role": "research_strategist"}, inputs={"instagram_url": instagram_url}, output=business))
                 research = ResearchBrief.model_validate(business["research"])
                 write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "research_strategist_completed", "research_completed")
-                media_path = run_dir / "media_input" / "manifest.json"
+                media_path = run_dir / settings.media_input_dir / "manifest.json"
                 media_manifest = self._read_json(reports_dir / "02_authorised_media_manifest.json")
                 if media_manifest is None:
                     candidates = self.media_preparer.load_candidates(media_path)
                     media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
+                self.media_preparer.validate_manifest(media_manifest)
                 self._checkpoint(reports_dir, "media_prepared", "media_input_completed")
-                references = selected_references()
-                write_json(reports_dir / "02_selected_references.json", {"references": references})
+                references = selected_references(business_research=business)
+                write_json(reports_dir / "02_selected_references.json", {"references": references, "selection_input_checksum": checksum(business), "selection_checksum": checksum(references)})
                 self._checkpoint(reports_dir, "references_selected")
                 design = self._read_json(reports_dir / "03_design_implementation_brief.json")
-                if design is None:
+                if design is None or not (reports_dir / "03_design_implementation_brief.provenance.json").is_file():
                     if self.design_director is None:
                         self.design_director = DesignDirector(LLMClient(provider=settings.design_director_provider))
                     design = self.design_director.run(
@@ -140,10 +142,12 @@ class SiteAgentOrchestrator:
                     ).model_dump()
                     write_json(reports_dir / "03_design_implementation_brief.json", design)
                     write_markdown(reports_dir / "design_implementation_brief.md", "Design implementation brief", design)
+                    write_json(reports_dir / "03_design_implementation_brief.provenance.json", role_provenance(role="Design Director", provider=self.design_director.llm.provider, model=self.design_director.llm.model, prompt_version="design-director-v1", prompt={"role": "design_director"}, inputs={"business": business, "media_manifest": media_manifest, "references": references}, output=design))
                 strategy = StrategyBrief.model_validate(design["strategy"])
                 spec = SiteSpec.model_validate(design["site_spec"])
                 package = implementation_package(business_research=business, media_manifest=media_manifest, design_brief=design, references=references)
                 write_json(reports_dir / "04_implementation_package.json", package)
+                write_json(reports_dir / "04_implementation_package.provenance.json", {"role": "Implementation Package", "input_checksum": checksum(package["input_checksums"]), "output_checksum": package["sha256"], "used": True})
                 self._checkpoint(reports_dir, "design_director_completed", "implementation_package_prepared", "generation_completed")
             except (WorkflowConfigurationError, MediaInputBlocked, KeyError, ValueError) as exc:
                 self._checkpoint(reports_dir, "media_input_blocked")

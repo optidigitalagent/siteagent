@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import unescape
 from html.parser import HTMLParser
+import re
 from pathlib import Path
 from typing import Any, Callable
 
@@ -61,6 +62,24 @@ CALIBRATION_ONLY_TEXT = (
 UNVERIFIED_PRODUCTION_MEDIA_KINDS = frozenset({"fixture_stock", "stock", "unknown"})
 
 
+class _RenderedMediaParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(); self.urls: list[str] = []
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = dict(attrs)
+        for name in ("src", "poster", "data-src"):
+            if values.get(name): self.urls.append(values[name] or "")
+        for value in (values.get("srcset"), values.get("style")):
+            if value:
+                self.urls.extend(re.findall(r"https?://[^\s,'\")]+", value))
+
+
+def _rendered_media_urls(html: str) -> set[str]:
+    parser = _RenderedMediaParser(); parser.feed(html)
+    parser.urls.extend(re.findall(r"url\(\s*['\"]?(https?://[^\s'\")]+)", html))
+    return {url for url in parser.urls if url.startswith("http")}
+
+
 def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, Any]:
     """Describe media actually rendered by one exact static-site revision.
 
@@ -80,6 +99,8 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
     rendered_html = unescape(source.read_text(encoding="utf-8"))
     assets: list[dict[str, Any]] = []
     blocked: list[dict[str, Any]] = []
+    rendered_urls = _rendered_media_urls(rendered_html)
+    manifest_urls = {str(item.get("url", "")) for item in manifest.get("media", [])}
     for item in manifest.get("media", []):
         record = dict(item)
         url = str(record.get("url", ""))
@@ -98,6 +119,8 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
                 "rendered_uses": record["rendered_uses"],
             })
         assets.append(record)
+    for url in sorted(rendered_urls - manifest_urls):
+        blocked.append({"asset_id": url, "source_kind": "unlisted_external", "rendered_uses": 1})
     return {
         "schema_version": 2,
         "final_html_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
@@ -107,6 +130,7 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
         "production_promotion_allowed": not blocked,
         "blocked_selected_media": blocked,
         "used_asset_count": sum(item["rendered_uses"] for item in assets),
+        "rendered_media_urls": sorted(rendered_urls),
         "assets": assets,
         "rationale": "Only authorised business media delivered from Cloudinary may be promoted; fixture, stock, scraped, or unverified media is never production-safe.",
     }
