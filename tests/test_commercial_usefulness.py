@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from site_agent.commercial_usefulness import semantic_repetition_report
+from site_agent.commercial_usefulness import commercial_usefulness_report, semantic_repetition_report
 from site_agent.design_quality import EvidenceLevel, assess_evidence, audit_quality, build_context
 from site_agent.models import ContentTheme, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 from site_agent.studio import CodexStudioRunner
@@ -113,6 +113,20 @@ class CommercialUsefulnessTests(unittest.TestCase):
             result = CodexStudioRunner._apply_art_director_calibration(studio, {"approved": True, "score": 90, "findings": [], "unresolved_issues": []})
             self.assertFalse(result["approved"])
             self.assertEqual(result["score"], 42)
+
+    def test_desire_failure_cannot_receive_commercial_or_art_direction_approval(self) -> None:
+        current = spec(h1="A clear offer", hero_subtitle="A factual request path.")
+        context = build_context(research(), strategy(), current)
+        commercial = commercial_usefulness_report(current, context, html_text="<main>Clear offer. Ask in Direct.</main>")
+        self.assertFalse(commercial.checks["desire_created"])
+        self.assertFalse(commercial.approved)
+        with tempfile.TemporaryDirectory() as temp:
+            studio = Path(temp)
+            (studio / "commercial_usefulness_report.json").write_text(json.dumps(commercial.model_dump()), encoding="utf-8")
+            (studio / "language_fit_report.json").write_text(json.dumps({"approved": True}), encoding="utf-8")
+            (studio / "semantic_repetition_report.json").write_text(json.dumps({"approved": True}), encoding="utf-8")
+            result = CodexStudioRunner._apply_art_director_calibration(studio, {"approved": True, "score": 90, "findings": [], "unresolved_issues": []})
+            self.assertFalse(result["approved"])
 
     def test_technical_success_cannot_compensate_commercial_failure(self) -> None:
         current = spec(h1="Night, noted.", hero_subtitle="A field study.")

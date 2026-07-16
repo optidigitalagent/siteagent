@@ -19,6 +19,11 @@ class MediaAsset(BaseModel):
     recommended_use: str = ""
     width: int = 0
     height: int = 0
+    asset_id: str = ""
+    source_kind: Literal["business", "stock", "fixture_stock", "unknown"] = "unknown"
+    source_url: str = ""
+    provenance_note: str = ""
+    portfolio_claim: bool = False
 
 
 class ProductIdentity(BaseModel):

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import json
 import os
 import shutil
@@ -50,12 +51,12 @@ def rich_floral_fixture():
     """The controlled full-site calibration brief; every publishable detail is explicit."""
     source = "controlled_fixture:botanika_form:2026-07"
     media = [
-        MediaAsset(url="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=85", alt="Рожева квіткова композиція на святковому столі", recommended_use="hero: table florals", width=1600, height=1067),
-        MediaAsset(url="https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=1600&q=85", alt="Квіти у скляних вазах у денному світлі", recommended_use="process: flower selection", width=1600, height=1067),
-        MediaAsset(url="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1600&q=85", alt="Букет польових квітів крупним планом", recommended_use="detail: seasonal texture", width=1600, height=1067),
-        MediaAsset(url="https://images.unsplash.com/photo-1468327768560-75b778cbb551?auto=format&fit=crop&w=1600&q=85", alt="Квіти в саду з м’яким світлом", recommended_use="atmosphere: ceremony", width=1600, height=1067),
-        MediaAsset(url="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=85", alt="Зелена рослина та керамічний горщик", recommended_use="material: botanical palette", width=1600, height=1067),
-        MediaAsset(url="https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1600&q=85", alt="Зелений ботанічний лист крупним планом", recommended_use="closing: botanical study", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-01", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1490750967868-88aa4486c946", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Жовті тюльпани крупним планом", recommended_use="hero: seasonal tulip study", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-02", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1507504031003-b417219a0fde", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Табличка Mr & Mrs серед весільних квітів", recommended_use="fixture-only ceremony reference", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-03", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1526047932273-341f2a7631f9", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Букет польових квітів у руках", recommended_use="fixture-only floral detail", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1468327768560-75b778cbb551?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-04", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1468327768560-75b778cbb551", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Тюльпани в садовому світлі", recommended_use="fixture-only botanical atmosphere", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-05", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1501004318641-b39e6451bec6", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Зелена рослина у керамічному горщику", recommended_use="fixture-only botanical material", width=1600, height=1067),
+        MediaAsset(url="https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1600&q=85", asset_id="botanika-stock-06", source_kind="fixture_stock", source_url="https://unsplash.com/photos/1485955900006-10f4d324d411", provenance_note="Controlled calibration stock media; visual reference only, not Botanika Form portfolio.", alt="Сукулент у горщику крупним планом", recommended_use="fixture-only botanical detail", width=1600, height=1067),
     ]
     research = ResearchBrief(
         instagram_url="https://www.instagram.com/botanika_form_fixture/", business_name="Botanika Form",
@@ -228,6 +229,8 @@ def _write_calibration_package(run_dir: Path, selected: str, report: dict) -> di
     business_name = json.loads((studio / "input" / "business_brief.json").read_text(encoding="utf-8"))["research"]["business_name"]
     selected_data = json.loads((studio / "concept_reviews" / "selected_concept.json").read_text(encoding="utf-8"))
     comparison = json.loads((studio / "concept_reviews" / "comparison.json").read_text(encoding="utf-8"))
+    media_report = _write_media_provenance_report(run_dir)
+    media = media_report["assets"]
     concepts = []
     for concept in ("concept_a", "concept_b", "concept_c"):
         idea = (studio / "concepts" / concept / "concept.md").read_text(encoding="utf-8")
@@ -243,6 +246,14 @@ def _write_calibration_package(run_dir: Path, selected: str, report: dict) -> di
             html.escape(str(item.get("screenshot", ""))), html.escape(str(item.get("screenshot_region", ""))),
         ) for item in report.get("findings", [])
     ) or "<li>No Art Director findings recorded.</li>"
+    media_rows = "".join(
+        "<li><strong>{}</strong> — {}. <a href='{}'>source</a>; {}.</li>".format(
+            html.escape(str(item.get("asset_id") or item.get("url", "media"))),
+            html.escape(str(item.get("source_kind", "unknown"))),
+            html.escape(str(item.get("source_url") or item.get("url", "#")), quote=True),
+            html.escape("used {} time(s); {}".format(item.get("rendered_uses", 0), item.get("provenance_note", "No provenance note recorded"))),
+        ) for item in media
+    )
     before = f"../studio/concept_reviews/{selected}/desktop.png"
     fixer_before = studio / "fixer_history" / "iteration_1" / "before" / "desktop.png"
     fixer_after = studio / "fixer_history" / "iteration_1" / "after" / "desktop.png"
@@ -250,24 +261,66 @@ def _write_calibration_package(run_dir: Path, selected: str, report: dict) -> di
     if fixer_before.is_file() and fixer_after.is_file():
         fixer_block = "<h3>Creative fixer — before / after</h3><div class='pair'><img src='../studio/fixer_history/iteration_1/before/desktop.png' alt='Before fixer desktop'><img src='../studio/fixer_history/iteration_1/after/desktop.png' alt='After fixer desktop'></div><div class='pair'><img src='../studio/fixer_history/iteration_1/before/mobile.png' alt='Before fixer mobile'><img src='../studio/fixer_history/iteration_1/after/mobile.png' alt='After fixer mobile'></div>"
     page = """<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>__BUSINESS__ — human calibration</title><style>body{margin:0;background:#111;color:#f3efe4;font:16px/1.5 system-ui}main{max-width:1600px;margin:auto;padding:32px}h1{font-size:clamp(2rem,5vw,5rem);line-height:1;margin:0 0 16px}.pair{display:grid;grid-template-columns:3fr 1fr;gap:16px}.pair img,.final img{width:100%;height:auto;border:1px solid #555;background:#222}section{border-top:1px solid #555;padding:28px 0}.final{display:grid;gap:16px}.note{color:#f98d5d}@media(max-width:760px){main{padding:18px}.pair{grid-template-columns:1fr}}</style><main>
+<title>__BUSINESS__ — human calibration</title><style>*,*:before,*:after{box-sizing:border-box}body{margin:0;background:#111;color:#f3efe4;font:16px/1.5 system-ui}main{width:100%;max-width:1800px;margin:auto;padding:40px}h1{font-size:clamp(2rem,5vw,5rem);line-height:1;margin:0 0 16px}.pair{display:grid;grid-template-columns:3fr 1fr;gap:20px}.pair img,.final img{display:block;width:100%;max-width:100%;height:auto;border:1px solid #555;background:#222}section{border-top:1px solid #555;padding:32px 0}.final{display:grid;gap:20px}.note{color:#f98d5d}p,li,pre{overflow-wrap:anywhere}pre{white-space:pre-wrap}@media(max-width:760px){main{padding:18px}.pair{grid-template-columns:1fr}}</style><main>
 <p class='note'>Human calibration required — no Telegram or Cloudflare action was run.</p><h1>__BUSINESS__<br>Creative Studio review</h1>
 <section><h2>Concept stage</h2><p>Selected: <strong>__SELECTED__</strong></p><ul>__REASONS__</ul>__CONCEPTS__</section>
-<section class='final'><h2>Final stage</h2><p>Selected concept before extension</p><img src='__BEFORE__' alt='Selected concept before full build'><p>Full build — desktop</p><img src='../studio/final_reviews/desktop.png' alt='Final desktop'><p>Full build — mobile</p><img src='../studio/final_reviews/mobile.png' alt='Final mobile'>__FIXER__<h3>Art Director</h3><p>Score: __SCORE__. __SUMMARY__</p><ul>__FINDINGS__</ul><h3>Unresolved medium/low issues</h3><pre>__UNRESOLVED__</pre></section>
+<section class='final'><h2>Final stage</h2><p>Selected concept before extension</p><img src='__BEFORE__' alt='Selected concept before full build'><h3>Native review captures</h3><p><a href='artifacts/desktop-1440x1100.png'>Desktop viewport — 1440×1100</a> · <a href='artifacts/desktop-full.png'>Desktop full page — 1440px wide</a> · <a href='artifacts/mobile-390x844.png'>Mobile viewport — 390×844</a> · <a href='artifacts/mobile-full.png'>Mobile full page — 390px wide</a></p><img src='artifacts/desktop-1440x1100.png' alt='Final desktop viewport at 1440 by 1100'><img src='artifacts/mobile-390x844.png' alt='Final mobile viewport at 390 by 844'>__FIXER__<h3>Art Director</h3><p>Score: __SCORE__. __SUMMARY__</p><ul>__FINDINGS__</ul><h3>Media provenance</h3><p>Every image below is controlled fixture stock for calibration only; it is not presented as Botanika Form portfolio work.</p><ul>__MEDIA_ROWS__</ul><h3>Unresolved medium/low issues</h3><pre>__UNRESOLVED__</pre></section>
 </main></html>""".replace("__BUSINESS__", html.escape(business_name)).replace("__SELECTED__", html.escape(selected)).replace("__REASONS__", reasons).replace("__CONCEPTS__", "".join(concepts)).replace("__BEFORE__", before).replace("__FIXER__", fixer_block).replace("__SCORE__", html.escape(str(report.get("score", "unscored")))).replace("__SUMMARY__", html.escape(str(report.get("summary", "")))).replace("__FINDINGS__", findings).replace("__UNRESOLVED__", html.escape(json.dumps(report.get("unresolved_issues", []), ensure_ascii=False, indent=2)))
+    page = page.replace("__MEDIA_ROWS__", media_rows)
     index = calibration / "index.html"
     index.write_text(page, encoding="utf-8")
     from playwright.sync_api import sync_playwright
+    artifacts = calibration / "artifacts"
+    artifacts.mkdir(exist_ok=True)
     png = calibration / f"{run_dir.name}_calibration.png"
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         try:
-            page_object = browser.new_page(viewport={"width": 1600, "height": 1200})
+            site = run_dir / "site" / "index.html"
+            for filename, viewport, full_page in (
+                ("desktop-1440x1100.png", {"width": 1440, "height": 1100}, False),
+                ("desktop-full.png", {"width": 1440, "height": 1100}, True),
+                ("mobile-390x844.png", {"width": 390, "height": 844}, False),
+                ("mobile-full.png", {"width": 390, "height": 844}, True),
+            ):
+                capture = browser.new_page(viewport=viewport)
+                capture.goto(site.resolve().as_uri(), wait_until="networkidle")
+                capture.screenshot(path=artifacts / filename, full_page=full_page)
+                capture.close()
+            page_object = browser.new_page(viewport={"width": 1920, "height": 1200})
             page_object.goto(index.resolve().as_uri(), wait_until="networkidle")
             page_object.screenshot(path=png, full_page=True)
+            page_object.close()
         finally:
             browser.close()
-    return {"calibration_page": str(index), "calibration_png": str(png), "comparison_reviews": comparison.get("concept_reviews", {})}
+    return {"calibration_page": str(index), "calibration_png": str(png), "calibration_artifacts": {name: str(artifacts / name) for name in ("desktop-1440x1100.png", "desktop-full.png", "mobile-390x844.png", "mobile-full.png")}, "media_provenance_report": str(studio / "media_provenance_report.json"), "comparison_reviews": comparison.get("concept_reviews", {})}
+
+
+def _write_media_provenance_report(run_dir: Path) -> dict:
+    """Classify every fixture asset against the exact promoted HTML it supports."""
+    studio = run_dir / "studio"
+    source = run_dir / "site" / "index.html"
+    manifest = json.loads((studio / "input" / "media_manifest.json").read_text(encoding="utf-8"))
+    rendered_html = html.unescape(source.read_text(encoding="utf-8"))
+    assets = []
+    for item in manifest.get("media", []):
+        record = dict(item)
+        record["rendered_uses"] = rendered_html.count(str(item.get("url", "")))
+        record["status"] = "used" if record["rendered_uses"] else "not_used"
+        record["portfolio_safe"] = bool(item.get("source_kind") == "business" or not item.get("portfolio_claim", False))
+        assets.append(record)
+    report = {
+        "schema_version": 1,
+        "final_html_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "final_html": str(source),
+        "fixture_only": all(item.get("source_kind") == "fixture_stock" for item in assets),
+        "production_media_blocked": any(item.get("source_kind") == "fixture_stock" for item in assets),
+        "used_asset_count": sum(item["rendered_uses"] for item in assets),
+        "assets": assets,
+        "rationale": "Fixture/stock media is explicit calibration material and must never be represented as a business portfolio or reused in production without rights and business-media provenance.",
+    }
+    (studio / "media_provenance_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
 
 
 if __name__ == "__main__":

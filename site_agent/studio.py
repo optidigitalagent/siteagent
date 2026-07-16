@@ -334,6 +334,7 @@ class CodexStudioRunner:
             or category_scores["business_clarity"] < 85
             or category_scores["copy_quality"] < 80
             or category_scores["ux"] < 85
+            or not commercial.get("approved", False)
             or any(item.get("severity") in {"critical", "high"} for item in report.get("findings", []))
         )
         report["calibration"] = {

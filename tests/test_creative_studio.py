@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
+from site_agent.creative_fixture_e2e import _write_media_provenance_report, rich_floral_fixture
 from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent.skill_lock import validate_studio_plugin_bundle
 from site_agent.studio import CodexStudioRunner, StudioError
@@ -158,6 +159,34 @@ class CreativeStudioTests(unittest.TestCase):
 
     def test_plugin_bundle_is_identical_to_repository_skills(self) -> None:
         self.assertEqual(validate_studio_plugin_bundle(Path.cwd()), [])
+
+    def test_botanika_fixture_media_is_explicit_stock_not_portfolio_proof(self) -> None:
+        floral_research, _, _ = rich_floral_fixture()
+        self.assertEqual(len(floral_research.best_media), 6)
+        for media in floral_research.best_media:
+            self.assertEqual(media.source_kind, "fixture_stock")
+            self.assertTrue(media.asset_id)
+            self.assertTrue(media.source_url.startswith("https://unsplash.com/photos/"))
+            self.assertIn("not Botanika Form portfolio", media.provenance_note)
+            self.assertFalse(media.portfolio_claim)
+
+    def test_media_provenance_report_tracks_used_fixture_assets_by_final_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp) / "fixture"
+            studio = run_dir / "studio"
+            (studio / "input").mkdir(parents=True)
+            (run_dir / "site").mkdir()
+            used = "https://images.example/used.jpg"
+            (studio / "input" / "media_manifest.json").write_text(json.dumps({"media": [
+                {"asset_id": "used", "url": used, "source_kind": "fixture_stock", "portfolio_claim": False},
+                {"asset_id": "unused", "url": "https://images.example/unused.jpg", "source_kind": "fixture_stock", "portfolio_claim": False},
+            ]}), encoding="utf-8")
+            (run_dir / "site" / "index.html").write_text(f'<img src="{used}">', encoding="utf-8")
+            report = _write_media_provenance_report(run_dir)
+            self.assertEqual(report["used_asset_count"], 1)
+            self.assertTrue(report["production_media_blocked"])
+            self.assertEqual([item["status"] for item in report["assets"]], ["used", "not_used"])
+            self.assertTrue((studio / "media_provenance_report.json").is_file())
 
     def test_creative_source_has_no_category_layout_map_or_jinja_renderer(self) -> None:
         source = (Path("site_agent") / "studio.py").read_text(encoding="utf-8").lower()

@@ -226,3 +226,33 @@ Live end-to-end verification requires local runtime credentials:
 - Fresh regression evidence: `python -m unittest discover -s tests -v` -> 81 passed, 1 opt-in
   Cloudflare smoke skipped; `python -m compileall -q site_agent scripts tests`, `python -m pip
   check`, `python scripts/smoke_build.py`, and `git diff --check` passed.
+
+## Botanika Form approved-with-fixes calibration (2026-07-16)
+
+- Preserved selected Concept C and revised only its promoted/source/staging full build:
+  the first desktop and mobile viewport now explicitly names event floristry and
+  decoration for weddings, private dinners and branded events, with the existing
+  Direct CTA. The mobile material sequence is now one image paired directly with
+  its explanation; the Concept C collage, flower-mark and three-format manifesto remain.
+- Corrected accessibility and interaction defects found by independent review:
+  manifesto text contrast is 5.66:1, the hero large-text contrast is 3.30:1,
+  the tablet footer stacks intentionally, and the skip link moves keyboard focus
+  to `main#main`.
+- Fixed the commercial-report contradiction: `desire_created` now supports
+  Ukrainian and evidence-backed value language, is required for approval, and
+  is enforced again by art-direction calibration. The revised report is 100/100
+  with no failed checks; historical skill snapshots were regenerated from the
+  repository-owned skill source and plugin mirror validation passes.
+- Added explicit per-asset fixture-stock provenance, truthful alt text, a final
+  HTML SHA-256 used/not-used media report, visible non-portfolio disclosure, and
+  a production-media block. The final uses four classified fixture-stock assets;
+  two classified assets are not used.
+- Regenerated the final human-calibration package: native `1440x1100` desktop,
+  desktop full-page, `390x844` mobile, mobile full-page, and a no-overflow
+  `1920x21788` comparison PNG. Independent Commercial/Copy/Media, Art/UX,
+  Responsive, Accessibility and Technical reviews report no critical or high
+  issue. Production remains blocked by the human calibration gate and fixture
+  media provenance; no `go`, Telegram or Cloudflare action ran.
+- Regression evidence: `python -m unittest discover -s tests -v` -> 84 passed,
+  1 opt-in Cloudflare smoke skipped; `compileall`, `pip check`, `smoke_build`,
+  and `git diff --check` passed.

@@ -164,7 +164,19 @@ def commercial_usefulness_report(
     value_clear = offer_visible and bool(spec.hero_subtitle.strip())
     conversion_path = primary_action and ("instagram" in all_text.lower() or "direct" in all_text.lower() or bool(context.business_brief.primary_cta))
     business_information = bool(offer_terms)
-    desire = any(word in all_text.lower() for word in ("private", "evening", "experience", "time on the water", "occasion"))
+    # This is a commercial gate, so it must work for the verified site language
+    # rather than silently favouring an English fixture vocabulary. The terms are
+    # deliberately broad sensory/product stems, not unsupported superlatives.
+    desire_terms = (
+        "private", "evening", "experience", "time on the water", "occasion",
+        "квіт", "простір", "світл", "жив", "момент", "атмосфер", "церемон",
+    )
+    evidence_backed_value = any(
+        phrase.strip().lower() in all_text.lower()
+        for phrase in context.business_brief.differentiators
+        if len(phrase.strip()) >= 4
+    )
+    desire = any(word in all_text.lower() for word in desire_terms) or evidence_backed_value
     recitable = offer_visible and primary_action
     editorial_only = any(token in all_text.lower() for token in ("field notes", "dossier", "copy this question", "editorial exercise"))
     checks = {
@@ -211,7 +223,7 @@ def commercial_usefulness_report(
     ]
     return CommercialUsefulnessReport(
         score=score,
-        approved=score >= 85 and all(checks[key] for key in ("offer_clear_within_five_seconds", "primary_action_clear", "primary_cta_in_first_meaningful_viewport", "missing_information_is_not_primary_narrative", "reads_as_commercial_site")),
+        approved=score >= 85 and all(checks[key] for key in ("offer_clear_within_five_seconds", "primary_action_clear", "primary_cta_in_first_meaningful_viewport", "missing_information_is_not_primary_narrative", "desire_created", "reads_as_commercial_site")),
         checks=checks,
         issues=issues,
         rationale="Commercial usefulness is a hard gate: clear offer, value, action, and a concise evidence boundary must survive the first meaningful viewport. Sparse verified evidence retains a visible score margin rather than becoming the page narrative.",

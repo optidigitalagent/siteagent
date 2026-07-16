@@ -77,3 +77,17 @@ The user wants the main Codex agent to act as a demanding Project Director:
 remember the product goal, inspect what subagents actually made, criticize weak
 results, order material rework, and persist lessons so the user does not have to
 repeat the same brief in every chat.
+
+## Botanika Form calibration follow-up (2026-07-16)
+
+- An approved commercial or art-direction report may never retain a failed check
+  whose own recommendation says it must be resolved before promotion. Commercial
+  signals must work for the verified page language and evidence-backed value
+  language, and a failed required signal blocks calibration approval.
+- Calibration comparisons must contain native, separately inspectable desktop
+  and mobile viewport/full-page captures. A full-page board must be at least
+  1800px wide and must not use unwrapped report text that causes hidden overflow.
+- Fixture or stock imagery must be declared per asset, tied to the final HTML
+  checksum with used/not-used status, and visibly disclosed. It is never business
+  portfolio proof and blocks production reuse until rights and authorised
+  business-media provenance exist.
