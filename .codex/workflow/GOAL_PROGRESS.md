@@ -209,3 +209,20 @@ Live end-to-end verification requires local runtime credentials:
 - Regression evidence: `python -m unittest discover -s tests -v` -> 80 passed, 1 opt-in
   Cloudflare smoke skipped; `python -m compileall -q site_agent scripts tests`,
   `python -m pip check`, `python scripts/smoke_build.py`, and `git diff --check` pass.
+
+## Crash-Recovery Audit and Checkpoint Handoff (2026-07-16)
+
+- Recovered from the workstation interruption without regenerating concepts, HTML, screenshots,
+  reports, deployments, or Telegram delivery. `191ad4a` matched `origin/main`; there was no
+  merge, rebase, lock, staged change, or untracked work. The coherent saved implementation was
+  validated and pushed as `a6268cf`.
+- Reused the Botanika Form final evidence directly: selected/staged/promoted HTML is byte-identical,
+  final desktop/tablet/mobile technical evidence is clean, and the independent review has no
+  critical or high finding. The active gate remains explicit human calibration only.
+- Current pre-rollout follow-ups: do not treat the all-completed Studio task ledger as release
+  authorization; human calibration remains external and blocking. Reconcile the historical
+  `desire_created: false` versus approved-95 commercial report and the historical skill-provenance
+  checksum mismatches before relying on either as a clean machine-enforced production signal.
+- Fresh regression evidence: `python -m unittest discover -s tests -v` -> 81 passed, 1 opt-in
+  Cloudflare smoke skipped; `python -m compileall -q site_agent scripts tests`, `python -m pip
+  check`, `python scripts/smoke_build.py`, and `git diff --check` passed.

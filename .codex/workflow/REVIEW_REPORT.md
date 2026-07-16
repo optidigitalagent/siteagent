@@ -45,3 +45,12 @@ botanical collage, circular flower-mark and Roman-numeral manifesto without gene
 invented proof. The technical gate has no critical/high issue, overflow, missing media, broken
 links, console/network errors or undersized targets. One medium non-blocking note remains: the
 first narrow mobile material crop reads slightly more as a collage pause than an explanation.
+
+## Crash-Recovery Review (2026-07-16)
+
+The saved Botanika Form output remains fit only for human calibration. The final source, staging
+and promoted HTML are byte-identical, so the existing local screenshot and technical evidence is
+reusable for that exact output. It is not a live-production verification. No critical or high
+visual issue emerged from the recovery review; the recorded medium mobile material-pause note
+remains. Before any future rollout, reconcile the contradictory deterministic commercial report
+(`desire_created: false` while approved at 95) and historical skill-provenance checksum mismatch.
