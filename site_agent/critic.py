@@ -225,7 +225,7 @@ class CriticAgent:
                     "exact_product": scope.exact_product,
                     "required_concepts": scope.required_concepts,
                     "rules": {
-                        "micro_site": "Require an offer, real proof/process, and a conversion close. Do not require a gallery, FAQ, team, reviews, certificates, price list, or a longer full-site path.",
+                        "micro_site": "Require an offer, either evidence-grounded real proof or a verified process, and a conversion close. Never require or invent a contact sequence, call method, timing, clinical step, or process that the research does not confirm. Do not require a gallery, FAQ, team, reviews, certificates, price list, or a longer full-site path.",
                         "full_site": "Require a complete commercial path appropriate to the sourced themes and media.",
                         "blocked": "No site may be approved; evidence is insufficient for creative output.",
                     },

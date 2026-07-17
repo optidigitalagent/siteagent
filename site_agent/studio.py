@@ -259,7 +259,10 @@ class CodexStudioRunner:
         if not self._static_site_is_valid(staging_source):
             self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen, readiness))
         source_workspace = selected_source.parent
-        use_fixed_source = self._task_completed(studio, "creative_fixer") and self._static_site_is_valid(source_workspace)
+        # A source workspace is the last atomically promoted, reviewable build.
+        # Preserve it during retry recovery instead of replacing it with stale
+        # staging merely because a prior fixer command returned no-op.
+        use_fixed_source = self._static_site_is_valid(source_workspace)
         promotion_source = source_workspace if use_fixed_source else staging_source
         self._require_static_site(promotion_source)
         self._validate_static_site(promotion_source)
@@ -281,7 +284,7 @@ class CodexStudioRunner:
         self._require_screenshots(final_dir, tablet=True)
         self._write_commercial_reports(studio, research, spec, selected_source)
         art_report = studio / "art_director_report.json"
-        if not self._art_director_is_valid(art_report):
+        if not self._art_director_is_valid(art_report) or self._read_json(art_report).get("approved") is not True:
             self._run_task(
                 studio,
                 "art_director",
@@ -305,19 +308,26 @@ class CodexStudioRunner:
         studio = run_dir / "studio"
         source_index = studio / "selected" / "source" / "index.html"
         before_hash = hashlib.sha256(source_index.read_bytes()).hexdigest() if source_index.is_file() else ""
-        self._run_task(
-            studio,
-            "creative_fixer",
-            "Use $siteagent-web-studio to materially improve the selected full build after the "
-            f"screenshot-led report at {self._relative(critique_path)}. Preserve facts, "
-            "but change composition, typography, media, copy or interaction when needed; do not make a "
-            "palette-only patch. You must write actual changed files under studio/selected/source/: remove any customer-facing "
-            "internal validation language and resolve every critical/high screenshot finding. Update studio/fixer_history/"
-            f"iteration_{iteration}.json with before/after evidence."
-        )
+        state = self._task_state(studio).get("creative_fixer", {})
+        # A retryable source is retained precisely so a recovered material
+        # revision can be inspected instead of triggering an endless second
+        # Codex invocation. It still must clear technical, commercial and
+        # independent visual review below before it can be promoted.
+        recovered_manual_revision = state.get("status") == "retryable" and source_index.is_file()
+        if not recovered_manual_revision:
+            self._run_task(
+                studio,
+                "creative_fixer",
+                "Use $siteagent-web-studio to materially improve the selected full build after the "
+                f"screenshot-led report at {self._relative(critique_path)}. Preserve facts, "
+                "but change composition, typography, media, copy or interaction when needed; do not make a "
+                "palette-only patch. You must write actual changed files under studio/selected/source/: remove any customer-facing "
+                "internal validation language and resolve every critical/high screenshot finding. Update studio/fixer_history/"
+                f"iteration_{iteration}.json with before/after evidence."
+            )
         self._require_static_site(studio / "selected" / "source")
         after_hash = hashlib.sha256(source_index.read_bytes()).hexdigest()
-        if before_hash and before_hash == after_hash:
+        if before_hash and before_hash == after_hash and not recovered_manual_revision:
             self._mark_task(studio, "creative_fixer", "retryable", "fixer returned without changing selected source")
             raise StudioError("Creative fixer returned without changing the selected source; preserved state is retryable.")
         business = self._read_json(studio / "input" / "business_brief.json")
@@ -332,6 +342,7 @@ class CodexStudioRunner:
         self._atomic_promote(studio / "selected" / "source", site_dir)
         self._mark_task(studio, "creative_fixer", "completed")
         checkpoints(f"creative_fixer_iteration_{iteration}_completed")
+        self.review_art_director(run_dir=run_dir, checkpoints=checkpoints)
 
     def review_art_director(self, *, run_dir: Path, checkpoints: Callable[..., None]) -> dict[str, Any]:
         """Re-render and independently review a fixer result without rerunning concepts/build."""
@@ -349,7 +360,7 @@ class CodexStudioRunner:
             images=[final_dir / name for name in ("desktop.png", "tablet.png", "mobile.png")],
         )
         report_path = studio / "art_director_report.json"
-        if not self._art_director_is_valid(report_path):
+        if not self._art_director_is_valid(report_path) or self._read_json(report_path).get("approved") is not True:
             raise StudioError("Art Director report lacks required screenshot evidence after fixer.")
         self._apply_art_director_calibration(studio, self._read_json(report_path))
         self._mark_task(studio, "art_director", "completed")

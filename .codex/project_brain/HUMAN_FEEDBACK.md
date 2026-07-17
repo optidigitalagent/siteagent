@@ -142,3 +142,8 @@ repeat the same brief in every chat.
 - The user explicitly authorises proven Orange Beauty Studio and Bella Dent Clinic business media for public-site use only when the asset-to-business link is documented. Such assets may be recorded as `source_kind=business`, `user_authorized=true`, and `allowed_for_public_site=true`.
 - This approval never extends to stock, fixture, reference captures, third-party portfolios, or an asset whose business linkage cannot be proven. Existing business-site code is media-origin evidence only; it is not design, layout, copy, or structure input.
 - A Level B micro-site must be reviewed against its configured limit (one concept, at most three semantic sections and two image treatments). Critics must not demand a full-site gallery as a condition of approval; instead they must assess whether the bounded proof and conversion path are commercially sufficient.
+
+## Bella Level B critic calibration (2026-07-17)
+
+- A critic must not downgrade a compliant Level B micro-site into a “thin redirect” merely because verified evidence lacks a direct contact method, clinical process, prices, outcomes, or a fuller decision path. Those missing facts are a reason to keep the product compact, not material to invent.
+- An explicit CTA that names the visitor's consultation intent and transparently opens the verified official site is a valid conversion path when no verified direct route exists. High-severity findings need a concrete scope, evidence, copy, visual, or technical failure; scope-correct concision is not one.

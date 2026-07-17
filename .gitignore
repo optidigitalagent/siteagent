@@ -7,3 +7,6 @@ runs/
 node_modules/
 .wrangler/
 .dev.vars
+.chrome-*/
+.edge-*/
+bella-dent-*.png

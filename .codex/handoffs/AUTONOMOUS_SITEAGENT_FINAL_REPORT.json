@@ -1,0 +1,66 @@
+{
+  "status": "AUTONOMOUS_SITEAGENT_READY_FOR_FINAL_PRODUCT_AUDIT",
+  "scope": "local calibration recovery only",
+  "calibrations": {
+    "orange_beauty_studio": {
+      "accepted": true,
+      "scope": "Level B micro_site",
+      "publish": false,
+      "evidence": [
+        "runs/orange-beauty-studio-calibration/generation_reports/acceptance_audit.json",
+        "runs/orange-beauty-studio-calibration/critique_reports/critique_scope_aware_final.json",
+        "runs/orange-beauty-studio-calibration/studio/art_director_report.json"
+      ]
+    },
+    "bella_dent_clinic": {
+      "accepted": true,
+      "scope": "Level B micro_site",
+      "concepts": 1,
+      "semantic_sections": 3,
+      "image_treatments": 2,
+      "final_score": 89,
+      "technical_gate_passed": true,
+      "visual_director_approved": true,
+      "business_approved": true,
+      "blocking_issues": false,
+      "publish": false,
+      "evidence": [
+        "runs/bella-dent-clinic-calibration/generation_reports/acceptance_audit.json",
+        "runs/bella-dent-clinic-calibration/generation_reports/calibration_result.json",
+        "runs/bella-dent-clinic-calibration/critique_reports/critique_iteration_5.json",
+        "runs/bella-dent-clinic-calibration/studio/final_reviews/desktop.png",
+        "runs/bella-dent-clinic-calibration/studio/final_reviews/tablet.png",
+        "runs/bella-dent-clinic-calibration/studio/final_reviews/mobile.png",
+        "runs/bella-dent-clinic-calibration/studio/art_director_report.json",
+        "runs/bella-dent-clinic-calibration/studio/commercial_usefulness_report.json",
+        "runs/bella-dent-clinic-calibration/studio/scope_compliance_report.json",
+        "runs/bella-dent-clinic-calibration/studio/media_provenance_report.json",
+        "runs/bella-dent-clinic-calibration/studio/language_fit_report.json",
+        "runs/bella-dent-clinic-calibration/studio/semantic_repetition_report.json"
+      ]
+    }
+  },
+  "reference_library": {
+    "path": "references/site_designs/reference_decisions.json",
+    "active": 32,
+    "excluded": 8
+  },
+  "verification": {
+    "unittest": "128 passed; 1 credential-gated Cloudflare smoke test skipped",
+    "compileall": "passed",
+    "pip_check": "passed",
+    "smoke_build": "passed",
+    "git_diff_check": "passed",
+    "final_screenshots_inspected": ["bella desktop", "bella mobile"]
+  },
+  "external_actions": {
+    "go": false,
+    "telegram": false,
+    "cloudflare": false,
+    "production_publish": false
+  },
+  "remaining_state": {
+    "human_calibration_required": true,
+    "next_action": "Human final-product audit; production actions require separate explicit authorization."
+  }
+}
