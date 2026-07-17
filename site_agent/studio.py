@@ -361,7 +361,9 @@ class CodexStudioRunner:
         spec: SiteSpec, evidence: Any, implementation_package: dict[str, Any] | None = None,
     ) -> None:
         evidence_payload = evidence.model_dump() if hasattr(evidence, "model_dump") else dict(evidence or {})
-        self._archive_scope_bound_workspace(studio, str(evidence_payload.get("page_scope", "blocked")))
+        scope_value = evidence_payload.get("page_scope", "blocked")
+        incoming_scope = scope_value.value if isinstance(scope_value, PageScope) else str(scope_value)
+        self._archive_scope_bound_workspace(studio, incoming_scope)
         input_dir = studio / "input"
         for folder in (input_dir, studio / "concepts", studio / "concept_reviews", studio / "selected"):
             folder.mkdir(parents=True, exist_ok=True)
