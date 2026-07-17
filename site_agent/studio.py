@@ -360,6 +360,8 @@ class CodexStudioRunner:
         self, studio: Path, job_id: str, research: ResearchBrief, strategy: StrategyBrief,
         spec: SiteSpec, evidence: Any, implementation_package: dict[str, Any] | None = None,
     ) -> None:
+        evidence_payload = evidence.model_dump() if hasattr(evidence, "model_dump") else dict(evidence or {})
+        self._archive_scope_bound_workspace(studio, str(evidence_payload.get("page_scope", "blocked")))
         input_dir = studio / "input"
         for folder in (input_dir, studio / "concepts", studio / "concept_reviews", studio / "selected"):
             folder.mkdir(parents=True, exist_ok=True)
@@ -367,7 +369,6 @@ class CodexStudioRunner:
         media = [item.model_dump() for item in (spec.gallery_assets or research.best_media)]
         if implementation_package is not None:
             media = list(implementation_package.get("authorised_media_manifest", {}).get("media", []))
-        evidence_payload = evidence.model_dump() if hasattr(evidence, "model_dump") else dict(evidence or {})
         self._write_json(input_dir / "evidence.json", {"assessment": evidence_payload, "verified_facts": [item.model_dump() for item in research.verified_facts]})
         self._write_json(input_dir / "scope_decision.json", {
             "scope": evidence_payload.get("page_scope", "blocked"),
@@ -395,6 +396,36 @@ class CodexStudioRunner:
             package["studio_input_sha256"] = hashlib.sha256(serialized).hexdigest()
             package["contract"] = "Codex must implement this package directly; legacy SiteSpec/PageComposition are validation-only."
             self._write_json(input_dir / "implementation_package.json", package)
+
+    @staticmethod
+    def _archive_scope_bound_workspace(studio: Path, incoming_scope: str) -> None:
+        """Preserve stale concepts when an approved recovery scope changes.
+
+        Concept/output artifacts are valid only under the input contract that
+        created them.  Moving rather than deleting keeps crash evidence while
+        forcing the replacement contract to generate its own bounded work.
+        """
+        contract = studio / "input" / "concept_contract.json"
+        if not contract.is_file():
+            return
+        try:
+            previous_scope = str(json.loads(contract.read_text(encoding="utf-8")).get("scope", ""))
+        except (OSError, ValueError):
+            previous_scope = "invalid"
+        if previous_scope == incoming_scope:
+            return
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        archive = studio / "recovery_archives" / f"scope-{previous_scope or 'unknown'}-to-{incoming_scope or 'unknown'}-{stamp}"
+        archive.mkdir(parents=True, exist_ok=False)
+        for name in ("input", "concepts", "concept_reviews", "selected", "initial_validation", "final_reviews", "task_state.json"):
+            source = studio / name
+            if source.exists():
+                shutil.move(str(source), str(archive / name))
+        CodexStudioRunner._write_json(archive / "scope_recovery.json", {
+            "previous_scope": previous_scope,
+            "incoming_scope": incoming_scope,
+            "reason": "approved scope changed; prior concepts and reviews are not reusable",
+        })
 
     def _skill_snapshot(self) -> list[dict[str, str]]:
         root = self.project_root / ".agents" / "skills"

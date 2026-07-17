@@ -207,6 +207,32 @@ class CreativeStudioTests(unittest.TestCase):
             self.assertEqual(report["scope"], "micro_site")
             self.assertTrue(report["approved"])
 
+    def test_scope_change_archives_old_full_site_concepts_before_micro_site_work(self) -> None:
+        research, strategy, spec = fixtures()
+        effective = EvidenceAssessment(
+            level=EvidenceLevel.B, score=100, checks={"product_identified": True},
+            page_scope=PageScope.MICRO, exact_product=research.product_identity.exact_product,
+            content_theme_count=3, usable_media_count=6, required_concepts=1,
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            (studio / "input").mkdir(parents=True)
+            (studio / "concepts" / "concept_a").mkdir(parents=True)
+            (studio / "input" / "concept_contract.json").write_text(
+                json.dumps({"scope": "full_site", "required_concepts": ["concept_a", "concept_b", "concept_c"]}),
+                encoding="utf-8",
+            )
+            (studio / "concepts" / "concept_a" / "index.html").write_text("old full-site concept", encoding="utf-8")
+            CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())._prepare_input(
+                studio, "scope-archive", research, strategy, spec, effective,
+            )
+            self.assertFalse((studio / "concepts" / "concept_a" / "index.html").exists())
+            archives = list((studio / "recovery_archives").glob("scope-full_site-to-micro_site-*"))
+            self.assertEqual(len(archives), 1)
+            self.assertTrue((archives[0] / "concepts" / "concept_a" / "index.html").is_file())
+            self.assertEqual(json.loads((studio / "input" / "scope_decision.json").read_text(encoding="utf-8"))["scope"], "micro_site")
+
     def test_fixer_rejects_a_noop_source_change(self) -> None:
         research, strategy, spec = fixtures()
         with tempfile.TemporaryDirectory() as temp:
