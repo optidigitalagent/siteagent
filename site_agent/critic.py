@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from playwright.sync_api import Error, sync_playwright
 
 from site_agent.models import CritiqueReport, ResearchBrief, SiteSpec, StrategyBrief, TechnicalGate
+from site_agent.design_quality import EvidenceAssessment, assess_studio_readiness
 from site_agent import prompts
 
 if TYPE_CHECKING:
@@ -98,6 +99,31 @@ class TechnicalInspector:
 
     def _take_screenshot(self, page, path: Path) -> None:
         """Retry a transient Chromium capture failure before failing the quality gate."""
+        # Chromium's full-page capture does not always paint below-fold lazy
+        # media in a file:// review. Traverse the page once so screenshot-led
+        # criticism sees the same authorised proof a visitor can scroll to.
+        page.evaluate(
+            """async () => {
+              const max = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+              const step = Math.max(window.innerHeight * 0.8, 320);
+              for (let y = 0; y < max; y += step) {
+                window.scrollTo(0, y);
+                await new Promise(resolve => setTimeout(resolve, 35));
+              }
+              await Promise.all(Array.from(document.images).map(image => image.complete
+                ? Promise.resolve()
+                : Promise.race([
+                    new Promise(resolve => {
+                      image.addEventListener('load', resolve, {once: true});
+                      image.addEventListener('error', resolve, {once: true});
+                    }),
+                    new Promise(resolve => setTimeout(resolve, 1000)),
+                  ])
+              ));
+              window.scrollTo(0, 0);
+              await new Promise(resolve => setTimeout(resolve, 120));
+            }"""
+        )
         last_error: Error | None = None
         for attempt in range(3):
             try:
@@ -142,6 +168,8 @@ class TechnicalInspector:
                 .filter(href => !href || href === "#" || href.startsWith("javascript:"));
               const smallTapTargets = Array.from(document.querySelectorAll("a, button"))
                 .filter(el => {
+                  const style = window.getComputedStyle(el);
+                  if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
                   const r = el.getBoundingClientRect();
                   return r.width < 44 || r.height < 44;
                 })
@@ -180,15 +208,28 @@ class CriticAgent:
         research: ResearchBrief,
         strategy: StrategyBrief,
         site_spec: SiteSpec,
+        evidence: EvidenceAssessment | None = None,
     ) -> CritiqueReport:
         technical_gate, observations = self.inspector.inspect(index_path, artifacts_dir)
         public_spec = self._public_site_spec(site_spec)
+        scope = evidence or assess_studio_readiness(research)
         return self.llm.structured(
             system=prompts.CRITIC_SYSTEM,
             user=prompts.CRITIC_USER.format(
                 research_json=research.model_dump_json(indent=2),
                 strategy_json=strategy.model_dump_json(indent=2),
                 site_spec_json=public_spec.model_dump_json(indent=2),
+                scope_json=json.dumps({
+                    "level": scope.level.value,
+                    "scope": scope.page_scope.value,
+                    "exact_product": scope.exact_product,
+                    "required_concepts": scope.required_concepts,
+                    "rules": {
+                        "micro_site": "Require an offer, real proof/process, and a conversion close. Do not require a gallery, FAQ, team, reviews, certificates, price list, or a longer full-site path.",
+                        "full_site": "Require a complete commercial path appropriate to the sourced themes and media.",
+                        "blocked": "No site may be approved; evidence is insufficient for creative output.",
+                    },
+                }, ensure_ascii=False, indent=2),
                 technical_json=technical_gate.model_dump_json(indent=2),
                 desktop_observations=observations["desktop"],
                 mobile_observations=observations["mobile"],

@@ -143,27 +143,32 @@ class LLMClient:
                 )
 
     def _openai_structured(self, *, system: str, user: str, schema: type[T]) -> T:
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system},
-                {
-                    "role": "user",
-                    "content": (
-                        f"{user}\n\nReturn only valid JSON matching this schema name: "
-                        f"{schema.__name__}."
-                    ),
-                },
-            ],
-            response_format={"type": "json_object"},
+        prompt = (
+            f"{user}\n\nReturn only valid JSON matching this schema name: {schema.__name__}."
         )
-        text = response.choices[0].message.content or ""
-        try:
-            return schema.model_validate_json(text)
-        except ValidationError as exc:
-            raise LLMError(f"Model returned invalid {schema.__name__}: {exc}") from exc
-        except json.JSONDecodeError as exc:
-            raise LLMError(f"Model returned non-JSON {schema.__name__}: {text[:500]}") from exc
+        last_error: Exception | None = None
+        for attempt in range(2):
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+            )
+            text = response.choices[0].message.content or ""
+            try:
+                return schema.model_validate_json(text)
+            except (ValidationError, json.JSONDecodeError) as exc:
+                last_error = exc
+                # A bounded repair avoids throwing away a complete media/research
+                # checkpoint merely because the role chose its own field names.
+                # Do not persist raw model text here: it may contain unrelated
+                # public scrape data and is not a durable evidence artifact.
+                prompt = (
+                    f"{user}\n\nYour previous response did not validate as {schema.__name__}. "
+                    "Return only one complete JSON object using exactly the schema fields below; "
+                    "do not nest it under a project_overview or any wrapper.\n"
+                    + json.dumps(schema.model_json_schema(), ensure_ascii=False)
+                )
+        raise LLMError(f"Model returned invalid {schema.__name__} after bounded repair: {last_error}") from last_error
 
     def _codex_structured(self, *, system: str, user: str, schema: type[T]) -> T:
         prompt = (

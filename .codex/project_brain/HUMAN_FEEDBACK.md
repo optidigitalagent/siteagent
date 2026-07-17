@@ -136,3 +136,9 @@ repeat the same brief in every chat.
 - Award galleries introduce candidates only. Selection requires a resolved original live site,
   screenshot evidence, Curator/Auditor agreement, bounded learning scope for incomplete pages,
   duplicate suppression and an active-library decision separate from raw records.
+
+## Authorised business-media calibration (2026-07-17)
+
+- The user explicitly authorises proven Orange Beauty Studio and Bella Dent Clinic business media for public-site use only when the asset-to-business link is documented. Such assets may be recorded as `source_kind=business`, `user_authorized=true`, and `allowed_for_public_site=true`.
+- This approval never extends to stock, fixture, reference captures, third-party portfolios, or an asset whose business linkage cannot be proven. Existing business-site code is media-origin evidence only; it is not design, layout, copy, or structure input.
+- A Level B micro-site must be reviewed against its configured limit (one concept, at most three semantic sections and two image treatments). Critics must not demand a full-site gallery as a condition of approval; instead they must assess whether the bounded proof and conversion path are commercially sufficient.

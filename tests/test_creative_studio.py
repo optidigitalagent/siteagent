@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from playwright.sync_api import sync_playwright
 
 from site_agent.creative_fixture_e2e import _write_media_provenance_report, rich_dental_fixture, rich_floral_fixture
-from site_agent.design_quality import PageScope, assess_studio_readiness
+from site_agent.design_quality import EvidenceAssessment, EvidenceLevel, PageScope, assess_studio_readiness
 from site_agent.models import ContentTheme, MediaAsset, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent.skill_lock import validate_studio_plugin_bundle
 from site_agent.studio import (
@@ -116,6 +116,15 @@ class CreativeStudioTests(unittest.TestCase):
             with self.assertRaisesRegex(StudioError, "calibration-only disclosure leaked"):
                 assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
 
+    def test_static_build_rejects_local_media_when_manifest_requires_cloudinary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio, site = self._write_provenance_workspace(
+                root, source_kind="business", body='<img src="media/local-photo.jpg">'
+            )
+            with self.assertRaisesRegex(StudioError, "outside the authorised Cloudinary manifest"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
     def test_intermediate_responsive_hero_keeps_type_clear_of_media_and_next_band(self) -> None:
         """A 960px breakpoint must stack the care-map hero without collisions."""
         with tempfile.TemporaryDirectory() as temp:
@@ -148,6 +157,55 @@ class CreativeStudioTests(unittest.TestCase):
             runner._relative(Path("runs") / "creative-studio-e2e" / "night_yacht" / "studio" / "art_director_report.json"),
             "runs/creative-studio-e2e/night_yacht/studio/art_director_report.json",
         )
+
+    def test_micro_site_selection_accepts_named_viewport_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            studio = Path(temp) / "studio"
+            (studio / "input").mkdir(parents=True)
+            (studio / "concept_reviews").mkdir()
+            (studio / "concepts" / "concept_a").mkdir(parents=True)
+            source = studio / "concepts" / "concept_a" / "index.html"
+            source.write_text("<main>micro concept" + "x" * 200 + "</main>", encoding="utf-8")
+            (studio / "input" / "concept_contract.json").write_text(json.dumps({"required_concepts": ["concept_a"]}), encoding="utf-8")
+            checksum = __import__("hashlib").sha256(source.read_bytes()).hexdigest()
+            required = {key: [] for key in ("strengths", "weaknesses", "technical_risks", "visual_risks", "business_risks", "desktop_observations", "mobile_observations", "anti_template_observations")}
+            (studio / "concept_reviews" / "comparison.json").write_text(json.dumps({"concept_reviews": {"concept_a": required}}), encoding="utf-8")
+            (studio / "concept_reviews" / "selected_concept.json").write_text(json.dumps({
+                "selected_concept": "concept_a", "reasons": ["bounded micro scope"], "selected_weaknesses": ["one"],
+                "mandatory_improvements": ["one"], "elements_to_preserve": ["one"], "source_concept_checksum": checksum,
+                "desktop_screenshot_reference": "concept_a/desktop.png", "mobile_screenshot_reference": "concept_a/mobile.png",
+            }), encoding="utf-8")
+            self.assertTrue(CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())._selection_is_valid(studio))
+
+    def test_effective_micro_scope_is_preserved_when_research_would_allow_full_site(self) -> None:
+        research, strategy, spec = fixtures()
+        self.assertEqual(assess_studio_readiness(research).page_scope, PageScope.FULL)
+        effective = EvidenceAssessment(
+            level=EvidenceLevel.B,
+            score=100,
+            checks={"product_identified": True},
+            page_scope=PageScope.MICRO,
+            exact_product=research.product_identity.exact_product,
+            content_theme_count=3,
+            usable_media_count=6,
+            required_concepts=1,
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            runner = CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())
+            studio = root / "studio"
+            runner._prepare_input(studio, "scope-test", research, strategy, spec, effective)
+            self.assertEqual(runner._stored_readiness(studio).page_scope, PageScope.MICRO)
+            folder = root / "site"
+            folder.mkdir()
+            (folder / "index.html").write_text(
+                "<main><section>Offer</section><section>Real proof</section><section>Contact</section></main>",
+                encoding="utf-8",
+            )
+            runner._validate_scope_compliance(studio, folder, effective)
+            report = json.loads((studio / "scope_compliance_report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["scope"], "micro_site")
+            self.assertTrue(report["approved"])
 
     def test_fixer_rejects_a_noop_source_change(self) -> None:
         research, strategy, spec = fixtures()

@@ -57,6 +57,45 @@ def spec(**changes) -> SiteSpec:
 
 
 class CommercialUsefulnessTests(unittest.TestCase):
+    def test_good_micro_site_passes_without_full_site_only_sections(self) -> None:
+        current = spec()
+        context = build_context(research(), strategy(), current)
+        html = """
+        <section id='offer' data-decision-role='offer'>Private yacht charter. <a href='https://instagram.com'>Message on Instagram</a></section>
+        <section id='proof' data-decision-role='proof'>Private evening water experience.</section>
+        <section id='booking' data-decision-role='conversion'>Message on Instagram to plan the next step.</section>
+        """
+        semantic = semantic_repetition_report(current, context, html_text=html, page_scope="micro_site")
+        report = commercial_usefulness_report(current, context, semantic=semantic, html_text=html, hero_cta_present=True, page_scope="micro_site")
+        self.assertTrue(semantic.approved, semantic.model_dump())
+        self.assertTrue(report.approved, report.model_dump())
+        self.assertTrue(report.checks["micro_site_has_offer_proof_conversion_path"])
+
+    def test_truncated_micro_site_fails_its_own_path_not_a_full_site_rubric(self) -> None:
+        current = spec()
+        context = build_context(research(), strategy(), current)
+        html = """
+        <section id='offer' data-decision-role='offer'>Private yacht charter. <a href='https://instagram.com'>Message on Instagram</a></section>
+        <section id='booking' data-decision-role='conversion'>Message on Instagram.</section>
+        """
+        report = commercial_usefulness_report(current, context, html_text=html, hero_cta_present=True, page_scope="micro_site")
+        self.assertFalse(report.approved)
+        self.assertFalse(report.checks["micro_site_has_offer_proof_conversion_path"])
+
+    def test_full_site_still_requires_a_complete_commercial_path(self) -> None:
+        current = spec()
+        context = build_context(research(), strategy(), current)
+        html = "<section data-decision-role='offer'>Private yacht charter <a href='https://instagram.com'>Message on Instagram</a></section><section data-decision-role='conversion'>Message on Instagram</section>"
+        report = commercial_usefulness_report(current, context, html_text=html, hero_cta_present=True, page_scope="full_site")
+        self.assertFalse(report.approved)
+        self.assertFalse(report.checks["full_site_has_complete_commercial_path"])
+
+    def test_blocked_scope_can_never_receive_commercial_approval(self) -> None:
+        current = spec()
+        context = build_context(research(), strategy(), current)
+        report = commercial_usefulness_report(current, context, html_text="<section>Private yacht charter</section>", hero_cta_present=True, page_scope="blocked")
+        self.assertFalse(report.approved)
+        self.assertFalse(report.checks["scope_allows_generation"])
     def test_missing_information_cannot_be_primary_narrative(self) -> None:
         current = spec(sections=[
             SectionSpec(id="one", title="Confirm details", purpose="x", content=["Confirm current details in Instagram Direct."]),

@@ -204,17 +204,26 @@ class CodexStudioRunner:
         checkpoints: Callable[..., None],
     ) -> StudioResult:
         studio = run_dir / "studio"
-        readiness = assess_studio_readiness(research)
+        # The control plane may deliberately choose the more restrictive scope
+        # from the strategist.  Never recompute that decision from media count.
+        readiness = evidence if isinstance(evidence, EvidenceAssessment) else assess_studio_readiness(research)
         if readiness.page_scope is PageScope.BLOCKED:
             raise StudioError("Studio readiness blocked generation: " + "; ".join(readiness.reasons))
         self._prepare_input(studio, job_id, research, strategy, spec, readiness, implementation_package)
         checkpoints("studio_input_prepared")
 
-        missing = [name for name in CONCEPTS if not (studio / "concepts" / name / "index.html").is_file()]
+        concept_names = CONCEPTS if readiness.page_scope is PageScope.FULL else ("concept_a",)
+        self._write_json(studio / "input" / "concept_contract.json", {
+            "required_concepts": list(concept_names),
+            "scope": readiness.page_scope.value,
+            "reason": "Full sites require comparison; an intentional micro-site must not be padded into three variants.",
+        })
+        missing = [name for name in concept_names if not (studio / "concepts" / name / "index.html").is_file()]
         if missing:
             self._run_task(studio, "concept_generation", self._concept_prompt(run_dir, missing))
         self._require_concepts(studio)
-        checkpoints(*(f"{name}_completed" for name in CONCEPTS))
+        self._mark_task(studio, "concept_generation", "completed")
+        checkpoints(*(f"{name}_completed" for name in concept_names))
 
         self._capture_concept_screenshots(studio)
         checkpoints("concept_screenshots_completed")
@@ -234,22 +243,27 @@ class CodexStudioRunner:
                 studio,
                 "concept_selection",
                 self._selection_prompt(run_dir),
-                images=[studio / "concept_reviews" / name / viewport for name in CONCEPTS for viewport in ("desktop.png", "tablet.png", "mobile.png")],
+                images=[studio / "concept_reviews" / name / viewport for name in concept_names for viewport in ("desktop.png", "tablet.png", "mobile.png")],
             )
         selected = self._read_json(selected_path)
-        chosen = self._selected_id(selected)
+        chosen = self._selected_id(selected, studio)
         if not self._selection_is_valid(studio):
             self._mark_task(studio, "concept_selection", "retryable", "selection artifacts did not satisfy the evidence contract")
             raise StudioError("Creative Director selection is incomplete or lacks required screenshot evidence.")
         self._mark_task(studio, "concept_selection", "completed")
         checkpoints("concept_selected", "selected_concept_improvements_recorded")
-        if not self._task_completed(studio, "full_creative_build") or not self._static_site_is_valid(staging_source):
-            self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen))
+        # A browser or validator failure after Codex has written a complete
+        # staging build is recoverable. Revalidate that exact source first;
+        # do not discard it or spend another full-generation budget unless it
+        # is missing or structurally invalid.
+        if not self._static_site_is_valid(staging_source):
+            self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen, readiness))
         source_workspace = selected_source.parent
         use_fixed_source = self._task_completed(studio, "creative_fixer") and self._static_site_is_valid(source_workspace)
         promotion_source = source_workspace if use_fixed_source else staging_source
         self._require_static_site(promotion_source)
         self._validate_static_site(promotion_source)
+        self._validate_authorised_media_rendering(studio, promotion_source)
         self._validate_scope_compliance(studio, promotion_source, readiness)
         initial_dir = studio / "selected" / "initial_validation"
         gate, _ = self.inspector.inspect(promotion_source / "index.html", initial_dir)
@@ -306,6 +320,12 @@ class CodexStudioRunner:
         if before_hash and before_hash == after_hash:
             self._mark_task(studio, "creative_fixer", "retryable", "fixer returned without changing selected source")
             raise StudioError("Creative fixer returned without changing the selected source; preserved state is retryable.")
+        business = self._read_json(studio / "input" / "business_brief.json")
+        research = ResearchBrief.model_validate(business["research"])
+        readiness = self._stored_readiness(studio)
+        self._validate_static_site(studio / "selected" / "source")
+        self._validate_authorised_media_rendering(studio, studio / "selected" / "source")
+        self._validate_scope_compliance(studio, studio / "selected" / "source", readiness)
         self.inspector.inspect(studio / "selected" / "source" / "index.html", studio / "final_reviews")
         selected = self._selected_id(self._read_json(studio / "concept_reviews" / "selected_concept.json"))
         self._write_provenance(studio, selected, studio / "selected" / "source")
@@ -410,13 +430,22 @@ class CodexStudioRunner:
             "the selected concept index.html as source_concept_checksum. Do not edit a full build in this selection step."
         )
 
-    def _full_build_prompt(self, run_dir: Path, chosen: str) -> str:
+    def _full_build_prompt(self, run_dir: Path, chosen: str, readiness: EvidenceAssessment) -> str:
+        scope_rule = (
+            "This is an intentional micro-site: render no more than three semantic <section> elements and no more than two <img> treatments total. "
+            "Use the strongest authorised hero image and at most one supporting image; do not turn the manifest into a gallery. "
+            if readiness.page_scope is PageScope.MICRO else
+            "This is a full site: use the approved themes and media deliberately without repeating one visual treatment. "
+        )
         return (
             "Use $siteagent-web-studio to expand the selected concept without changing its central creative idea. "
             f"Read {self._relative(run_dir / 'studio' / 'concept_reviews' / 'selected_concept.json')} and the selected "
             f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)}, implementation package at {self._relative(run_dir / 'studio' / 'input' / 'implementation_package.json')} and scope contract at {self._relative(run_dir / 'studio' / 'input' / 'scope_decision.json')}. Write a complete static responsive "
             f"HTML/CSS/JS site to the staging workspace {self._relative(run_dir / 'studio' / 'selected' / 'staging')}. Preserve its signature "
-            "element and composition language. Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
+            "element and composition language. " + scope_rule +
+            "Render business imagery only with the exact authorised Cloudinary URLs from studio/input/media_manifest.json; "
+            "do not copy, download, proxy, transform, or reference local media files. "
+            "Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )
 
     def _art_director_prompt(self, run_dir: Path) -> str:
@@ -426,7 +455,7 @@ class CodexStudioRunner:
             "business input, selected concept, and the mandatory studio/commercial_usefulness_report.json, "
             "studio/language_fit_report.json, and studio/semantic_repetition_report.json. Write studio/art_director_report.json with approved (boolean), score, "
             "summary, unresolved_issues and findings. Every finding needs severity, screenshot, screenshot_region, selector, "
-            "description, reason and desired_outcome. Score and approval must cite screenshot evidence. You must not approve if commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."
+            "description, reason and desired_outcome. Read studio/input/scope_decision.json before judging completeness: a micro_site is a finished compact product, not a deficient full site. It needs a clear offer and CTA, real proof/process, and a conversion close; do not demand a gallery, FAQ, team, reviews, certificates, prices, or extra sections unless the evidence and approved scope require them. A full_site must demonstrate its longer commercial path. Score and approval must cite screenshot evidence. You must not approve if the scope-aware commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."
         )
 
     @staticmethod
@@ -436,8 +465,15 @@ class CodexStudioRunner:
 
         context = build_context(research, StrategyBrief.model_validate(json.loads((studio / "input" / "business_brief.json").read_text(encoding="utf-8"))["strategy"]), spec)
         html_text = index_path.read_text(encoding="utf-8")
-        semantic = semantic_repetition_report(spec, context, html_text=html_text)
-        commercial = commercial_usefulness_report(spec, context, semantic=semantic, html_text=html_text)
+        readiness = CodexStudioRunner._stored_readiness(studio)
+        declared_scope = CodexStudioRunner._read_json(studio / "input" / "scope_decision.json").get("scope", "")
+        if declared_scope != readiness.page_scope.value:
+            raise StudioError(
+                f"Scope contract mismatch: declared {declared_scope!r}, effective decision is {readiness.page_scope.value!r}. "
+                "A reviewer may not change the persisted approved scope."
+            )
+        semantic = semantic_repetition_report(spec, context, html_text=html_text, page_scope=declared_scope)
+        commercial = commercial_usefulness_report(spec, context, semantic=semantic, html_text=html_text, page_scope=declared_scope)
         language = language_fit_report(spec, research)
         CodexStudioRunner._write_json(studio / "commercial_usefulness_report.json", commercial.model_dump())
         CodexStudioRunner._write_json(studio / "language_fit_report.json", language.model_dump())
@@ -457,6 +493,10 @@ class CodexStudioRunner:
             "ux": 100 if checks.get("primary_cta_in_first_meaningful_viewport") else 60,
             "brand_fit": 100 if language.get("approved") and checks.get("reads_as_commercial_site") else 60,
         }
+        scope = commercial.get("page_scope", "unspecified")
+        scope_check = "micro_site_has_offer_proof_conversion_path" if scope == "micro_site" else "full_site_has_complete_commercial_path"
+        if scope in {"micro_site", "full_site"} and not checks.get(scope_check, False):
+            category_scores["commercial_usefulness"] = min(category_scores["commercial_usefulness"], 60)
         blocked = (
             category_scores["commercial_usefulness"] < 85
             or category_scores["business_clarity"] < 85
@@ -533,18 +573,19 @@ class CodexStudioRunner:
         self._write_json(studio / "task_state.json", state)
 
     def _capture_concept_screenshots(self, studio: Path) -> None:
-        for name in CONCEPTS:
+        for name in self._concept_names(studio):
             artifacts = studio / "concept_reviews" / name
             if not (artifacts / "desktop.png").is_file() or not (artifacts / "mobile.png").is_file():
                 self.inspector.inspect(studio / "concepts" / name / "index.html", artifacts)
             self._require_screenshots(artifacts, tablet=False)
 
     def _compare_concepts(self, studio: Path) -> dict[str, Any]:
-        fingerprints = {name: self._concept_fingerprint(studio / "concepts" / name / "index.html") for name in CONCEPTS}
+        names = self._concept_names(studio)
+        fingerprints = {name: self._concept_fingerprint(studio / "concepts" / name / "index.html") for name in names}
         pairs: dict[str, dict[str, Any]] = {}
         reasons: list[str] = []
-        for index, left in enumerate(CONCEPTS):
-            for right in CONCEPTS[index + 1:]:
+        for index, left in enumerate(names):
+            for right in names[index + 1:]:
                 same = fingerprints[left] == fingerprints[right]
                 pairs[f"{left}:{right}"] = {"same_structure": same, "left": fingerprints[left], "right": fingerprints[right]}
                 if same:
@@ -634,21 +675,50 @@ class CodexStudioRunner:
             if not target.exists():
                 raise StudioError(f"Static studio output references a missing local asset: {value}")
 
+    @staticmethod
+    def _validate_authorised_media_rendering(studio: Path, folder: Path) -> None:
+        """Require final customer imagery to be traceable to the approved manifest.
+
+        A local copy of an otherwise authorised photo breaks the required
+        Cloudinary provenance and prevents exact rendered-use reporting.
+        """
+        source = folder / "index.html"
+        manifest_path = studio / "input" / "media_manifest.json"
+        if not source.is_file() or not manifest_path.is_file():
+            raise StudioError("Authorised media validation requires final HTML and media manifest.")
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise StudioError("Authorised media validation could not read media manifest.") from exc
+        allowed = {str(item.get("url", "")) for item in manifest.get("media", [])}
+        html = source.read_text(encoding="utf-8")
+        rendered = re.findall(r"<(?:img|source|video)\b[^>]*\bsrc=[\"']([^\"']+)", html, flags=re.I)
+        forbidden = [url for url in rendered if not url.startswith("data:") and url not in allowed]
+        if forbidden:
+            raise StudioError("Static studio output renders media outside the authorised Cloudinary manifest: " + ", ".join(forbidden[:5]))
+
     def _validate_scope_compliance(self, studio: Path, folder: Path, readiness: EvidenceAssessment) -> None:
         """Persist a checkable scope decision before any final screenshot approval."""
+        declared = self._read_json(studio / "input" / "scope_decision.json").get("scope", "")
+        stored = self._stored_readiness(studio)
+        if declared != stored.page_scope.value or readiness.page_scope is not stored.page_scope:
+            raise StudioError(
+                f"Scope contract mismatch: declared {declared!r}, effective decision is {stored.page_scope.value!r}. "
+                "Scope may not be changed to influence review or promotion."
+            )
         html_text = (folder / "index.html").read_text(encoding="utf-8")
         section_count = len(__import__("re").findall(r"<section\b", html_text, flags=__import__("re").I))
         image_urls = __import__("re").findall(r"<img\b[^>]*\bsrc=[\"']([^\"']+)", html_text, flags=__import__("re").I)
         reasons: list[str] = []
-        if readiness.page_scope is PageScope.MICRO and section_count > 3:
+        if stored.page_scope is PageScope.MICRO and section_count > 3:
             reasons.append(f"micro-site has {section_count} sections; maximum is 3")
-        if readiness.page_scope is PageScope.MICRO and len(image_urls) > 2:
+        if stored.page_scope is PageScope.MICRO and len(image_urls) > 2:
             reasons.append(f"micro-site has {len(image_urls)} image treatments; maximum is 2")
-        if readiness.page_scope is PageScope.FULL and section_count < 4:
+        if stored.page_scope is PageScope.FULL and section_count < 4:
             reasons.append("full-site lacks enough sections to express its approved themes")
         report = {
-            "scope": readiness.page_scope.value,
-            "exact_product": readiness.exact_product,
+            "scope": stored.page_scope.value,
+            "exact_product": stored.exact_product,
             "section_count": section_count,
             "image_treatments": len(image_urls),
             "approved": not reasons,
@@ -659,11 +729,21 @@ class CodexStudioRunner:
             raise StudioError("Page scope compliance failed: " + "; ".join(reasons))
 
     @staticmethod
-    def _selected_id(selected: dict[str, Any]) -> str:
+    def _stored_readiness(studio: Path) -> EvidenceAssessment:
+        payload = CodexStudioRunner._read_json(studio / "input" / "evidence.json")
+        assessment = payload.get("assessment") if isinstance(payload, dict) else None
+        if not isinstance(assessment, dict):
+            raise StudioError("Studio input is missing its immutable evidence assessment.")
+        try:
+            return EvidenceAssessment.model_validate(assessment)
+        except ValueError as exc:
+            raise StudioError("Studio input has an invalid immutable evidence assessment.") from exc
+
+    def _selected_id(self, selected: dict[str, Any], studio: Path | None = None) -> str:
         value = selected.get("selected_concept")
         if isinstance(value, dict):
             value = value.get("id")
-        return value if value in CONCEPTS else ""
+        return value if value in self._concept_names(studio) else ""
 
     def _selection_is_valid(self, studio: Path) -> bool:
         path = studio / "concept_reviews" / "selected_concept.json"
@@ -675,8 +755,12 @@ class CodexStudioRunner:
             comparison = self._read_json(comparison_path)
         except StudioError:
             return False
-        chosen = self._selected_id(selected)
-        screenshot_evidence = selected.get("screenshot_evidence") or selected.get("screenshot_references")
+        chosen = self._selected_id(selected, studio)
+        screenshot_evidence = (
+            selected.get("screenshot_evidence")
+            or selected.get("screenshot_references")
+            or [selected.get(key) for key in ("desktop_screenshot_reference", "tablet_screenshot_reference", "mobile_screenshot_reference") if selected.get(key)]
+        )
         if not chosen or not isinstance(selected.get("reasons"), list) or not screenshot_evidence:
             return False
         selected_weaknesses = selected.get("selected_weaknesses") or selected.get("concrete_selected_weaknesses")
@@ -688,10 +772,11 @@ class CodexStudioRunner:
         if selected.get("source_concept_checksum") != checksum:
             return False
         reviews = comparison.get("concept_reviews") or comparison.get("reviews")
-        if not isinstance(reviews, dict) or any(name not in reviews for name in CONCEPTS):
+        names = self._concept_names(studio)
+        if not isinstance(reviews, dict) or any(name not in reviews for name in names):
             return False
         required_review = ("strengths", "weaknesses", "technical_risks", "visual_risks", "business_risks", "desktop_observations", "mobile_observations", "anti_template_observations")
-        return all(isinstance(reviews[name], dict) and all(field in reviews[name] for field in required_review) for name in CONCEPTS)
+        return all(isinstance(reviews[name], dict) and all(field in reviews[name] for field in required_review) for name in names)
 
     @staticmethod
     def _art_director_is_valid(path: Path) -> bool:
@@ -706,12 +791,26 @@ class CodexStudioRunner:
         fields = {"severity", "screenshot", "screenshot_region", "selector", "description", "reason", "desired_outcome"}
         return all(isinstance(item, dict) and fields <= set(item) for item in report["findings"])
 
-    @staticmethod
-    def _require_concepts(studio: Path) -> None:
-        for name in CONCEPTS:
-            CodexStudioRunner._require_static_site(studio / "concepts" / name)
+    def _require_concepts(self, studio: Path) -> None:
+        for name in self._concept_names(studio):
+            self._require_static_site(studio / "concepts" / name)
             if not (studio / "concepts" / name / "concept.md").is_file():
                 raise StudioError(f"Concept rationale is missing for {name}")
+
+    @staticmethod
+    def _concept_names(studio: Path | None) -> tuple[str, ...]:
+        if studio is None:
+            return CONCEPTS
+        contract = studio / "input" / "concept_contract.json"
+        if not contract.is_file():
+            return CONCEPTS
+        try:
+            names = json.loads(contract.read_text(encoding="utf-8")).get("required_concepts", [])
+        except (OSError, ValueError):
+            return CONCEPTS
+        if isinstance(names, list) and names and all(name in CONCEPTS for name in names):
+            return tuple(names)
+        return CONCEPTS
 
     @staticmethod
     def _require_screenshots(folder: Path, *, tablet: bool) -> None:

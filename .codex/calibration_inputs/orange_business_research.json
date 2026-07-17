@@ -1,0 +1,44 @@
+{
+  "research": {
+    "instagram_url": "https://top20.ua/zp/sport-krasa/saloni-krasi-spa/orange-beauty-studio-manikyur-i-pedikyur.html",
+    "business_name": "Orange Beauty Studio",
+    "city": "Запоріжжя",
+    "country": "Україна",
+    "primary_language": "uk",
+    "niche": "студія манікюру та педикюру",
+    "sells": ["манікюр", "педикюр", "нарощування та дизайн нігтів"],
+    "services_or_products": ["манікюр", "педикюр", "нарощування нігтів", "дизайн нігтів"],
+    "contacts": ["tel:+380985003002"],
+    "communication_style": "спокійний, конкретний, українською",
+    "brand_atmosphere": "доглянута студія з акцентом на колір, форму та деталі роботи",
+    "visual_style": "реальні макро-фото nail work та простору",
+    "colors": [],
+    "best_media": [],
+    "verified_facts": [
+      {"source": "Top20.ua directory", "value": "Orange Beauty Studio у Запоріжжі позиціонується як студія манікюру та педикюру; у переліку вказані манікюр, педикюр, нарощування і дизайн нігтів.", "confidence": "medium"},
+      {"source": "Misto.biz.ua directory", "value": "Каталог вказує адресу в Запоріжжі на вулиці Істоміна, 15 та контактний номер +380985003002.", "confidence": "medium"},
+      {"source": "Authorised Orange media manifest", "value": "Підтверджені реальні фото робіт і простору належать Orange Beauty Studio та дозволені для публічного сайту користувачем.", "confidence": "high"}
+    ],
+    "product_identity": {"exact_product": "манікюр, педикюр і дизайн нігтів у студії Orange Beauty Studio", "evidence_sources": ["Top20.ua directory", "Misto.biz.ua directory"], "confidence": "high"},
+    "content_themes": [
+      {"label": "манікюр", "decision_role": "offer", "evidence_sources": ["Top20.ua directory"]},
+      {"label": "педикюр", "decision_role": "offer", "evidence_sources": ["Top20.ua directory"]},
+      {"label": "нарощування та дизайн нігтів", "decision_role": "format", "evidence_sources": ["Top20.ua directory"]}
+    ],
+    "unknowns": ["Поточний прайс, доступні слоти, склад команди й деталі кожної послуги не підтверджені для цієї калібровки."],
+    "forbidden_claims": ["Не заявляти ціни, акції, тривалість процедур, конкретних майстрів, відгуки, рейтинги, гарантії або додаткові послуги без нового джерела.", "Не використовувати старий сайт Orange Beauty Studio як копірайтинг, структуру, дизайн або layout input."]
+  },
+  "target_audience": "Люди у Запоріжжі, яким потрібен запис на манікюр, педикюр або дизайн нігтів.",
+  "buying_context": "Відвідувачеві потрібно швидко побачити тип робіт і перейти до реального контакту зі студією.",
+  "business_level": "не встановлено",
+  "positioning": ["Студія сфокусована на nail-послугах, підтверджених каталогами."],
+  "differentiators": [],
+  "customer_questions": ["Чи є вільний час?", "Яку послугу обрати?", "Як зв'язатися зі студією?"],
+  "trust_signals": ["Підтверджені реальні медіа робіт і простору."],
+  "brand_media_signals": ["Авторизовані фото nail work та студійного простору."],
+  "recommended_scope": "micro_site",
+  "citations": [
+    {"source": "https://top20.ua/zp/sport-krasa/saloni-krasi-spa/orange-beauty-studio-manikyur-i-pedikyur.html", "value": "Послуги та місто", "confidence": "medium"},
+    {"source": "https://misto.biz.ua/zaporizhzhia/company/orange-beauty-studio/", "value": "Адреса та телефон", "confidence": "medium"}
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "research": {
+    "instagram_url": "https://belladentclinik.kr.ua/",
+    "business_name": "BELLA DENT CLINIC",
+    "city": "Кривий Ріг",
+    "country": "Україна",
+    "primary_language": "uk",
+    "niche": "стоматологічна клініка",
+    "sells": ["стоматологічна консультація"],
+    "services_or_products": ["стоматологічна консультація"],
+    "contacts": ["https://belladentclinik.kr.ua/"],
+    "communication_style": "спокійний, ясний, українською",
+    "brand_atmosphere": "світлий клінічний простір, людяний і без зайвих обіцянок",
+    "visual_style": "реальна клінічна фотографія простору та команди",
+    "colors": [],
+    "best_media": [],
+    "verified_facts": [
+      {"source": "KRIVBASS.CITY", "value": "У Кривому Розі стоматолог Ігор Олійник відкрив BELLA DENT CLINIC у межах розвитку власної стоматологічної практики.", "confidence": "high"},
+      {"source": "Authorised Bella Dent media manifest", "value": "Підтверджені реальні фото клінічного простору та команди належать Bella Dent Clinic і дозволені для публічного сайту користувачем.", "confidence": "high"}
+    ],
+    "product_identity": {"exact_product": "стоматологічна консультація у BELLA DENT CLINIC", "evidence_sources": ["KRIVBASS.CITY"], "confidence": "high"},
+    "content_themes": [
+      {"label": "звернення щодо стоматологічної консультації", "decision_role": "conversion", "evidence_sources": ["KRIVBASS.CITY"]},
+      {"label": "клінічний простір", "decision_role": "proof", "evidence_sources": ["Authorised Bella Dent media manifest"]},
+      {"label": "команда клініки", "decision_role": "audience", "evidence_sources": ["Authorised Bella Dent media manifest"]}
+    ],
+    "unknowns": ["Перелік процедур, ціни, графік, лікарські спеціалізації та медичні результати не підтверджені для цієї калібровки."],
+    "forbidden_claims": ["Не заявляти перелік процедур, безболісність, результати, ціни, гарантії, сертифікації, відгуки, стаж, термінові послуги або спеціалізації без нового джерела.", "Не використовувати старий сайт Bella Dent Clinic як копірайтинг, структуру, дизайн або layout input."]
+  },
+  "target_audience": "Люди у Кривому Розі, які шукають первинний контакт зі стоматологічною клінікою.",
+  "buying_context": "Відвідувачеві потрібен ясний перший крок до стоматологічної консультації без непідтверджених медичних обіцянок.",
+  "business_level": "не встановлено",
+  "positioning": ["Локальна стоматологічна клініка у Кривому Розі."],
+  "differentiators": ["Підтверджені реальні медіа простору та команди."],
+  "customer_questions": ["Як звернутися до клініки?", "Що обговорити на першому контакті?"],
+  "trust_signals": ["Підтверджені реальні медіа клініки, а не stock-матеріали."],
+  "brand_media_signals": ["Світлі фотографії клінічного простору та команди."],
+  "recommended_scope": "micro_site",
+  "citations": [
+    {"source": "https://krivbass.city/news/view/grantova-pidtrimka-v-dii-krivorizkij-stomatolog-vidkriv-kliniku-evropejskogo-rivnya", "value": "BELLA DENT CLINIC як стоматологічна клініка у Кривому Розі", "confidence": "high"}
+  ]
+}

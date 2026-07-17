@@ -41,8 +41,12 @@ class AcceptanceAuditor:
                 studio_dir / "build_provenance.json",
                 studio_dir / "concept_reviews" / "comparison.json",
                 studio_dir / "concept_reviews" / "selected_concept.json",
-                studio_dir / "full_build_visuals" / "desktop.png",
-                studio_dir / "full_build_visuals" / "mobile.png",
+                # The Studio runner renders the promoted selected build here.
+                # Concept screenshots live elsewhere; accepting those instead
+                # would sever approval from the final static HTML revision.
+                studio_dir / "final_reviews" / "desktop.png",
+                studio_dir / "final_reviews" / "tablet.png",
+                studio_dir / "final_reviews" / "mobile.png",
                 studio_dir / "art_director_report.json",
                 studio_dir / "commercial_usefulness_report.json",
                 studio_dir / "language_fit_report.json",
@@ -64,8 +68,13 @@ class AcceptanceAuditor:
                     if commercial.get("approved") is not True or commercial.get("score", 0) < 85:
                         reasons.append("Commercial usefulness did not pass the mandatory 85-point gate.")
                     scope = json.loads((studio_dir / "scope_compliance_report.json").read_text(encoding="utf-8"))
+                    decision = json.loads((studio_dir / "input" / "scope_decision.json").read_text(encoding="utf-8"))
                     if scope.get("approved") is not True or scope.get("scope") not in {"full_site", "micro_site"}:
                         reasons.append("Studio page scope did not pass the mandatory readiness contract.")
+                    elif scope.get("scope") != decision.get("scope"):
+                        reasons.append("Studio scope compliance does not match the immutable approved scope decision.")
+                    elif scope.get("scope") == "micro_site" and (scope.get("section_count", 4) > 3 or scope.get("image_treatments", 3) > 2):
+                        reasons.append("Micro-site exceeds its approved section or image-treatment budget.")
                     package = json.loads((studio_dir / "input" / "implementation_package.json").read_text(encoding="utf-8"))
                     manifest = json.loads((studio_dir / "input" / "media_manifest.json").read_text(encoding="utf-8"))
                     if not package.get("sha256") or not package.get("design_implementation_brief"):

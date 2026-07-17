@@ -46,6 +46,11 @@ business category. The brief must make the exact offer and real CTA clear in
 the first desktop and mobile viewport. Do not invent claims, media or proof.
 The embedded compatibility strategy/site_spec are validation data only, never a
 category layout instruction.
+
+The approved scope is a hard constraint. For micro_site, write a compact
+three-section decision path (offer, proof/process, conversion) with no padded
+gallery or full-site-only sections. Never expand it because the media count is
+high. For full_site, design the longer evidence-backed commercial path.
 """
 
 DESIGN_DIRECTOR_USER = """Business research:
@@ -56,6 +61,8 @@ Authorised media manifest:
 
 Trait-relevant references:
 {references_json}
+
+Approved scope: {scope}
 
 Return DesignImplementationBrief JSON."""
 
@@ -142,8 +149,7 @@ Block delivery when:
 
 Evaluate customer-facing copy from the rendered screenshot observations and bodyTextSample. Use SiteSpec to check unsupported claims, but do not criticize internal metadata unless it appears in rendered text.
 If research has no visually verified media, do not require a product gallery. An intentional Instagram-profile preview or neutral atmospheric visual treatment is acceptable when it clearly avoids presenting unverified photos as proof.
-For sparse Instagram profiles where the only high-confidence facts are the handle and profile URL, judge the page as an honest contact bridge. Do not block delivery merely because offers, location, differentiators, reviews, or product proof are unavailable, as long as the rendered page is polished, technically sound, clear about using Instagram Direct, and avoids fake claims or leaked internal uncertainty.
-For a sparse profile, a compact page with a hero, one ready-to-send neutral Direct message, a short note to confirm current details in Direct, and one final contact action is sufficient. Do not require a service premise inferred from the handle, a catalog-like journey, or more than the hero and final CTA. When that compact contact bridge is technically sound, customer-facing copy is consistent, and no unsupported claims appear, approve it with a score of at least 90.
+The supplied scope contract is binding. For `micro_site`, judge the bounded product against offer → real proof/process → conversion, including an early CTA and intentional mobile treatment. Do not demand a gallery, FAQ, team, reviews, certificates, prices, or additional sections merely because they would appear in a full site. For `full_site`, require a longer evidence-backed decision path. For `blocked`, no contact bridge or creative page is acceptable: insufficient evidence must remain blocked.
 
 Issue format must include:
 severity: critical / high / medium / low;
@@ -164,6 +170,9 @@ StrategyBrief:
 
 SiteSpec:
 {site_spec_json}
+
+Approved scope contract:
+{scope_json}
 
 Technical inspection:
 {technical_json}

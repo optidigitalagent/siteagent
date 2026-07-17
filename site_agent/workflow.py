@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from urllib.parse import urlparse
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,9 +97,26 @@ def selected_references(
         str(item.get("reference_id")): item for item in decisions.get("decisions", [])
         if item.get("decision") == "active" and int(item.get("confidence", 0)) >= 90
     }
+    def _site_identity(value: object) -> str:
+        """Compare owned sites by host/path, not an incidental http/https variant."""
+        parsed = urlparse(str(value or "").strip().lower())
+        host = parsed.netloc.removeprefix("www.")
+        path = parsed.path.rstrip("/")
+        return f"{host}{path}" if host else ""
+
+    research_url = _site_identity(((business_research or {}).get("research", business_research or {}).get("instagram_url", "")))
     usable = []
     for item in data.get("references", []):
         item_id = str(item.get("id", ""))
+        # A business's existing public site can establish media provenance or
+        # facts, but it must never influence the new site's design, copy, or
+        # layout. Exclude that exact canonical site from reference selection.
+        record_urls = {
+            _site_identity(item.get(key, ""))
+            for key in ("source_url", "normalized_url", "url")
+        }
+        if research_url and research_url in record_urls:
+            continue
         if item_id not in active or item.get("capture_status") != "captured" or item.get("analysis_status") != "completed":
             continue
         paths = item.get("screenshot_paths", [])

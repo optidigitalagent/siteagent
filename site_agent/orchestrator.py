@@ -14,6 +14,8 @@ from site_agent.critic import CriticAgent
 from site_agent.design_quality import (
     BuilderContext,
     EvidenceAssessment,
+    EvidenceLevel,
+    PageScope,
     PIPELINE_SCHEMA_VERSION,
     QualityReport,
     assess_evidence,
@@ -25,7 +27,7 @@ from site_agent.design_quality import (
 from site_agent.external_skills import LocalSkillRuntime
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
-from site_agent.media import MediaInputBlocked, MediaPreparer
+from site_agent.media import MediaInputBlocked, MediaPreparer, authorised_media_assets
 from site_agent.models import (
     AcceptanceAuditResult,
     CritiqueReport,
@@ -49,6 +51,14 @@ class JobResult:
     job_id: str
     run_dir: Path
     publish: PublishResult
+    final_score: int
+
+
+@dataclass
+class CalibrationResult:
+    """A completed local creative acceptance with no publish/delivery side effect."""
+    job_id: str
+    run_dir: Path
     final_score: int
 
 
@@ -81,7 +91,8 @@ class SiteAgentOrchestrator:
         production: bool = False,
         run_id: str | None = None,
         run_path: Path | None = None,
-    ) -> JobResult:
+        calibration_only: bool = False,
+    ) -> JobResult | CalibrationResult:
         """Run or resume one job without replacing valid prior checkpoints."""
         job_id = run_id or self._job_id(instagram_url)
         run_dir = run_path or settings.runs_dir / job_id
@@ -91,16 +102,17 @@ class SiteAgentOrchestrator:
         reports_dir.mkdir(parents=True, exist_ok=True)
         critiques_dir.mkdir(parents=True, exist_ok=True)
 
-        recovered = self._resume_delivery_if_ready(
-            instagram_url=instagram_url,
-            job_id=job_id,
-            run_dir=run_dir,
-            reports_dir=reports_dir,
-            site_dir=site_dir,
-            production=production,
-        )
-        if recovered is not None:
-            return recovered
+        if not calibration_only:
+            recovered = self._resume_delivery_if_ready(
+                instagram_url=instagram_url,
+                job_id=job_id,
+                run_dir=run_dir,
+                reports_dir=reports_dir,
+                site_dir=site_dir,
+                production=production,
+            )
+            if recovered is not None:
+                return recovered
 
         builder_mode = settings.site_builder.strip().lower()
         if builder_mode not in {"codex_studio", "legacy_template"}:
@@ -128,21 +140,31 @@ class SiteAgentOrchestrator:
                     media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
                 self.media_preparer.validate_manifest(media_manifest)
+                # Readiness is based on the actual authorised Cloudinary assets,
+                # never the scraped public URL list returned by research.
+                research.best_media = authorised_media_assets(media_manifest)
+                write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "media_prepared", "media_input_completed")
+                evidence = self._effective_evidence(reports_dir, research, business)
+                write_json(reports_dir / "01_evidence_assessment.json", evidence)
+                write_json(reports_dir / "01_studio_readiness.json", evidence)
                 references = selected_references(business_research=business)
                 write_json(reports_dir / "02_selected_references.json", {"references": references, "selection_input_checksum": checksum(business), "selection_checksum": checksum(references)})
                 self._checkpoint(reports_dir, "references_selected")
                 design = self._read_json(reports_dir / "03_design_implementation_brief.json")
-                if design is None or not (reports_dir / "03_design_implementation_brief.provenance.json").is_file():
+                design_provenance = self._read_json(reports_dir / "03_design_implementation_brief.provenance.json")
+                if design is None or design_provenance is None or design_provenance.get("scope") != evidence.page_scope.value:
                     if self.design_director is None:
                         self.design_director = DesignDirector(LLMClient(provider=settings.design_director_provider))
                     design = self.design_director.run(
                         __import__("site_agent.models", fromlist=["BusinessResearch"]).BusinessResearch.model_validate(business),
-                        media_manifest, references,
+                        media_manifest, references, scope=evidence.page_scope.value,
                     ).model_dump()
                     write_json(reports_dir / "03_design_implementation_brief.json", design)
                     write_markdown(reports_dir / "design_implementation_brief.md", "Design implementation brief", design)
-                    write_json(reports_dir / "03_design_implementation_brief.provenance.json", role_provenance(role="Design Director", provider=self.design_director.llm.provider, model=self.design_director.llm.model, prompt_version="design-director-v1", prompt={"role": "design_director"}, inputs={"business": business, "media_manifest": media_manifest, "references": references}, output=design))
+                    provenance = role_provenance(role="Design Director", provider=self.design_director.llm.provider, model=self.design_director.llm.model, prompt_version="design-director-v1", prompt={"role": "design_director", "scope": evidence.page_scope.value}, inputs={"business": business, "media_manifest": media_manifest, "references": references}, output=design)
+                    provenance["scope"] = evidence.page_scope.value
+                    write_json(reports_dir / "03_design_implementation_brief.provenance.json", provenance)
                 strategy = StrategyBrief.model_validate(design["strategy"])
                 spec = SiteSpec.model_validate(design["site_spec"])
                 package = implementation_package(business_research=business, media_manifest=media_manifest, design_brief=design, references=references)
@@ -159,10 +181,10 @@ class SiteAgentOrchestrator:
                 write_json(reports_dir / "01_research.json", research)
             self._checkpoint(reports_dir, "research_completed")
 
-        evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
-        if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
-            evidence = assess_evidence(research)
-            write_json(reports_dir / "01_evidence_assessment.json", evidence)
+        if builder_mode != "codex_studio":
+            evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
+            if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
+                evidence = assess_evidence(research)
         # The explicit readiness artifact prevents a cached optimistic score from
         # silently authorising Studio work after a contract upgrade.
         write_json(reports_dir / "01_studio_readiness.json", evidence)
@@ -281,6 +303,7 @@ class SiteAgentOrchestrator:
                     research=research,
                     strategy=strategy,
                     site_spec=spec,
+                    evidence=evidence,
                 )
                 write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
             final_critique = critique
@@ -320,6 +343,19 @@ class SiteAgentOrchestrator:
                         raise GenerationBlocked(
                             "creative_studio_human_calibration_required: fixture evidence must be approved before production rollout."
                         )
+                if calibration_only:
+                    result = {
+                        "status": "completed_human_calibration_required",
+                        "job_id": job_id,
+                        "final_score": critique.score,
+                        "site_dir": str(site_dir),
+                        "studio_dir": str(studio_dir) if studio_dir else "",
+                        "acceptance_audit": "generation_reports/acceptance_audit.json",
+                        "external_actions": {"publisher": False, "cloudflare": False, "telegram": False, "queue": False},
+                    }
+                    write_json(reports_dir / "calibration_result.json", result)
+                    self._checkpoint(reports_dir, "calibration_completed")
+                    return CalibrationResult(job_id=job_id, run_dir=run_dir, final_score=critique.score)
                 publish = self.publisher.publish(
                     run_dir=run_dir,
                     site_dir=site_dir,
@@ -629,6 +665,26 @@ class SiteAgentOrchestrator:
         spec.process_steps = [decode(item) for item in spec.process_steps]
         spec.contact_lines = [decode(item) for item in spec.contact_lines]
         return spec
+
+    def _effective_evidence(
+        self, reports_dir: Path, research: ResearchBrief, business: dict,
+    ) -> EvidenceAssessment:
+        """Keep the strategist's stricter scope intact across every Studio stage."""
+        evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
+        if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
+            evidence = assess_evidence(research)
+        recommended = str(business.get("recommended_scope", "")).strip().lower()
+        if recommended == PageScope.MICRO.value and evidence.page_scope is PageScope.FULL:
+            return evidence.model_copy(update={
+                "level": EvidenceLevel.B,
+                "page_scope": PageScope.MICRO,
+                "required_concepts": 1,
+                "reasons": list(dict.fromkeys([
+                    *evidence.reasons,
+                    "research strategist selected the more restrictive intentional micro-site scope",
+                ])),
+            })
+        return evidence
 
     def _job_id(self, instagram_url: str) -> str:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")

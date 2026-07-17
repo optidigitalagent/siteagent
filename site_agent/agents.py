@@ -53,13 +53,21 @@ class DesignDirector:
     def __init__(self, llm: LLMClient) -> None:
         self.llm = llm
 
-    def run(self, research: BusinessResearch, media_manifest: dict, references: list[dict]) -> DesignImplementationBrief:
+    def run(
+        self,
+        research: BusinessResearch,
+        media_manifest: dict,
+        references: list[dict],
+        *,
+        scope: str,
+    ) -> DesignImplementationBrief:
         return self.llm.structured(
             system=prompts.DESIGN_DIRECTOR_SYSTEM,
             user=prompts.DESIGN_DIRECTOR_USER.format(
                 research_json=research.model_dump_json(indent=2),
                 media_json=__import__("json").dumps(media_manifest, ensure_ascii=False, indent=2),
                 references_json=__import__("json").dumps(references, ensure_ascii=False, indent=2),
+                scope=scope,
             ),
             schema=DesignImplementationBrief,
         )

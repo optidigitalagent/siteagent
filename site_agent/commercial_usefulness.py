@@ -25,6 +25,7 @@ class CommercialUsefulnessReport(BaseModel):
     score: int = Field(ge=0, le=100)
     minimum_score: int = 85
     approved: bool
+    page_scope: str = "unspecified"
     checks: dict[str, bool]
     issues: list[CommercialIssue] = Field(default_factory=list)
     rationale: str
@@ -48,8 +49,10 @@ class SemanticRepetitionItem(BaseModel):
 
 class SemanticRepetitionReport(BaseModel):
     approved: bool
+    page_scope: str = "unspecified"
     items: list[SemanticRepetitionItem] = Field(default_factory=list)
     section_intents: dict[str, str] = Field(default_factory=dict)
+    section_roles: dict[str, str] = Field(default_factory=dict)
     missing_information_ratio: float = Field(default=0.0, ge=0, le=1)
 
 
@@ -57,16 +60,21 @@ def _plain_text(value: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", value or "")).strip()
 
 
-def _sections_from_html(html_text: str) -> list[tuple[str, str]]:
-    sections: list[tuple[str, str]] = []
+def _sections_from_html(html_text: str) -> list[tuple[str, str, str]]:
+    sections: list[tuple[str, str, str]] = []
     for index, match in enumerate(re.finditer(r"<section\b(?P<attrs>[^>]*)>(?P<body>.*?)</section>", html_text or "", re.I | re.S), 1):
         attrs, body = match.group("attrs"), match.group("body")
         id_match = re.search(r"\bid\s*=\s*['\"]([^'\"]+)['\"]", attrs, re.I)
-        sections.append((id_match.group(1) if id_match else f"section-{index}", _plain_text(body)))
+        role_match = re.search(r"\bdata-decision-role\s*=\s*['\"]([^'\"]+)['\"]", attrs, re.I)
+        sections.append((id_match.group(1) if id_match else f"section-{index}", _plain_text(body), role_match.group(1).strip().lower() if role_match else ""))
     return sections
 
 
-def _intent(text: str, offerings: list[str]) -> str:
+def _intent(text: str, offerings: list[str], *, declared_role: str = "", section_id: str = "") -> str:
+    if declared_role in {"offer", "proof", "process", "conversion"}:
+        return declared_role
+    if section_id.lower() in {"contact", "contacts", "book", "booking", "close", "closure", "direct"}:
+        return "conversion"
     value = text.lower()
     offer_terms = [term.lower() for term in offerings if len(term.strip()) > 4]
     for term in offer_terms:
@@ -82,18 +90,36 @@ def _intent(text: str, offerings: list[str]) -> str:
     return "other"
 
 
-def semantic_repetition_report(spec: Any, context: Any, *, html_text: str = "") -> SemanticRepetitionReport:
+def semantic_repetition_report(
+    spec: Any, context: Any, *, html_text: str = "", page_scope: str | None = None
+) -> SemanticRepetitionReport:
+    """Check narrative repetition against the approved evidence scope.
+
+    A Level B page has room for only offer, proof/process, and conversion.  It
+    must not be penalised for not carrying the longer Level A journey, but it
+    must still give each of those scarce sections a different job.
+    """
+    scope = (page_scope or "unspecified").strip().lower()
     sections = _sections_from_html(html_text)
     if not sections:
-        sections = [(section.id, " ".join([section.title, *section.content])) for section in spec.sections]
-    intents = {section_id: _intent(text, context.business_brief.verified_offerings) for section_id, text in sections}
-    total_words = sum(len(text.split()) for _, text in sections)
-    missing_words = sum(len(text.split()) for section_id, text in sections if intents[section_id] == "ask for missing current details")
+        sections = [(section.id, " ".join([section.title, *section.content]), "") for section in spec.sections]
+    intents = {
+        section_id: _intent(text, context.business_brief.verified_offerings, declared_role=role, section_id=section_id)
+        for section_id, text, role in sections
+    }
+    roles = {section_id: role or intents[section_id] for section_id, _, role in sections}
+    total_words = sum(len(text.split()) for _, text, _ in sections)
+    missing_words = sum(len(text.split()) for section_id, text, _ in sections if intents[section_id] == "ask for missing current details")
     missing_ratio = round(missing_words / max(total_words, 1), 3)
     duplicates = []
     for idea, count in Counter(intents.values()).items():
         ids = [section_id for section_id, value in intents.items() if value == idea]
-        if count >= 3 and idea != "other":
+        # Three repeated meanings are always a failure.  For Level B we also
+        # reject a two-section duplicate because that consumes its entire
+        # decision budget; a repeated offer in a labelled conversion close is
+        # deliberately represented as conversion rather than duplicated offer.
+        repeated_limit = 2 if scope == "micro_site" else 3
+        if count >= repeated_limit and idea != "other":
             duplicates.append(
                 SemanticRepetitionItem(
                     repeated_idea=idea,
@@ -114,7 +140,30 @@ def semantic_repetition_report(spec: Any, context: Any, *, html_text: str = "") 
                 recommendation="Reduce this to one short factual caveat and restore offer, desire, proof, and action content.",
             )
         )
-    return SemanticRepetitionReport(approved=not duplicates, items=duplicates, section_intents=intents, missing_information_ratio=missing_ratio)
+    if scope == "micro_site":
+        required_roles = {"offer", "proof", "conversion"}
+        absent = sorted(required_roles - set(roles.values()))
+        if absent:
+            duplicates.append(
+                SemanticRepetitionItem(
+                    repeated_idea="incomplete micro-site decision path",
+                    sections=list(intents),
+                    closeness=1.0,
+                    storytelling_impact="A concise Level B page still needs offer, evidence-backed proof or process, and a conversion close.",
+                    recommendation="Use the existing three-section budget for distinct offer, proof/process, and booking roles; do not add filler sections.",
+                )
+            )
+    elif scope == "blocked":
+        duplicates.append(
+            SemanticRepetitionItem(
+                repeated_idea="blocked evidence scope rendered",
+                sections=list(intents),
+                closeness=1.0,
+                storytelling_impact="Insufficient evidence must block creative output before commercial review.",
+                recommendation="Obtain a confirmed product, language, and sourced content theme before building.",
+            )
+        )
+    return SemanticRepetitionReport(approved=not duplicates, page_scope=scope, items=duplicates, section_intents=intents, section_roles=roles, missing_information_ratio=missing_ratio)
 
 
 def language_fit_report(spec: Any, research: Any) -> LanguageFitReport:
@@ -144,8 +193,10 @@ def commercial_usefulness_report(
     semantic: SemanticRepetitionReport | None = None,
     html_text: str = "",
     hero_cta_present: bool | None = None,
+    page_scope: str | None = None,
 ) -> CommercialUsefulnessReport:
-    semantic = semantic or semantic_repetition_report(spec, context, html_text=html_text)
+    scope = (page_scope or "unspecified").strip().lower()
+    semantic = semantic or semantic_repetition_report(spec, context, html_text=html_text, page_scope=scope)
     hero = " ".join([spec.h1, spec.hero_subtitle]).lower()
     all_text = _plain_text(html_text) or " ".join([
         spec.h1, spec.hero_subtitle, *spec.trust_points,
@@ -192,6 +243,13 @@ def commercial_usefulness_report(
         "reads_as_commercial_site": not editorial_only,
         "primary_cta_in_first_meaningful_viewport": hero_action,
     }
+    if scope == "micro_site":
+        checks["micro_site_has_offer_proof_conversion_path"] = semantic.approved
+    elif scope == "full_site":
+        # A full site must earn its length with a more complete decision path.
+        checks["full_site_has_complete_commercial_path"] = len(_sections_from_html(html_text)) >= 4 if html_text else len(spec.sections) >= 4
+    elif scope == "blocked":
+        checks["scope_allows_generation"] = False
     deductions = {
         "offer_clear_within_five_seconds": 40,
         "audience_clear": 8,
@@ -204,6 +262,9 @@ def commercial_usefulness_report(
         "offer_is_recitable_after_first_screen": 20,
         "reads_as_commercial_site": 18,
         "primary_cta_in_first_meaningful_viewport": 20,
+        "micro_site_has_offer_proof_conversion_path": 28,
+        "full_site_has_complete_commercial_path": 28,
+        "scope_allows_generation": 100,
     }
     evidence_margin = 0
     if len(context.business_brief.verified_offerings) <= 1:
@@ -223,7 +284,8 @@ def commercial_usefulness_report(
     ]
     return CommercialUsefulnessReport(
         score=score,
-        approved=score >= 85 and all(checks[key] for key in ("offer_clear_within_five_seconds", "primary_action_clear", "primary_cta_in_first_meaningful_viewport", "missing_information_is_not_primary_narrative", "desire_created", "reads_as_commercial_site")),
+        approved=score >= 85 and all(checks[key] for key in ("offer_clear_within_five_seconds", "primary_action_clear", "primary_cta_in_first_meaningful_viewport", "missing_information_is_not_primary_narrative", "desire_created", "reads_as_commercial_site")) and (scope != "micro_site" or checks["micro_site_has_offer_proof_conversion_path"]) and (scope != "full_site" or checks["full_site_has_complete_commercial_path"]) and scope != "blocked",
+        page_scope=scope,
         checks=checks,
         issues=issues,
         rationale="Commercial usefulness is a hard gate: clear offer, value, action, and a concise evidence boundary must survive the first meaningful viewport. Sparse verified evidence retains a visible score margin rather than becoming the page narrative.",
