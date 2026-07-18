@@ -9,7 +9,13 @@
     "updated_at": "2026-07-13T06:58:42.750608+00:00",
     "site_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur/site/index.html",
     "repo_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur",
-    "error": ""
+    "error": "",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   },
   {
     "id": "d8176c55f451439cacf0e8a892ca97e7",
@@ -21,18 +27,30 @@
     "updated_at": "2026-07-14T07:14:24.062402+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   },
   {
     "id": "f684eed531f74dd8995b2a58ac77739e",
     "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "pending",
+    "status": "running",
     "received_at": "2026-07-18T15:44:01.634531+00:00",
-    "updated_at": "2026-07-18T15:44:01.634545+00:00",
+    "updated_at": "2026-07-18T15:48:54.381565+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": ""
+    "error": "",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   }
 ]
