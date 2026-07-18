@@ -76,7 +76,8 @@
   },
   "commits": {
     "recovery_checkpoint": "5041a730eae79e837539ae6fd3a17ecb4a21a573",
-    "final_main_head": "pending_final_commit"
+    "implementation_and_autonomous_audit": "1caed8c250898b5391be74132b01f7fe2701f873",
+    "report_finalization": "pushed main HEAD; see final response"
   },
   "next_action": "Human visual/product audit and explicit decision on the blind-integrity disclosure; do not publish before approval."
 }

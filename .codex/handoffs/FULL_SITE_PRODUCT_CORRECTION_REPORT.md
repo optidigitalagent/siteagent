@@ -132,8 +132,9 @@ strict blind benchmark. If strict blindness is mandatory, a new clean run is
 required; this recovered Concept C run must not be relabelled blind.
 
 Checkpoint commit: `5041a730eae79e837539ae6fd3a17ecb4a21a573`.
-Final implementation/report commits are resolved through the pushed `main` HEAD
-and will be recorded in the final response.
+Implementation and autonomous-audit commit:
+`1caed8c250898b5391be74132b01f7fe2701f873`. The report-finalization commit is
+the pushed `main` HEAD and is recorded in the final response.
 
 Exact next action: human visual/product audit of the Eliz screenshots and the
 blind-integrity disclosure. Do not publish before explicit approval.
