@@ -69,3 +69,17 @@ brand fit, or commercial usefulness.
 
 The same agent that implemented the work must not be the only reviewer.
 Screenshots and browser evidence are mandatory for visual approval.
+
+## Functional site shell
+
+- On a scrollable business page, primary navigation remains available at the
+  viewport top; a one-screen exception needs an explicit equivalent.
+- Every finished page has a semantic footer with useful navigation, a primary
+  conversion/contact action, and only verified social/contact destinations.
+- Primary CTA labels must not clip, collapse, disappear or leave the clickable
+  box in default, hover, focus or active states; targets remain at least 44×44.
+- Sticky filters and in-page controls sit below the persistent header.
+- These are behavioral requirements, not a shared header/footer visual template.
+
+Browser QA must verify the shell on desktop, tablet and mobile for every
+declared page.

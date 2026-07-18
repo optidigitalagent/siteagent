@@ -81,3 +81,28 @@ tracked preview plus fresh local/live screenshots and accepted the revision with
 no critical/high issue. The `.html` aliases use empty 308 redirects before the
 protected canonical 200 pages; this is non-blocking because the redirect bodies
 contain no indexable page content.
+
+## Eliz persistent shell and CTA revision review (2026-07-18)
+
+The selected Concept C remains materially intact. The revision changes the
+functional shell, not the creative direction: the header persists at the top
+of the viewport, the Portfolio filter bar offsets below it, every page has a
+complete five-link navigation/conversion footer, and the home-page enquiry CTA
+label retains its full geometry instead of inheriting the decorative mark's
+square dimensions.
+
+Fresh local and deployed Chromium gates pass all five pages at desktop, tablet
+and mobile with zero overflow, missing media, network/console/link failure,
+undersized visible target, sticky-header defect, incomplete footer or clipped
+primary CTA. Live interaction verification passes PL/EN and expanded mobile
+menus everywhere, footer navigation, Portfolio counts `24/3/7/12/2`, invalid
+form focus on `name`, and visible prepared output after a valid submission.
+All five canonical live pages return HTTP 200 and expose both noindex robots
+meta and `X-Robots-Tag: noindex, nofollow`; preview identity markers are intact.
+
+The blind revision Product Director accepts the complete multi-page shell at
+100/100. A separate read-only reviewer inspected the tracked preview and fresh
+screenshots and returned `ACCEPT`, with no critical, high, medium or low issue
+requiring revision. The full regression suite passes 144 tests with only the
+explicit credential-gated production smoke skipped. This approves the isolated
+preview for user review, not customer production.

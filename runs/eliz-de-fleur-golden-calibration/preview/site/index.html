@@ -44,7 +44,7 @@
           <h1 id="hero-title" data-en-html="Eliz de Fleur.<br> <em>Event scenography.</em>">Eliz de Fleur.<br> <em>Scenografia wydarzeń.</em></h1>
           <p class="hero__offer" data-en="Eliz de Fleur creates event scenography and floral installations for commercial spaces, corporate events, weddings and private events.">Eliz de Fleur tworzy scenografie eventowe i instalacje florystyczne dla przestrzeni komercyjnych, eventów firmowych, ślubów i wydarzeń prywatnych.</p>
           <div class="hero__actions">
-            <a class="live-cta" href="contact.html"><span aria-hidden="true"></span><span data-en="Prepare an enquiry">Przygotuj zapytanie</span></a>
+            <a class="live-cta" data-site-cta="primary" href="contact.html"><span class="live-cta__mark" aria-hidden="true"></span><span data-en="Prepare an enquiry">Przygotuj zapytanie</span></a>
             <a class="text-link" href="portfolio.html"><span data-en="View the work">Zobacz realizacje</span> <span aria-hidden="true">↘</span></a>
           </div>
         </div>
@@ -326,10 +326,20 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <a href="#start">Eliz de Fleur</a>
-      <p data-en="Warsaw · event scenography · floral installations">Warszawa · scenografia eventowa · instalacje florystyczne</p>
-    <a href="https://www.instagram.com/eliz_de_fleur/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+  <footer class="site-footer" data-site-footer>
+    <div class="site-footer__lead">
+      <div>
+        <a class="site-footer__wordmark" href="#start">Eliz de Fleur</a>
+        <p data-en="Event scenography and floral installations for commercial spaces, corporate events, weddings and private events in Warsaw.">Scenografia eventowa i instalacje florystyczne dla przestrzeni komercyjnych, eventów firmowych, ślubów i wydarzeń prywatnych w Warszawie.</p>
+      </div>
+      <a class="site-footer__cta" data-site-cta="primary" href="contact.html#brief"><span data-en="Prepare an enquiry">Przygotuj zapytanie</span><span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="site-footer__columns">
+      <div><p class="site-footer__label" data-en="Navigation">Nawigacja</p><nav class="site-footer__nav" data-footer-nav aria-label="Nawigacja w stopce" data-pl-aria-label="Nawigacja w stopce" data-en-aria-label="Footer navigation"><a href="index.html" data-en="Home">Start</a><a href="services.html" data-en="Services">Oferta</a><a href="portfolio.html">Portfolio</a><a href="about.html" data-en="About">O marce</a><a href="contact.html" data-en="Contact">Kontakt</a></nav></div>
+      <div class="site-footer__social"><p class="site-footer__label" data-en="Social">Social</p><a href="https://www.instagram.com/eliz_de_fleur/" target="_blank" rel="noopener noreferrer">Instagram ↗</a></div>
+      <div class="site-footer__location"><p class="site-footer__label" data-en="Location">Miejsce</p><span>Warszawa</span><span>@eliz_de_fleur</span></div>
+    </div>
+    <div class="site-footer__meta"><p>© <span data-year></span> Eliz de Fleur</p><p data-en="Event scenography · floral installations">Scenografia eventowa · instalacje florystyczne</p></div>
   </footer>
 </body>
 </html>

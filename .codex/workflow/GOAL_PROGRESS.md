@@ -435,3 +435,29 @@ Live end-to-end verification requires local runtime credentials:
 - Independent post-fix acceptance passed with no critical/high issue. The full
   regression suite also remains green: 141 tests passed and one
   credential-gated Cloudflare production smoke was skipped.
+
+## Eliz functional-shell revision preview (2026-07-18)
+
+- Preserved the selected Concept C composition, copy system, media and all 24
+  Portfolio items. Added a sticky header on every page, a full five-link footer
+  with verified Instagram and enquiry action, and repaired the home-page
+  enquiry CTA so its text is no longer compressed by the decorative-dot rule.
+- Promoted the lesson into durable SiteAgent contracts: generation prompts,
+  technical inspection, multi-page Product Director acceptance, quality bar,
+  workflow scenarios/risks/decisions, relevant creative/review skills and
+  regression tests now require a persistent navigation shell, useful footer
+  and intact primary CTA without prescribing composition.
+- Local and live Chromium QA passed Home, Services, Portfolio, About and Contact
+  at 1440×1100, 768×1024 and 390×844. PL/EN, mobile menus, cross-page footer
+  navigation, Portfolio filters `24/3/7/12/2`, invalid form focus and prepared
+  enquiry output passed. Every live page returns 200 with both robots meta and
+  `X-Robots-Tag: noindex, nofollow`.
+- Independent revision review: `ACCEPT`, with no critical/high/medium/low issue
+  requiring revision. Revision Product Director: 100/100. Full suite: 144
+  passed, one credential-gated production smoke skipped; compileall, pip check,
+  smoke build and diff check passed.
+- Published only the existing isolated Cloudflare Preview project at
+  `https://e77b3897.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`.
+  No production `go`, Telegram delivery, customer production deployment or
+  custom-domain action ran. Stop checkpoint:
+  `ELIZ_REVISION_PREVIEW_READY_FOR_USER_REVIEW`.

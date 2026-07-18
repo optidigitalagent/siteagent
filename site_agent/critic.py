@@ -66,6 +66,15 @@ class TechnicalInspector:
         small_tap_targets = list(
             dict.fromkeys(desktop_metrics["smallTapTargets"] + tablet_metrics["smallTapTargets"] + mobile_metrics["smallTapTargets"])
         )
+        persistent_header_issues = list(dict.fromkeys(
+            desktop_metrics["persistentHeaderIssues"] + tablet_metrics["persistentHeaderIssues"] + mobile_metrics["persistentHeaderIssues"]
+        ))
+        footer_issues = list(dict.fromkeys(
+            desktop_metrics["footerIssues"] + tablet_metrics["footerIssues"] + mobile_metrics["footerIssues"]
+        ))
+        clipped_primary_ctas = list(dict.fromkeys(
+            desktop_metrics["clippedPrimaryCtas"] + tablet_metrics["clippedPrimaryCtas"] + mobile_metrics["clippedPrimaryCtas"]
+        ))
         horizontal_scroll = bool(desktop_metrics["horizontalScroll"] or tablet_metrics["horizontalScroll"] or mobile_metrics["horizontalScroll"])
         failed_network_requests = list(dict.fromkeys(failed_network_requests))
         gate = TechnicalGate(
@@ -76,6 +85,9 @@ class TechnicalInspector:
                 or failed_network_requests
                 or broken_links
                 or small_tap_targets
+                or persistent_header_issues
+                or footer_issues
+                or clipped_primary_ctas
             ),
             horizontal_scroll=horizontal_scroll,
             missing_images=missing_images,
@@ -83,6 +95,9 @@ class TechnicalInspector:
             failed_network_requests=failed_network_requests,
             broken_links=broken_links,
             small_tap_targets=small_tap_targets,
+            persistent_header_issues=persistent_header_issues,
+            footer_issues=footer_issues,
+            clipped_primary_ctas=clipped_primary_ctas,
             notes=[
                 f"Desktop viewport: {desktop_metrics['viewport']}",
                 f"Tablet viewport: {tablet_metrics['viewport']}",
@@ -169,7 +184,7 @@ class TechnicalInspector:
     def _collect_metrics(self, page):
         return page.evaluate(
             """
-            () => {
+            async () => {
               const doc = document.documentElement;
               const body = document.body;
               const horizontalScroll = doc.scrollWidth > doc.clientWidth + 1 || body.scrollWidth > body.clientWidth + 1;
@@ -194,6 +209,51 @@ class TechnicalInspector:
                   return r.width < 44 || r.height < 44;
                 })
                 .map(el => (el.textContent || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 80));
+              const persistentHeaderIssues = [];
+              const header = document.querySelector("header");
+              if (!header) {
+                persistentHeaderIssues.push("Page has no header landmark.");
+              } else {
+                const style = window.getComputedStyle(header);
+                if (!['sticky', 'fixed'].includes(style.position) || style.top === 'auto') {
+                  persistentHeaderIssues.push(`Header is not persistent (position: ${style.position}; top: ${style.top}).`);
+                } else {
+                  const originalY = window.scrollY;
+                  const available = Math.max(0, doc.scrollHeight - window.innerHeight);
+                  const targetY = Math.min(640, available);
+                  if (targetY > 32) {
+                    window.scrollTo(0, targetY);
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    const top = header.getBoundingClientRect().top;
+                    if (Math.abs(top) > 2) persistentHeaderIssues.push(`Header leaves the viewport after scroll (top: ${top.toFixed(1)}px).`);
+                    window.scrollTo(0, originalY);
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                  }
+                }
+              }
+              const footerIssues = [];
+              const footer = document.querySelector("footer");
+              if (!footer) {
+                footerIssues.push("Page has no footer landmark.");
+              } else {
+                const footerNavigation = footer.querySelector("nav");
+                const footerNavigationLinks = footerNavigation
+                  ? Array.from(footerNavigation.querySelectorAll("a[href]")).filter(link => link.getAttribute("href")).length
+                  : 0;
+                if (!footerNavigation || footerNavigationLinks < 2) {
+                  footerIssues.push("Footer lacks a usable navigation group with at least two destinations.");
+                }
+                const footerCta = footer.querySelector("[data-site-cta='primary'], a[href*='contact'], a[href*='book'], a[href^='mailto:'], a[href^='tel:'], form button[type='submit']");
+                if (!footerCta) footerIssues.push("Footer lacks a clear conversion or contact action.");
+              }
+              const primaryCtas = Array.from(document.querySelectorAll("[data-site-cta='primary'], .live-cta, .btn.primary, .header-cta, [class*='primary-cta']"));
+              const clippedPrimaryCtas = primaryCtas
+                .filter(cta => cta.getClientRects().length > 0 && window.getComputedStyle(cta).visibility !== 'hidden')
+                .filter(cta => Array.from(cta.querySelectorAll("*")).some(part => {
+                  if (!(part.textContent || '').trim() || part.getClientRects().length === 0) return false;
+                  return part.scrollWidth > part.clientWidth + 1 || part.scrollHeight > part.clientHeight + 1;
+                }))
+                .map(cta => (cta.textContent || cta.getAttribute("aria-label") || "primary CTA").replace(/\\s+/g, " ").trim().slice(0, 80));
               const headings = Array.from(document.querySelectorAll("h1,h2")).map(h => h.textContent.trim());
               const buttons = Array.from(document.querySelectorAll("a.btn,button")).map(b => b.textContent.trim());
               const sectionIds = Array.from(document.querySelectorAll("main section")).map(s => s.id || s.className || "section");
@@ -205,6 +265,9 @@ class TechnicalInspector:
                 missingImages,
                 brokenLinks,
                 smallTapTargets,
+                persistentHeaderIssues,
+                footerIssues,
+                clippedPrimaryCtas,
                 headings,
                 buttons,
                 sectionIds,

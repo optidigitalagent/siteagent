@@ -187,6 +187,9 @@ class TechnicalGate(BaseModel):
     failed_network_requests: list[str] = Field(default_factory=list)
     broken_links: list[str] = Field(default_factory=list)
     small_tap_targets: list[str] = Field(default_factory=list)
+    persistent_header_issues: list[str] = Field(default_factory=list)
+    footer_issues: list[str] = Field(default_factory=list)
+    clipped_primary_ctas: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
 
 

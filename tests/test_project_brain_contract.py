@@ -45,6 +45,14 @@ class ProjectBrainContractTests(unittest.TestCase):
         self.assertIn("learn", data["required"])
         self.assertIn("do_not_copy", data["required"])
 
+    def test_functional_site_shell_is_a_durable_non_template_contract(self) -> None:
+        quality = (ROOT / ".codex/project_brain/QUALITY_BAR.md").read_text(encoding="utf-8-sig")
+        skill = (ROOT / ".agents/skills/siteagent-web-studio/SKILL.md").read_text(encoding="utf-8-sig")
+        self.assertIn("Functional site shell", quality)
+        self.assertIn("primary navigation remains available", quality)
+        self.assertIn("semantic footer", skill)
+        self.assertIn("not a visual template", skill)
+
 
 if __name__ == "__main__":
     unittest.main()

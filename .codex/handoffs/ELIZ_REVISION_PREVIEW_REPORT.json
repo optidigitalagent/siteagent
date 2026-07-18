@@ -1,0 +1,50 @@
+{
+  "status": "ELIZ_REVISION_PREVIEW_READY_FOR_USER_REVIEW",
+  "business": "Eliz de Fleur",
+  "selected_concept": "concept_c",
+  "requested_product_type": "multi_page_commercial_site",
+  "production_approved": false,
+  "preview": {
+    "provider": "cloudflare_pages",
+    "environment": "preview",
+    "project_id": "siteagent-preview-eliz-de-fleur-769afda793",
+    "branch": "eliz-human-audit-20260718",
+    "deployment_id": "e77b3897-b6cd-4bc9-ad12-cc69e9413e17",
+    "url": "https://e77b3897.siteagent-preview-eliz-de-fleur-769afda793.pages.dev",
+    "site_tree_sha256": "f0598fd1ae60ad9aafdc51492dbb0a016ad30f7a3bfa17ca5c7a570c5fd9155c",
+    "http_200_pages": 5,
+    "robots_meta_verified": true,
+    "x_robots_tag_verified": true
+  },
+  "revision": {
+    "concept_c_preserved": true,
+    "persistent_header": true,
+    "complete_footer_all_pages": true,
+    "home_primary_cta_geometry_fixed": true,
+    "portfolio_items_preserved": 24,
+    "future_siteagent_contracts_persisted": true
+  },
+  "verification": {
+    "pages": ["index.html", "services.html", "portfolio.html", "about.html", "contact.html"],
+    "viewports": ["1440x1100", "768x1024", "390x844"],
+    "local_technical_qa": "passed",
+    "live_technical_qa": "passed",
+    "live_interaction_qa": "passed",
+    "portfolio_filter_counts": {"all": 24, "commercial": 3, "corporate": 7, "private": 12, "zones": 2},
+    "product_director": {"accepted": true, "score": 100},
+    "independent_review": {"decision": "ACCEPT", "issues_requiring_revision": 0},
+    "full_unittest": {"passed": 144, "failed": 0, "skipped": 1},
+    "compileall": "passed",
+    "pip_check": "passed",
+    "smoke_build": "passed",
+    "git_diff_check": "passed"
+  },
+  "external_actions": {
+    "cloudflare_preview": true,
+    "production_go": false,
+    "telegram_delivery": false,
+    "customer_production": false,
+    "custom_domain_change": false
+  },
+  "next_action": "User reviews the isolated preview and either requests a scoped revision or explicitly approves a later production publish."
+}

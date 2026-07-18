@@ -25,3 +25,6 @@
 | Human-audit preview is requested | A separate preview project is deployed with an isolated run URL; customer production, custom domains, queue and Telegram stay unchanged | preview deployment metadata + Cloudflare environment + live checks |
 | Preview crawler protection is inspected | Every HTML page contains `noindex,nofollow` and every response includes `X-Robots-Tag: noindex, nofollow` | five live responses + browser DOM checks |
 | Preview form has no backend | The site reports its fallback mode and never claims a server-side submission | interaction report + final handoff `form_mode` |
+| A generated page is long enough to scroll | Header/navigation remains usable at the top, midpoint and near-bottom; sticky controls remain below it | desktop/tablet/mobile browser shell report |
+| Final page reaches its footer | Footer exposes declared-IA navigation, a primary CTA and only verified social/contact routes | DOM plus footer screenshots on every page |
+| Primary CTA contains nested decorative elements or translated text | Label stays fully visible inside a ≥44×44 clickable box in default/hover/focus/active states | CTA geometry/state assertions plus screenshots |

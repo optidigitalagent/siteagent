@@ -42,9 +42,22 @@ class _PageParser(HTMLParser):
         self.video_count = 0
         self.meta_redirect = False
         self.script_redirect = False
+        self.has_header = False
+        self.has_footer = False
+        self.footer_navigation_links = 0
+        self.footer_has_primary_cta = False
+        self._in_footer = False
+        self._in_footer_nav = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         data = {key.lower(): value or "" for key, value in attrs}
+        if tag == "header":
+            self.has_header = True
+        if tag == "footer":
+            self.has_footer = True
+            self._in_footer = True
+        if tag == "nav" and self._in_footer:
+            self._in_footer_nav = True
         if tag == "section":
             self.sections += 1
         role = data.get("data-decision-role", "").strip().lower().replace("-", "_")
@@ -55,6 +68,14 @@ class _PageParser(HTMLParser):
             self.roles.add(ROLE_ALIASES[section_id])
         if tag == "a" and data.get("href"):
             self.anchors.append(data["href"])
+            if self._in_footer_nav:
+                self.footer_navigation_links += 1
+            if self._in_footer and (
+                data.get("data-site-cta") == "primary"
+                or re.search(r"(?:contact|book|brief|enquir|zapyt|kontakt)", data["href"], flags=re.I)
+                or data["href"].startswith(("mailto:", "tel:"))
+            ):
+                self.footer_has_primary_cta = True
         if tag == "form":
             self.has_form = True
         if tag == "button" and data.get("data-lang"):
@@ -67,6 +88,12 @@ class _PageParser(HTMLParser):
             self.video_count += 1
         if tag == "meta" and data.get("http-equiv", "").lower() == "refresh":
             self.meta_redirect = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "nav" and self._in_footer_nav:
+            self._in_footer_nav = False
+        if tag == "footer":
+            self._in_footer = False
 
     def handle_data(self, data: str) -> None:
         lowered = data.lower()
@@ -123,6 +150,10 @@ class ProductDirectorAuditor:
                 "exists": page_path.is_file(),
                 "navigation_complete": required_navigation.issubset(local_links),
                 "language_switch_complete": {"pl", "en"}.issubset(page_parser.language_options),
+                "has_header": page_parser.has_header,
+                "has_footer": page_parser.has_footer,
+                "footer_navigation_links": page_parser.footer_navigation_links,
+                "footer_has_primary_cta": page_parser.footer_has_primary_cta,
                 "has_form": page_parser.has_form,
                 "portfolio_filters": sorted(page_parser.portfolio_filters),
                 "image_count": page_parser.image_count,
@@ -131,6 +162,14 @@ class ProductDirectorAuditor:
         missing_pages = [name for name, state in page_contract.items() if not state["exists"]]
         incomplete_navigation = [name for name, state in page_contract.items() if state["exists"] and not state["navigation_complete"]]
         incomplete_language_switches = [name for name, state in page_contract.items() if state["exists"] and not state["language_switch_complete"]]
+        incomplete_shell_pages = [
+            name for name, state in page_contract.items()
+            if state["exists"] and not (
+                state["has_header"] and state["has_footer"]
+                and state["footer_navigation_links"] >= 2
+                and state["footer_has_primary_cta"]
+            )
+        ]
         portfolio_filters_complete = {"all", "commercial", "corporate", "private", "zones"}.issubset(
             set(page_contract["portfolio.html"]["portfolio_filters"])
         )
@@ -145,10 +184,18 @@ class ProductDirectorAuditor:
             caps.append({"reason": "three semantic sections cannot satisfy a normal business-site request", "maximum_score": 45})
         if redirect_only:
             caps.append({"reason": "redirect-only output is not a commercial website", "maximum_score": 0})
+        if full_request and not (
+            parser.has_header and parser.has_footer
+            and parser.footer_navigation_links >= 2
+            and parser.footer_has_primary_cta
+        ):
+            caps.append({"reason": "functional header/footer shell is incomplete", "maximum_score": 60})
         if multi_page_request and missing_pages:
             caps.append({"reason": "requested multi-page product is missing required pages", "maximum_score": 45})
         if multi_page_request and (incomplete_navigation or incomplete_language_switches):
             caps.append({"reason": "multi-page navigation or language switching is incomplete", "maximum_score": 60})
+        if multi_page_request and incomplete_shell_pages:
+            caps.append({"reason": "one or more pages has an incomplete functional shell", "maximum_score": 60})
         if multi_page_request and (not portfolio_filters_complete or not contact_form_present):
             caps.append({"reason": "portfolio filtering or contact conversion is incomplete", "maximum_score": 55})
         for cap in caps:
@@ -170,12 +217,22 @@ class ProductDirectorAuditor:
             reasons.append("business research lacks a sourced product identity")
         if media_count == 0:
             reasons.append("media manifest is empty")
+        if full_request and not parser.has_header:
+            reasons.append("final site lacks a header landmark")
+        if full_request and not parser.has_footer:
+            reasons.append("final site lacks a footer landmark")
+        if full_request and parser.footer_navigation_links < 2:
+            reasons.append("footer lacks useful navigation")
+        if full_request and not parser.footer_has_primary_cta:
+            reasons.append("footer lacks a primary conversion/contact action")
         if multi_page_request and missing_pages:
             reasons.append("missing required pages: " + ", ".join(missing_pages))
         if multi_page_request and incomplete_navigation:
             reasons.append("incomplete cross-page navigation: " + ", ".join(incomplete_navigation))
         if multi_page_request and incomplete_language_switches:
             reasons.append("missing PL/EN switching: " + ", ".join(incomplete_language_switches))
+        if multi_page_request and incomplete_shell_pages:
+            reasons.append("incomplete functional shell: " + ", ".join(incomplete_shell_pages))
         if multi_page_request and not portfolio_filters_complete:
             reasons.append("portfolio page lacks the required business filters")
         if multi_page_request and not contact_form_present:
@@ -199,6 +256,7 @@ class ProductDirectorAuditor:
                 "missing_pages": missing_pages,
                 "incomplete_navigation": incomplete_navigation,
                 "incomplete_language_switches": incomplete_language_switches,
+                "incomplete_shell_pages": incomplete_shell_pages,
                 "portfolio_filters_complete": portfolio_filters_complete,
                 "contact_form_present": contact_form_present,
             },

@@ -32,6 +32,38 @@ def research(**overrides) -> ResearchBrief:
 
 
 class FullSiteProductContractTests(unittest.TestCase):
+    def test_product_director_requires_a_complete_functional_shell(self) -> None:
+        roles = "".join(
+            f"<section data-decision-role='{role}'>{role}</section>"
+            for role in (
+                "identity_value", "offer_services", "proof", "brand_about",
+                "trust_process", "commercial_decision", "objection_handling",
+                "final_conversion",
+            )
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); site = root / "site"; shots = root / "shots"; site.mkdir(); shots.mkdir()
+            for name in ("desktop.png", "tablet.png", "mobile.png"):
+                (shots / name).write_bytes(b"png")
+            complete = f"""<header><nav><a href='#offer'>Offer</a></nav></header><main>{roles}<form></form></main>
+              <footer><nav><a href='#offer'>Offer</a><a href='#proof'>Proof</a></nav>
+              <a data-site-cta='primary' href='#contact'>Contact</a></footer>"""
+            (site / "index.html").write_text(complete, encoding="utf-8")
+            report = ProductDirectorAuditor().audit(
+                requested_product_type="full_commercial_site", site_dir=site, screenshots_dir=shots,
+                business_research={"research": {"product_identity": {"exact_product": "event design"}}},
+                media_manifest={"media": [{"url": "https://media.example/work.jpg"}]},
+            )
+            self.assertTrue(report["product_accepted"], report["reasons"])
+            (site / "index.html").write_text(f"<header></header><main>{roles}<form></form></main>", encoding="utf-8")
+            report = ProductDirectorAuditor().audit(
+                requested_product_type="full_commercial_site", site_dir=site, screenshots_dir=shots,
+                business_research={"research": {"product_identity": {"exact_product": "event design"}}},
+                media_manifest={"media": [{"url": "https://media.example/work.jpg"}]},
+            )
+            self.assertFalse(report["product_accepted"])
+            self.assertIn("final site lacks a footer landmark", report["reasons"])
+
     def test_saved_critic_is_reused_only_for_the_exact_site_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -112,6 +144,11 @@ class FullSiteProductContractTests(unittest.TestCase):
         )
         self.assertFalse(package["implementation_package_information_loss"])
         self.assertIn("research.requested_product_type", package["missing_required_handoff_fields"])
+        contract = package["acceptance_contract"]
+        self.assertTrue(contract["persistent_navigation_required_on_scrollable_pages"])
+        self.assertTrue(contract["semantic_footer_requires_navigation_and_conversion"])
+        self.assertTrue(contract["primary_cta_text_geometry_must_remain_intact"])
+        self.assertTrue(contract["functional_shell_does_not_prescribe_visual_composition"])
 
 
 if __name__ == "__main__":

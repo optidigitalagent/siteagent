@@ -1,21 +1,28 @@
 # Next Action
 
-Checkpoint: `ELIZ_PREVIEW_READY_FOR_USER_REVIEW`.
+Checkpoint: `ELIZ_REVISION_PREVIEW_READY_FOR_USER_REVIEW`.
 
 The human product audit accepts Eliz de Fleur Concept C as a high-quality full
 commercial website with limited revisions. Product-quality calibration is
 accepted; the historically contaminated strict-blind benchmark is deferred.
 Customer production is not approved.
 
-The required revision changed only header/footer navigation typography. CTA
-copy/system, Concept C composition and the complete Portfolio remain intact.
+The scoped revision preserves Concept C and the complete 24-item Portfolio. It
+adds a persistent header, a complete navigation/conversion footer on all five
+pages, and repairs the compressed home-page enquiry CTA label. These functional
+shell requirements are now durable SiteAgent generation, inspection, Product
+Director, skill, test and quality-bar contracts without prescribing a visual
+template.
+
 Fresh local and live desktop/tablet/mobile technical and interaction QA pass on
 all five pages with no critical/high issue, overflow, broken media/link,
-console/network error or sub-44px target.
+console/network error, sub-44px target, persistent-header failure, incomplete
+footer or clipped primary CTA. Independent review returns `ACCEPT`; the
+revision Product Director returns 100/100.
 
 Preview:
 
-- URL: `https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`
+- URL: `https://e77b3897.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`
 - project: `siteagent-preview-eliz-de-fleur-769afda793`
 - run: `eliz-de-fleur-golden-calibration`
 - environment: Cloudflare `Preview`

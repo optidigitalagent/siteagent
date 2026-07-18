@@ -193,3 +193,16 @@ repeat the same brief in every chat.
   preserve its design system and business context, publish a new preview after
   QA, and update production only after explicit approval. Do not merge it into
   the new-site generation path.
+
+## Persistent navigation, footer and CTA integrity (2026-07-18)
+
+- A header that scrolls away on a normal multi-section business site is a
+  product defect. Primary navigation must be scroll-tested and remain available.
+- A copyright/metadata strip is not a complete footer. The footer needs useful
+  IA navigation, a clear conversion action and verified social/contact routes;
+  never invent additional networks to fill it.
+- Primary CTA text geometry is a blocking check. Decorative-child selectors
+  must not collapse, clip or visually break the translated label.
+- Persist these as generation, responsive, accessibility, Product Director and
+  browser-QA requirements for every future site, while leaving visual treatment
+  bespoke to the business.

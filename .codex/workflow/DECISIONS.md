@@ -60,3 +60,8 @@
   saved context and publish a fresh preview after QA. It remains separate from
   the new-site generation pipeline and may update production only after human
   approval.
+- The functional site shell is a blocking cross-project contract: scrollable
+  pages keep primary navigation available, every page has a semantic footer
+  with IA navigation plus a verified conversion/contact route, and primary CTA
+  labels must remain geometrically intact in every interaction state. The
+  contract standardizes behavior and evidence, never visual composition.

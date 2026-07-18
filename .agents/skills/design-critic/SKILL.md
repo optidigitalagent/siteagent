@@ -7,4 +7,6 @@ description: Critique rendered SiteAgent website screenshots for art direction, 
 
 Use screenshots, not DOM alone. Report concrete region/selector, reason, severity and desired
 outcome. Check concept fidelity, hierarchy, spacing, typography, colors, media, signature element,
-AI-template risk and mobile. Scores without screenshot evidence are invalid.
+AI-template risk and mobile. Treat scrolling navigation, a purposeful footer and intact primary
+CTA states as functional quality gates without prescribing a shared visual shell. Scores without
+screenshot evidence are invalid.

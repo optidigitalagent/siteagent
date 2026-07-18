@@ -478,6 +478,7 @@ class CodexStudioRunner:
             "The implementation package is the creative source of truth; legacy business_brief/site_spec files are validation-only. Use the project-local guidance referenced by skill_guidance.json. Do not use a category template, "
             "Jinja, secrets, Telegram, Cloudflare or external publishing. Obey the selected scope exactly; a micro-site must never be expanded into a long page. Each concept must have a distinct "
             "central idea, composition, hero, density, media strategy, typography, CTA and signature element. "
+            "Each runnable concept must also show a persistent navigation solution on scrollable pages, a purposeful footer with verified routes, and unclipped primary CTA text; these are functional requirements, not a shared visual shell. "
             "Write a concise concept.md beside each index.html."
         )
 
@@ -508,6 +509,7 @@ class CodexStudioRunner:
             "element and composition language. " + scope_rule +
             "Render business imagery only with the exact authorised Cloudinary URLs from studio/input/media_manifest.json; "
             "do not copy, download, proxy, transform, or reference local media files. "
+            "Keep primary navigation available while scrollable pages move, offset sticky controls below it, and include a semantic footer with declared-IA navigation, a primary conversion action and verified social/contact routes only. Mark primary CTA anchors with data-site-cta='primary' and ensure translated text is not clipped in default, hover, focus or active states. Do not reuse one visual header/footer composition across businesses. "
             "Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )
 
@@ -518,7 +520,7 @@ class CodexStudioRunner:
             "business input, selected concept, and the mandatory studio/commercial_usefulness_report.json, "
             "studio/language_fit_report.json, and studio/semantic_repetition_report.json. Write studio/art_director_report.json with approved (boolean), score, "
             "summary, unresolved_issues and findings. Every finding needs severity, screenshot, screenshot_region, selector, "
-            "description, reason and desired_outcome. Read studio/input/scope_decision.json before judging completeness: a micro_site is a finished compact product, not a deficient full site. It needs a clear offer and CTA, real proof/process, and a conversion close; do not demand a gallery, FAQ, team, reviews, certificates, prices, or extra sections unless the evidence and approved scope require them. A full_site must demonstrate its longer commercial path. Score and approval must cite screenshot evidence. You must not approve if the scope-aware commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."
+            "description, reason and desired_outcome. Read studio/input/scope_decision.json before judging completeness: a micro_site is a finished compact product, not a deficient full site. It needs a clear offer and CTA, real proof/process, and a conversion close; do not demand a gallery, FAQ, team, reviews, certificates, prices, or extra sections unless the evidence and approved scope require them. A full_site must demonstrate its longer commercial path. Scroll-test navigation, inspect the complete footer, and reject clipped or broken primary CTA states on every declared page without prescribing a common visual shell. Score and approval must cite screenshot evidence. You must not approve if the scope-aware commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."
         )
 
     @staticmethod

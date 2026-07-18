@@ -15,6 +15,7 @@
   --mono: "Space Mono", Consolas, monospace;
   --gutter: clamp(1.125rem, 4.8vw, 5rem);
   --section-space: clamp(5rem, 8vw, 8.75rem);
+  --header-height: 4.75rem;
 }
 
 *,
@@ -25,7 +26,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: calc(var(--header-height) + 1rem);
 }
 
 body {
@@ -107,13 +108,17 @@ main:focus {
 }
 
 .site-header {
-  position: relative;
-  z-index: 20;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: grid;
   grid-template-columns: auto 1fr auto;
-  min-height: 4.75rem;
+  min-height: var(--header-height);
   padding: 0 var(--gutter);
   border-bottom: 1px solid var(--line-dark);
+  background: rgba(37, 25, 28, 0.97);
+  box-shadow: 0 0.35rem 1.5rem rgba(20, 10, 13, 0.12);
+  backdrop-filter: blur(0.75rem);
   align-items: center;
 }
 
@@ -294,7 +299,8 @@ main:focus {
   color: var(--ink);
 }
 
-.live-cta > span {
+.live-cta__mark {
+  flex: 0 0 auto;
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 50%;
@@ -1021,30 +1027,118 @@ main:focus {
 }
 
 .site-footer {
-  min-height: 5rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 2rem;
-  align-items: center;
-  padding: 1rem var(--gutter);
+  padding: clamp(3.5rem, 7vw, 6.5rem) var(--gutter) 1.5rem;
+  border-top: 1px solid var(--line-dark);
   background: var(--night);
-  color: var(--rose);
-  font: 700 clamp(0.75rem, 0.72vw, 0.82rem)/1.5 var(--mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.site-footer p {
-  margin: 0;
-  text-align: center;
+  color: var(--chalk);
 }
 
 .site-footer a {
+  min-width: 2.75rem;
   min-height: 2.75rem;
   display: inline-flex;
   align-items: center;
+  color: inherit;
   text-underline-offset: 0.3rem;
-  font-size: 0.875rem;
+}
+
+.site-footer__lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr);
+  gap: clamp(2rem, 7vw, 8rem);
+  align-items: end;
+  padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.site-footer__wordmark {
+  padding: 0;
+  font: 500 clamp(3.2rem, 7.4vw, 7.8rem)/0.82 var(--condensed);
+  letter-spacing: -0.05em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.site-footer__lead p {
+  max-width: 42rem;
+  margin: 1.25rem 0 0;
+  color: var(--chalk-muted);
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+}
+
+.site-footer__cta {
+  min-height: 3.75rem !important;
+  padding: 0.9rem 1.15rem;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--rose);
+  color: var(--ink) !important;
+  font: 700 1rem/1 var(--condensed);
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.site-footer__cta:hover,
+.site-footer__cta:focus-visible {
+  background: var(--chalk);
+}
+
+.site-footer__columns {
+  display: grid;
+  grid-template-columns: 1.55fr 0.7fr 0.75fr;
+  gap: clamp(2rem, 6vw, 7rem);
+  padding: clamp(2rem, 4vw, 3.5rem) 0;
+}
+
+.site-footer__label {
+  margin: 0 0 0.75rem;
+  color: var(--rose);
+  font: 700 0.72rem/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem clamp(1rem, 2.4vw, 2.25rem);
+}
+
+.site-footer__nav a,
+.site-footer__social a {
+  font: 700 1rem/1 var(--condensed);
+  letter-spacing: 0.06em;
+  text-decoration-thickness: 1px;
+  text-transform: uppercase;
+}
+
+.site-footer__social,
+.site-footer__location {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.site-footer__location span {
+  color: var(--chalk-muted);
+  font-size: 0.95rem;
+}
+
+.site-footer__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line-dark);
+  color: var(--chalk-muted);
+  font: 700 0.75rem/1.5 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.site-footer__meta p {
+  margin: 0;
 }
 
 @media (max-width: 70rem) {
@@ -1166,8 +1260,8 @@ main:focus {
 }
 
 @media (max-width: 45rem) {
-  html {
-    scroll-padding-top: 4.25rem;
+  :root {
+    --header-height: 4rem;
   }
 
   .site-header {
@@ -1414,13 +1508,34 @@ main:focus {
   }
 
   .site-footer {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    padding: 1.5rem 1.125rem;
+    padding: 3.5rem 1.125rem 1.25rem;
   }
 
-  .site-footer p {
-    text-align: left;
+  .site-footer__lead,
+  .site-footer__columns {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer__lead {
+    gap: 2rem;
+  }
+
+  .site-footer__wordmark {
+    font-size: clamp(3.5rem, 18vw, 5.5rem);
+  }
+
+  .site-footer__columns {
+    gap: 2rem;
+  }
+
+  .site-footer__nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem 1rem;
+  }
+
+  .site-footer__meta {
+    flex-direction: column;
   }
 }
 
@@ -1530,7 +1645,7 @@ main:focus {
 .portfolio-intro__count span { max-width: 9rem; font: 700 .68rem/1.45 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
 .orbit--portfolio { border-color: var(--wine); }
 .portfolio-browser { padding: 0 var(--gutter) var(--section-space); background: var(--chalk); }
-.portfolio-filters { position: sticky; z-index: 8; top: 0; display: flex; gap: .3rem; overflow-x: auto; padding: .8rem 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); background: var(--chalk); scrollbar-width: thin; }
+.portfolio-filters { position: sticky; z-index: 8; top: var(--header-height); display: flex; gap: .3rem; overflow-x: auto; padding: .8rem 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); background: var(--chalk); scrollbar-width: thin; }
 .portfolio-filters button { min-height: 44px; flex: 0 0 auto; padding: .4rem .8rem; border: 1px solid transparent; background: transparent; color: var(--ink); cursor: pointer; font: 700 .72rem/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
 .portfolio-filters button.is-active { border-color: var(--wine); background: var(--wine); color: var(--chalk); }
 .portfolio-mosaic { padding-top: 1rem; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); grid-auto-flow: dense; gap: .75rem; align-items: start; }

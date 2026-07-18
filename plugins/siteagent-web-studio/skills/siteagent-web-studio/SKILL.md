@@ -73,6 +73,18 @@ overlays or make visual claims the media contradicts.
 
 References are principles to transform, not layouts to copy.
 
+Treat the functional site shell as a gate, not a visual template:
+
+- keep primary navigation available while a scrollable page moves; use a
+  sticky/fixed header unless a one-screen scope records an explicit equivalent;
+- provide a semantic footer with navigation appropriate to the declared IA, a
+  primary conversion action, and only verified social/contact routes;
+- keep primary CTA text fully visible inside its clickable box in default,
+  hover, focus and active states, with at least a 44×44 CSS-pixel target;
+- offset sticky in-page controls below the persistent header.
+
+Color, shape, column count and footer composition remain concept-specific.
+
 ## Completion
 
 Leave valid static files in the required workspace. The control plane validates,
@@ -80,4 +92,6 @@ fingerprints, promotes, publishes, and delivers. Do not invoke Telegram,
 Cloudflare, git push, or legacy Jinja yourself.
 
 Do not approve the result without screenshot-led commercial, UX, copy, media,
-responsive, accessibility, technical, and anti-template review.
+responsive, accessibility, technical, and anti-template review. Browser QA must
+scroll-test the header, inspect the complete footer, and check primary CTA text
+geometry on desktop, tablet and mobile for every declared page.
