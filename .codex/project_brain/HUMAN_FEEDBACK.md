@@ -147,3 +147,10 @@ repeat the same brief in every chat.
 
 - A critic must not downgrade a compliant Level B micro-site into a “thin redirect” merely because verified evidence lacks a direct contact method, clinical process, prices, outcomes, or a fuller decision path. Those missing facts are a reason to keep the product compact, not material to invent.
 - An explicit CTA that names the visitor's consultation intent and transparently opens the verified official site is a valid conversion path when no verified direct route exists. High-severity findings need a concrete scope, evidence, copy, visual, or technical failure; scope-correct concision is not one.
+
+## Full-site product audit rejection (2026-07-18)
+
+- Orange Beauty Studio and Bella Dent Clinic were technically stable but rejected as commercial websites. Their old 89/100 and 100/100 results measured compliance with an invalid, evidence-shrunk micro-site scope and are not product readiness.
+- A normal business request defaults to a full commercial website. Evidence controls allowed claims and can block with an exact missing-content manifest; it must never silently change the ordered product into a micro-site. Micro-sites are only for explicit campaign, teaser, event, link-in-bio or narrow lead-magnet requests.
+- Full-site acceptance requires a complete customer journey: identity/value, services, proof, brand/about, trust/process, commercial decision, evidence-backed objection handling and final conversion. Three semantic sections, a redirect, repeated CTA or clean technical report cannot compensate for missing coverage.
+- Acceptance needs an independent Product Director who sees the request, research, final site/screenshots and media provenance but not internal critic scores or scope-shrink rationale. The human gate remains enabled until a golden result is visually and product-wise approved.

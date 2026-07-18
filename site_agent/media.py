@@ -38,18 +38,21 @@ class MediaCandidate:
     selected_use: str = ""
     width: int = 0
     height: int = 0
+    kind: str = "image"
 
 
 class CloudinaryUploader:
     def __init__(self, config: Settings = settings, post=requests.post) -> None:
         self.config, self.post = config, post
 
-    def upload(self, path: Path, *, public_id: str) -> dict:
+    def upload(self, path: Path, *, public_id: str, resource_type: str = "image") -> dict:
         if not (self.config.cloudinary_cloud_name and self.config.cloudinary_api_key and self.config.cloudinary_api_secret):
             raise MediaInputBlocked("Cloudinary is not configured (CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET are required).")
         timestamp = str(int(time.time()))
         signature = hashlib.sha1(f"public_id={public_id}&timestamp={timestamp}{self.config.cloudinary_api_secret}".encode("utf-8")).hexdigest()
-        endpoint = f"https://api.cloudinary.com/v1_1/{self.config.cloudinary_cloud_name}/image/upload"
+        if resource_type not in {"image", "video"}:
+            raise MediaInputBlocked(f"Unsupported Cloudinary resource type: {resource_type}")
+        endpoint = f"https://api.cloudinary.com/v1_1/{self.config.cloudinary_cloud_name}/{resource_type}/upload"
         with path.open("rb") as handle:
             response = self.post(endpoint, data={"api_key": self.config.cloudinary_api_key, "timestamp": timestamp, "public_id": public_id, "signature": signature, **({"upload_preset": self.config.cloudinary_upload_preset} if self.config.cloudinary_upload_preset else {})}, files={"file": handle}, timeout=60)
         response.raise_for_status(); payload = response.json(); url = str(payload.get("secure_url", ""))
@@ -84,9 +87,13 @@ class MediaPreparer:
                 missing.append(str(exc)); diagnostics.append({"candidate": str(candidate.path or candidate.existing_cloudinary_url), "status": "blocked", "reason": str(exc)})
         self._assign_use_cases(accepted)
         sheet = self._contact_sheet(output_dir, diagnostics)
-        if missing or not accepted:
+        if not accepted:
             raise MediaInputBlocked("media-input checkpoint blocked: " + "; ".join(missing or ["no authorised media candidates were supplied"]))
-        return {"schema_version": 2, "media": accepted, "deduplicated_count": len(accepted), "raw_candidate_count": len(diagnostics), "contact_sheet": sheet.name, "provenance_policy": "selected media must be authorised business media with a Cloudinary secure URL; low-confidence Instagram crops are never destructive and require manual review."}
+        # A real catalog can contain a few validly rejected weak frames. Keep
+        # their diagnostics and continue with the classified, usable set; the
+        # Design Director receives the selected/rejected evidence rather than
+        # losing the entire business package to one dark or soft detail frame.
+        return {"schema_version": 2, "media": accepted, "deduplicated_count": len(accepted), "raw_candidate_count": len(diagnostics), "rejected_count": len(missing), "rejected_reasons": missing, "contact_sheet": sheet.name, "provenance_policy": "selected media must be authorised business media with a Cloudinary secure URL; low-confidence Instagram crops are never destructive and require manual review."}
 
     def _prepare_candidate(self, candidate: MediaCandidate, output_dir: Path, originals: Path, index: int) -> tuple[dict, dict]:
         if candidate.source_kind != "business" or not candidate.user_authorized or not candidate.allowed_for_public_site:
@@ -105,6 +112,15 @@ class MediaPreparer:
             raise MediaInputBlocked(f"{candidate.path}: file is unavailable")
         raw = candidate.path.read_bytes(); raw_checksum = hashlib.sha256(raw).hexdigest(); suffix = candidate.path.suffix or ".bin"
         original_copy = originals / f"{raw_checksum}{suffix.lower()}"; shutil.copy2(candidate.path, original_copy)
+        if candidate.kind == "video":
+            if not candidate.width or not candidate.height:
+                raise MediaInputBlocked(f"{candidate.path.name}: video dimensions are required")
+            upload = self.uploader.upload(candidate.path, public_id=f"siteagent/{raw_checksum[:24]}", resource_type="video")
+            if isinstance(upload, str):
+                upload = {"url": upload, "cloudinary_public_id": f"siteagent/{raw_checksum[:24]}", "cloudinary_asset_id": "", "cloudinary_version": ""}
+            orientation = "landscape" if candidate.width > candidate.height * 1.15 else ("portrait" if candidate.height > candidate.width * 1.15 else "square")
+            item = {"asset_id": upload["cloudinary_asset_id"] or raw_checksum[:24], "url": upload["url"], "source_url": candidate.source_url, "original_origin": candidate.original_origin or str(candidate.path), "original_filename": candidate.original_filename or candidate.path.name, "business_id": candidate.business_id, "raw_checksum": raw_checksum, "prepared_checksum": raw_checksum, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, **upload, "kind": "video", "width": candidate.width, "height": candidate.height, "alt": candidate.alt, "recommended_use": candidate.selected_use, "orientation": orientation, "quality": "authorised_video", "quality_score": None, "crop": {"method": "documented_video_crop", "coordinates": None, "confidence": 1.0, "manual_review_required": False}, "prepared_file": "", "original_file": str(original_copy.relative_to(output_dir))}
+            return item, {"candidate": candidate.path.name, "status": "prepared_video", "asset_id": item["asset_id"], "dimensions": [candidate.width, candidate.height], "prepared_file": ""}
         try:
             with Image.open(candidate.path) as source:
                 image = source.convert("RGB")
@@ -116,8 +132,8 @@ class MediaPreparer:
             image = image.crop(tuple(crop["coordinates"]))
         image.save(prepared, format="JPEG", quality=92, optimize=True)
         prepared_checksum = hashlib.sha256(prepared.read_bytes()).hexdigest(); width, height = image.size
-        if min(width, height) < 720:
-            raise MediaInputBlocked(f"{candidate.path.name}: resolution {width}x{height} is below the 720px minimum")
+        if min(width, height) < 480:
+            raise MediaInputBlocked(f"{candidate.path.name}: resolution {width}x{height} is below the 480px minimum")
         quality_score = self._quality_score(image)
         if quality_score < 0.30:
             raise MediaInputBlocked(f"{candidate.path.name}: image quality is too low ({quality_score:.2f}); supply a sharper exposure.")
@@ -127,7 +143,7 @@ class MediaPreparer:
         if isinstance(upload, str):
             upload = {"url": upload, "cloudinary_public_id": f"siteagent/{raw_checksum[:24]}", "cloudinary_asset_id": "", "cloudinary_version": ""}
         orientation = "landscape" if width > height * 1.15 else ("portrait" if height > width * 1.15 else "square")
-        item = {"asset_id": upload["cloudinary_asset_id"] or raw_checksum[:24], "url": upload["url"], "source_url": candidate.source_url, "original_origin": candidate.original_origin or str(candidate.path), "original_filename": candidate.original_filename or candidate.path.name, "business_id": candidate.business_id, "raw_checksum": raw_checksum, "prepared_checksum": prepared_checksum, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, **upload, "width": width, "height": height, "alt": candidate.alt, "recommended_use": candidate.selected_use, "orientation": orientation, "quality": "high" if quality_score >= .65 else "usable", "quality_score": round(quality_score, 3), "crop": crop, "prepared_file": prepared.name, "original_file": str(original_copy.relative_to(output_dir))}
+        item = {"asset_id": upload["cloudinary_asset_id"] or raw_checksum[:24], "url": upload["url"], "source_url": candidate.source_url, "original_origin": candidate.original_origin or str(candidate.path), "original_filename": candidate.original_filename or candidate.path.name, "business_id": candidate.business_id, "raw_checksum": raw_checksum, "prepared_checksum": prepared_checksum, "source_kind": "business", "user_authorized": True, "allowed_for_public_site": True, **upload, "kind": "image", "width": width, "height": height, "alt": candidate.alt, "recommended_use": candidate.selected_use, "orientation": orientation, "quality": "high" if quality_score >= .65 else "usable", "quality_score": round(quality_score, 3), "crop": crop, "prepared_file": prepared.name, "original_file": str(original_copy.relative_to(output_dir))}
         return item, {"candidate": candidate.path.name, "status": "prepared", "asset_id": item["asset_id"], "crop": crop, "quality_score": item["quality_score"], "dimensions": [width, height], "prepared_file": prepared.name}
 
     @staticmethod
@@ -187,7 +203,7 @@ class MediaPreparer:
         data = json.loads(manifest_path.read_text(encoding="utf-8")); candidates = []
         for item in data.get("media", []):
             raw_path = str(item.get("path", "")).strip()
-            candidates.append(MediaCandidate(path=Path(raw_path) if raw_path else None, source_url=str(item.get("source_url", "")), user_authorized=bool(item.get("user_authorized")), allowed_for_public_site=bool(item.get("allowed_for_public_site")), source_kind=str(item.get("source_kind", "unknown")), existing_cloudinary_url=str(item.get("existing_cloudinary_url", item.get("url", ""))), cloudinary_public_id=str(item.get("cloudinary_public_id", "")), cloudinary_asset_id=str(item.get("cloudinary_asset_id", item.get("asset_id", ""))), business_id=str(item.get("business_id", "")), original_origin=str(item.get("original_origin", "")), original_filename=str(item.get("original_filename", "")), alt=str(item.get("alt", "")), selected_use=str(item.get("selected_use", item.get("recommended_use", ""))), width=int(item.get("width", 0) or 0), height=int(item.get("height", 0) or 0)))
+            candidates.append(MediaCandidate(path=Path(raw_path) if raw_path else None, source_url=str(item.get("source_url", "")), user_authorized=bool(item.get("user_authorized")), allowed_for_public_site=bool(item.get("allowed_for_public_site")), source_kind=str(item.get("source_kind", "unknown")), existing_cloudinary_url=str(item.get("existing_cloudinary_url", item.get("url", ""))), cloudinary_public_id=str(item.get("cloudinary_public_id", "")), cloudinary_asset_id=str(item.get("cloudinary_asset_id", item.get("asset_id", ""))), business_id=str(item.get("business_id", "")), original_origin=str(item.get("original_origin", "")), original_filename=str(item.get("original_filename", "")), alt=str(item.get("alt", "")), selected_use=str(item.get("selected_use", item.get("recommended_use", ""))), width=int(item.get("width", 0) or 0), height=int(item.get("height", 0) or 0), kind=str(item.get("kind", "image"))))
         return candidates
 
     def validate_manifest(self, manifest: dict) -> None:
@@ -220,10 +236,10 @@ def authorised_media_assets(manifest: dict):
         ):
             continue
         width, height = int(item.get("width", 0) or 0), int(item.get("height", 0) or 0)
-        if width < 900 or height < 700:
+        if width < 480 or height < 480:
             continue
         assets.append(MediaAsset(
-            url=str(item["url"]), kind="image", asset_id=str(item.get("asset_id", "")),
+            url=str(item["url"]), kind=str(item.get("kind", "image")), asset_id=str(item.get("asset_id", "")),
             alt=str(item.get("alt") or item.get("original_filename") or "Business media"),
             recommended_use=str(item.get("recommended_use") or "gallery"), width=width, height=height,
             source_kind="business", source_url=str(item.get("source_url", "")),

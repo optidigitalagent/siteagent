@@ -166,6 +166,49 @@ def write_markdown(path: Path, title: str, payload: dict) -> None:
 
 
 def implementation_package(*, business_research: dict, media_manifest: dict, design_brief: dict, references: list[dict]) -> dict:
-    package = {"schema_version": 2, "business_research": business_research, "authorised_media_manifest": media_manifest, "design_implementation_brief": design_brief, "selected_references": references, "input_checksums": {"business_research": checksum(business_research), "media_manifest": checksum(media_manifest), "design_implementation_brief": checksum(design_brief), "selected_references": checksum(references)}, "acceptance_contract": {"use_only_authorised_cloudinary_business_media": True, "no_reference_copying": True, "first_viewport_requires_offer_and_cta": True, "independent_screenshot_review_required": True, "human_calibration_remains_blocking": True}}
+    research = business_research.get("research", {})
+    required_research = (
+        "product_identity", "primary_language", "content_themes", "verified_facts",
+        "unknowns", "forbidden_claims", "requested_product_type",
+    )
+    required_design = (
+        "central_idea", "narrative", "first_viewport", "page_structure",
+        "section_requirements", "cta_logic", "responsive_behavior", "media_treatment", "do_not_copy",
+    )
+    missing = [f"research.{key}" for key in required_research if key not in research]
+    missing.extend(f"design.{key}" for key in required_design if key not in design_brief)
+    package = {
+        "schema_version": 3,
+        "requested_product_type": research.get("requested_product_type", "full_commercial_site"),
+        "business_research": business_research,
+        "authorised_media_manifest": media_manifest,
+        "design_implementation_brief": design_brief,
+        "selected_references": references,
+        "commercial_completeness_contract": {
+            "required_capabilities": [
+                "identity_value", "offer_services", "proof", "brand_about", "trust_process",
+                "commercial_decision", "objection_handling", "final_conversion",
+            ],
+            "full_site_minimum_semantic_sections": 7,
+            "redirect_only_is_rejected": True,
+            "technical_pass_cannot_override_product_failure": True,
+        },
+        "implementation_package_information_loss": not missing,
+        "missing_required_handoff_fields": missing,
+        "input_checksums": {
+            "business_research": checksum(business_research),
+            "media_manifest": checksum(media_manifest),
+            "design_implementation_brief": checksum(design_brief),
+            "selected_references": checksum(references),
+        },
+        "acceptance_contract": {
+            "use_only_authorised_cloudinary_business_media": True,
+            "no_reference_copying": True,
+            "first_viewport_requires_offer_and_cta": True,
+            "independent_screenshot_review_required": True,
+            "independent_product_director_required": True,
+            "human_calibration_remains_blocking": True,
+        },
+    }
     package["sha256"] = checksum(package)
     return package

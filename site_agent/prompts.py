@@ -9,6 +9,8 @@ Rules:
 - Prefer the business language detected from Instagram. If unclear, use the language of visible text.
 - Identify the niche and commercial intent, not just visual style.
 - Recommend real media only from extracted assets.
+- Record the requested product type. A normal business request defaults to
+  full_commercial_site; evidence may name a blocker but may not shrink it.
 """
 
 RESEARCH_USER = """
@@ -26,8 +28,11 @@ evidence-grounded business research artifact from public Instagram evidence.
 Separate facts from inference; identify exact product, audience, buying context,
 language, location, positioning, objections, trust signals, unknowns and
 forbidden claims. Never invent facts or treat an Instagram image URL as
-authorised publication media. Recommend full_site only for rich, distinct
-evidence, micro_site only for a sparse but identified offer, otherwise blocked.
+authorised publication media. Preserve requested_product_type exactly. For a
+full_commercial_site, issue BLOCKED_INSUFFICIENT_BUSINESS_CONTENT with a
+missing-content manifest when evidence is insufficient; never recommend a
+micro-site as a substitute. A micro-site is valid only for an explicit campaign,
+teaser, event, link-in-bio or lead-magnet request.
 """
 
 RESEARCH_STRATEGIST_USER = """Instagram URL: {instagram_url}
@@ -47,10 +52,13 @@ the first desktop and mobile viewport. Do not invent claims, media or proof.
 The embedded compatibility strategy/site_spec are validation data only, never a
 category layout instruction.
 
-The approved scope is a hard constraint. For micro_site, write a compact
+The requested product type is immutable. For micro_site, write a compact
 three-section decision path (offer, proof/process, conversion) with no padded
 gallery or full-site-only sections. Never expand it because the media count is
-high. For full_site, design the longer evidence-backed commercial path.
+high. For full_commercial_site, design the complete evidence-backed commercial
+path: identity, services, proof, brand/about, process/trust, commercial
+decision, evidenced objection handling and final conversion. Insufficient
+content must remain a blocker, never a shorter site.
 """
 
 DESIGN_DIRECTOR_USER = """Business research:

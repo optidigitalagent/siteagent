@@ -44,6 +44,12 @@ class ContentTheme(BaseModel):
 
 class ResearchBrief(BaseModel):
     instagram_url: str
+    # Evidence controls which facts may be used. It never gets to replace the
+    # product the customer ordered with a smaller, unrequested page.
+    requested_product_type: Literal[
+        "full_commercial_site", "multi_page_commercial_site", "campaign_landing",
+        "micro_site", "portfolio", "catalog", "web_app",
+    ] = "full_commercial_site"
     business_name: str = ""
     city: str = ""
     country: str = ""
@@ -78,6 +84,7 @@ class BusinessResearch(BaseModel):
     trust_signals: list[str] = Field(default_factory=list)
     brand_media_signals: list[str] = Field(default_factory=list)
     recommended_scope: Literal["full_site", "micro_site", "blocked"] = "blocked"
+    missing_content_manifest: list[str] = Field(default_factory=list)
     citations: list[Evidence] = Field(default_factory=list)
 
 

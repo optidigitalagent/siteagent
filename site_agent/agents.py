@@ -61,12 +61,23 @@ class DesignDirector:
         *,
         scope: str,
     ) -> DesignImplementationBrief:
+        # The immutable package retains complete provenance. The director needs
+        # an art-direction index, not raw checksums/crop diagnostics/repeated
+        # catalog payload that can exceed model TPM before it can design.
+        compact_media = [
+            {key: item.get(key) for key in ("asset_id", "url", "kind", "alt", "recommended_use", "orientation", "width", "height", "source_kind", "quality", "crop")}
+            for item in media_manifest.get("media", [])
+        ]
+        compact_references = [
+            {key: item.get(key) for key in ("id", "title", "traits", "business_context", "audience", "conversion_goal", "reusable_cross_category_traits", "learn", "do_not_copy", "selection_rationale")}
+            for item in references
+        ]
         return self.llm.structured(
             system=prompts.DESIGN_DIRECTOR_SYSTEM,
             user=prompts.DESIGN_DIRECTOR_USER.format(
                 research_json=research.model_dump_json(indent=2),
-                media_json=__import__("json").dumps(media_manifest, ensure_ascii=False, indent=2),
-                references_json=__import__("json").dumps(references, ensure_ascii=False, indent=2),
+                media_json=__import__("json").dumps({"media": compact_media}, ensure_ascii=False, indent=2),
+                references_json=__import__("json").dumps(compact_references, ensure_ascii=False, indent=2),
                 scope=scope,
             ),
             schema=DesignImplementationBrief,

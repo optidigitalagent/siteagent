@@ -246,8 +246,21 @@ def commercial_usefulness_report(
     if scope == "micro_site":
         checks["micro_site_has_offer_proof_conversion_path"] = semantic.approved
     elif scope == "full_site":
-        # A full site must earn its length with a more complete decision path.
-        checks["full_site_has_complete_commercial_path"] = len(_sections_from_html(html_text)) >= 4 if html_text else len(spec.sections) >= 4
+        # A full commercial product has a complete decision journey, not just
+        # four visually separated blocks. Roles are intentionally explicit so
+        # a repeated CTA or decorative band cannot satisfy the contract.
+        sections = _sections_from_html(html_text)
+        roles = {role.replace("-", "_") for _, _, role in sections if role}
+        aliases = {
+            "identity": "identity_value", "hero": "identity_value", "offer": "offer_services", "services": "offer_services",
+            "portfolio": "proof", "gallery": "proof", "about": "brand_about", "brand": "brand_about",
+            "process": "trust_process", "trust": "trust_process", "pricing": "commercial_decision",
+            "consultation": "commercial_decision", "faq": "objection_handling", "objections": "objection_handling",
+            "contact": "final_conversion", "conversion": "final_conversion",
+        }
+        normalized = {aliases.get(role, role) for role in roles}
+        required = {"identity_value", "offer_services", "proof", "brand_about", "trust_process", "commercial_decision", "objection_handling", "final_conversion"}
+        checks["full_site_has_complete_commercial_path"] = len(sections) >= 7 and required <= normalized
     elif scope == "blocked":
         checks["scope_allows_generation"] = False
     deductions = {

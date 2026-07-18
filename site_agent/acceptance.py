@@ -7,6 +7,7 @@ from pathlib import Path
 
 from site_agent.design_quality import QualityReport
 from site_agent.models import AcceptanceAuditResult, CritiqueReport
+from site_agent.product_director import ProductDirectorAuditor
 
 
 class AcceptanceAuditor:
@@ -49,6 +50,7 @@ class AcceptanceAuditor:
                 studio_dir / "final_reviews" / "mobile.png",
                 studio_dir / "art_director_report.json",
                 studio_dir / "commercial_usefulness_report.json",
+                studio_dir / "product_director_report.json",
                 studio_dir / "language_fit_report.json",
                 studio_dir / "semantic_repetition_report.json",
                 studio_dir / "input" / "scope_decision.json",
@@ -67,6 +69,9 @@ class AcceptanceAuditor:
                     commercial = json.loads((studio_dir / "commercial_usefulness_report.json").read_text(encoding="utf-8"))
                     if commercial.get("approved") is not True or commercial.get("score", 0) < 85:
                         reasons.append("Commercial usefulness did not pass the mandatory 85-point gate.")
+                    product = json.loads((studio_dir / "product_director_report.json").read_text(encoding="utf-8"))
+                    if product.get("auditor") != "ProductDirectorAuditor" or product.get("product_accepted") is not True:
+                        reasons.append("Independent Product Director did not accept the requested commercial product.")
                     scope = json.loads((studio_dir / "scope_compliance_report.json").read_text(encoding="utf-8"))
                     decision = json.loads((studio_dir / "input" / "scope_decision.json").read_text(encoding="utf-8"))
                     if scope.get("approved") is not True or scope.get("scope") not in {"full_site", "micro_site"}:
@@ -79,6 +84,8 @@ class AcceptanceAuditor:
                     manifest = json.loads((studio_dir / "input" / "media_manifest.json").read_text(encoding="utf-8"))
                     if not package.get("sha256") or not package.get("design_implementation_brief"):
                         reasons.append("Studio implementation package is incomplete or lacks an integrity checksum.")
+                    elif package.get("implementation_package_information_loss") is not True:
+                        reasons.append("Studio implementation package lost mandatory research or Design Director information.")
                     else:
                         canonical = dict(package)
                         supplied = canonical.pop("sha256")
@@ -92,7 +99,7 @@ class AcceptanceAuditor:
                         reasons.append("Studio media manifest contains media without authorised Cloudinary business provenance.")
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")
-                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/product-director", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
 
         return AcceptanceAuditResult(
             approved=not reasons,

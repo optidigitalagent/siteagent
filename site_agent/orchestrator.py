@@ -38,6 +38,7 @@ from site_agent.models import (
 )
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
+from site_agent.product_director import ProductDirectorAuditor
 from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
 from site_agent.workflow import WorkflowConfigurationError, checksum, implementation_package, role_provenance, selected_references, validate_role_providers, write_markdown
 
@@ -148,6 +149,9 @@ class SiteAgentOrchestrator:
                 evidence = self._effective_evidence(reports_dir, research, business)
                 write_json(reports_dir / "01_evidence_assessment.json", evidence)
                 write_json(reports_dir / "01_studio_readiness.json", evidence)
+                if not evidence.build_allowed:
+                    manifest = "; ".join(evidence.missing_content_manifest or evidence.reasons)
+                    raise GenerationBlocked("BLOCKED_INSUFFICIENT_BUSINESS_CONTENT: " + manifest)
                 references = selected_references(business_research=business)
                 write_json(reports_dir / "02_selected_references.json", {"references": references, "selection_input_checksum": checksum(business), "selection_checksum": checksum(references)})
                 self._checkpoint(reports_dir, "references_selected")
@@ -320,6 +324,15 @@ class SiteAgentOrchestrator:
                 quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []), html_text=html_text)
                 write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
             if critique.approved_for_delivery and (quality is None or quality.approved):
+                if builder_mode == "codex_studio" and studio_dir is not None:
+                    product_report = ProductDirectorAuditor().audit(
+                        requested_product_type=research.requested_product_type,
+                        site_dir=site_dir,
+                        screenshots_dir=studio_dir / "final_reviews",
+                        business_research=business,
+                        media_manifest=media_manifest,
+                    )
+                    write_json(studio_dir / "product_director_report.json", product_report)
                 acceptance = self.acceptance_auditor.audit(
                     critique=critique,
                     site_dir=site_dir,
@@ -669,21 +682,10 @@ class SiteAgentOrchestrator:
     def _effective_evidence(
         self, reports_dir: Path, research: ResearchBrief, business: dict,
     ) -> EvidenceAssessment:
-        """Keep the strategist's stricter scope intact across every Studio stage."""
+        """Resolve evidence only; the immutable intake product type owns scope."""
         evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
         if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
             evidence = assess_evidence(research)
-        recommended = str(business.get("recommended_scope", "")).strip().lower()
-        if recommended == PageScope.MICRO.value and evidence.page_scope is PageScope.FULL:
-            return evidence.model_copy(update={
-                "level": EvidenceLevel.B,
-                "page_scope": PageScope.MICRO,
-                "required_concepts": 1,
-                "reasons": list(dict.fromkeys([
-                    *evidence.reasons,
-                    "research strategist selected the more restrictive intentional micro-site scope",
-                ])),
-            })
         return evidence
 
     def _job_id(self, instagram_url: str) -> str:

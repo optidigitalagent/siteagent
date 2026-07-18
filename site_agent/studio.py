@@ -256,7 +256,10 @@ class CodexStudioRunner:
         # staging build is recoverable. Revalidate that exact source first;
         # do not discard it or spend another full-generation budget unless it
         # is missing or structurally invalid.
-        if not self._static_site_is_valid(staging_source):
+        # A technically rejected staging build is not reusable as-is. Its
+        # files remain as evidence, but the retryable task must receive a
+        # material full-build revision rather than looping on the same DOM.
+        if not self._static_site_is_valid(staging_source) or self._task_state(studio).get("full_creative_build", {}).get("status") == "retryable":
             self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen, readiness))
         source_workspace = selected_source.parent
         # A source workspace is the last atomically promoted, reviewable build.
@@ -385,13 +388,14 @@ class CodexStudioRunner:
         self._write_json(input_dir / "evidence.json", {"assessment": evidence_payload, "verified_facts": [item.model_dump() for item in research.verified_facts]})
         self._write_json(input_dir / "scope_decision.json", {
             "scope": evidence_payload.get("page_scope", "blocked"),
+            "requested_product_type": evidence_payload.get("requested_product_type", research.requested_product_type),
             "exact_product": evidence_payload.get("exact_product", ""),
             "confirmed_language": research.primary_language,
             "content_theme_count": evidence_payload.get("content_theme_count", 0),
             "usable_media_count": evidence_payload.get("usable_media_count", 0),
             "required_concepts": evidence_payload.get("required_concepts", 0),
             "rules": {
-                "full_site": "Three materially different concepts and a content-led full build are allowed.",
+                "full_site": "Three materially different concepts and a full commercial build are required. It needs at least seven meaningful decision sections covering identity, services, proof, brand, process/trust, commercial decision, objections and final conversion; repeated CTAs do not count.",
                 "micro_site": "One concise concept only; no more than three semantic sections and no padded gallery or repeated caveat.",
                 "blocked": "No creative output may be produced.",
             },
@@ -479,7 +483,7 @@ class CodexStudioRunner:
             "This is an intentional micro-site: render no more than three semantic <section> elements and no more than two <img> treatments total. "
             "Use the strongest authorised hero image and at most one supporting image; do not turn the manifest into a gallery. "
             if readiness.page_scope is PageScope.MICRO else
-            "This is a full site: use the approved themes and media deliberately without repeating one visual treatment. "
+            "This is a full commercial site: implement at least seven meaningful sections with explicit data-decision-role values covering identity_value, offer_services, proof, brand_about, trust_process, commercial_decision, objection_handling and final_conversion. The final conversion must be a real form or verified direct contact path. Repeated CTAs, decorative panels, a footer, or a redirect do not count as coverage. Use approved themes and media deliberately without repeating one visual treatment. "
         )
         return (
             "Use $siteagent-web-studio to expand the selected concept without changing its central creative idea. "
@@ -758,13 +762,31 @@ class CodexStudioRunner:
             reasons.append(f"micro-site has {section_count} sections; maximum is 3")
         if stored.page_scope is PageScope.MICRO and len(image_urls) > 2:
             reasons.append(f"micro-site has {len(image_urls)} image treatments; maximum is 2")
-        if stored.page_scope is PageScope.FULL and section_count < 4:
-            reasons.append("full-site lacks enough sections to express its approved themes")
+        role_values = {
+            value.lower().replace("-", "_")
+            for value in __import__("re").findall(r"data-decision-role=[\"']([^\"']+)", html_text, flags=__import__("re").I)
+        }
+        if stored.page_scope is PageScope.FULL and section_count < 7:
+            reasons.append("full commercial site has fewer than seven meaningful sections")
+        if stored.page_scope is PageScope.FULL:
+            required_roles = {"identity_value", "offer_services", "proof", "brand_about", "trust_process", "commercial_decision", "objection_handling", "final_conversion"}
+            aliases = {
+                "identity": "identity_value", "hero": "identity_value", "offer": "offer_services", "services": "offer_services",
+                "portfolio": "proof", "gallery": "proof", "about": "brand_about", "brand": "brand_about",
+                "process": "trust_process", "trust": "trust_process", "pricing": "commercial_decision",
+                "consultation": "commercial_decision", "faq": "objection_handling", "objections": "objection_handling",
+                "contact": "final_conversion", "conversion": "final_conversion",
+            }
+            normalized_roles = {aliases.get(role, role) for role in role_values}
+            absent = sorted(required_roles - normalized_roles)
+            if absent:
+                reasons.append("full commercial coverage is missing: " + ", ".join(absent))
         report = {
             "scope": stored.page_scope.value,
             "exact_product": stored.exact_product,
             "section_count": section_count,
             "image_treatments": len(image_urls),
+            "coverage_roles": sorted(role_values),
             "approved": not reasons,
             "reasons": reasons,
         }

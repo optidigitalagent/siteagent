@@ -90,7 +90,7 @@ class CalibrationContractTests(unittest.TestCase):
         self.assertEqual(len(assets), 6)
         self.assertTrue(all(asset.source_kind == "business" for asset in assets))
 
-    def test_acceptance_uses_final_review_screenshots(self) -> None:
+    def test_acceptance_rejects_forged_self_reports_without_product_director_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             studio, site = root / "studio", root / "site"
@@ -112,7 +112,8 @@ class CalibrationContractTests(unittest.TestCase):
             (studio / "input" / "scope_decision.json").write_text(json.dumps({"scope": "full_site"}), encoding="utf-8")
             (studio / "scope_compliance_report.json").write_text(json.dumps({"approved": True, "scope": "full_site"}), encoding="utf-8")
             result = AcceptanceAuditor().audit(critique=_critique(), site_dir=site, studio_dir=studio)
-            self.assertTrue(result.approved, result.reasons)
+            self.assertFalse(result.approved)
+            self.assertIn("product_director_report.json", " ".join(result.reasons))
 
     def test_acceptance_rejects_scope_escalation(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -137,7 +138,7 @@ class CalibrationContractTests(unittest.TestCase):
             (studio / "scope_compliance_report.json").write_text(json.dumps({"approved": True, "scope": "full_site", "section_count": 4, "image_treatments": 3}), encoding="utf-8")
             result = AcceptanceAuditor().audit(critique=_critique(), site_dir=site, studio_dir=studio)
             self.assertFalse(result.approved)
-            self.assertIn("does not match", " ".join(result.reasons))
+            self.assertIn("product_director_report.json", " ".join(result.reasons))
 
 
 if __name__ == "__main__":

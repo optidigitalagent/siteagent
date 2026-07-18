@@ -1,0 +1,26 @@
+{
+  "status": "FULL_SITE_PRODUCT_CONTRACT_REBUILD_IN_PROGRESS",
+  "ready_for_human_audit": false,
+  "orange_bella": {
+    "technical_status": "accepted",
+    "product_status": "rejected_by_human_audit",
+    "rejection_reason": "incomplete_commercial_website"
+  },
+  "golden_calibration": {
+    "business": "Eliz de Fleur",
+    "blind_media_recovery": {"images": 24, "videos": 2, "baseline_used_as_creative_input": false},
+    "selected_concept": "concept_c",
+    "status": "full_creative_build_retryable",
+    "initial_technical_failures": ["four unavailable rendered Cloudinary images", "undersized navigation targets"],
+    "baseline_comparison_completed": false
+  },
+  "verification": {
+    "focused_tests": {"passed": 53},
+    "git_diff_check": "passed",
+    "full_unittest": "not completed; shell timeout",
+    "smoke_build": "not completed",
+    "final_browser_qa": "not completed"
+  },
+  "external_actions": {"go": false, "telegram": false, "cloudflare": false, "customer_deployment": false},
+  "next_action": "Resume the Eliz full_creative_build retryable checkpoint; do not rerun research, media recovery, concepts or selection."
+}

@@ -179,7 +179,7 @@ class CommercialUsefulnessTests(unittest.TestCase):
         self.assertLessEqual(report.category_scores["media_direction"], 65)
 
     def test_level_b_remains_concise_and_level_c_does_not_build(self) -> None:
-        level_b = assess_evidence(research(brand_atmosphere=""))
+        level_b = assess_evidence(research(requested_product_type="micro_site", brand_atmosphere=""))
         level_c = assess_evidence(research(business_name="Unknown (inferred)", niche="Unknown", contacts=[], instagram_url=""))
         self.assertEqual(level_b.level, EvidenceLevel.B)
         self.assertTrue(level_b.build_allowed)

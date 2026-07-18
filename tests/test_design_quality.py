@@ -45,8 +45,8 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(assessment.level, EvidenceLevel.A)
         self.assertTrue(assessment.build_allowed)
 
-    def test_sparse_but_identified_business_is_level_b(self) -> None:
-        assessment = assess_evidence(complete_research(content_themes=[ContentTheme(label="seasonal lunch menu", decision_role="offer", evidence_sources=["fixture:menu"])], best_media=[MediaAsset(url="https://media.example/one.jpg", alt="Kitchen fixture", recommended_use="hero", width=1600, height=1067)]))
+    def test_explicit_micro_request_can_be_level_b(self) -> None:
+        assessment = assess_evidence(complete_research(requested_product_type="micro_site", content_themes=[ContentTheme(label="seasonal lunch menu", decision_role="offer", evidence_sources=["fixture:menu"])], best_media=[MediaAsset(url="https://media.example/one.jpg", alt="Kitchen fixture", recommended_use="hero", width=1600, height=1067)]))
         self.assertEqual(assessment.level, EvidenceLevel.B)
         self.assertTrue(assessment.build_allowed)
 
@@ -66,7 +66,7 @@ class EvidenceTests(unittest.TestCase):
 
     def test_duplicate_themes_and_media_cannot_unlock_full_scope(self) -> None:
         repeated = MediaAsset(url="https://media.example/repeated.jpg", alt="Repeated kitchen fixture", recommended_use="hero", width=1600, height=1067)
-        assessment = assess_evidence(complete_research(
+        assessment = assess_evidence(complete_research(requested_product_type="micro_site",
             content_themes=[ContentTheme(label="seasonal lunch", decision_role="offer", evidence_sources=["fixture:menu"])] * 3,
             best_media=[repeated] * 6,
         ))
@@ -74,6 +74,15 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(assessment.content_theme_count, 1)
         self.assertEqual(assessment.usable_media_count, 1)
         self.assertEqual(assessment.page_scope.value, "micro_site")
+
+    def test_sparse_normal_business_request_is_blocked_not_silently_shrunk(self) -> None:
+        assessment = assess_evidence(complete_research(
+            content_themes=[ContentTheme(label="seasonal lunch", decision_role="offer", evidence_sources=["fixture:menu"])],
+            best_media=[MediaAsset(url="https://media.example/one.jpg", alt="Kitchen fixture", recommended_use="hero", width=1600, height=1067)],
+        ))
+        self.assertEqual(assessment.page_scope.value, "blocked")
+        self.assertIn("content_sufficient_for_full_site", assessment.missing_content_manifest)
+        self.assertIn("media_sufficient_for_full_site", assessment.missing_content_manifest)
 
 
 class QualityGateTests(unittest.TestCase):

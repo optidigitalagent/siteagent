@@ -49,12 +49,14 @@ class EvidenceAssessment(BaseModel):
     score: int = Field(ge=0, le=100)
     checks: dict[str, bool]
     page_scope: PageScope = PageScope.BLOCKED
+    requested_product_type: str = "full_commercial_site"
     exact_product: str = ""
     content_theme_count: int = Field(default=0, ge=0)
     usable_media_count: int = Field(default=0, ge=0)
     required_concepts: int = Field(default=0, ge=0, le=3)
     reasons: list[str] = Field(default_factory=list)
     unresolved_questions: list[str] = Field(default_factory=list)
+    missing_content_manifest: list[str] = Field(default_factory=list)
 
     @property
     def build_allowed(self) -> bool:
@@ -254,18 +256,18 @@ def _usable_media(research: ResearchBrief) -> list:
             continue
         # A source, descriptive alt, intended role and practical dimensions are
         # the minimum fixture-level proof that this is usable media, not a URL list.
-        if not (url.startswith(("https://", "http://")) and item.alt.strip() and item.recommended_use.strip() and item.width >= 900 and item.height >= 700):
+        if not (url.startswith(("https://", "http://")) and item.alt.strip() and item.recommended_use.strip() and item.width >= 480 and item.height >= 480):
             continue
         unique[url] = item
     return list(unique.values())
 
 
 def assess_studio_readiness(research: ResearchBrief) -> EvidenceAssessment:
-    """Classify product evidence before strategy or creative work can begin.
+    """Classify evidence without silently changing the requested product.
 
-    Full sites require enough independently sourced material to earn a long
-    narrative. Sparse but identifiable businesses receive only a micro-site;
-    ambiguity blocks generation rather than becoming atmospheric copy.
+    Normal business jobs are full commercial sites by default. Sparse evidence
+    yields a named blocker; only an explicit compact-product request permits a
+    micro-site.
     """
     product = _specific_product(research)
     theme_keys = set()
@@ -283,24 +285,38 @@ def assess_studio_readiness(research: ResearchBrief) -> EvidenceAssessment:
         "language_confirmed": bool(research.primary_language.strip()),
         "contact_path": bool(research.contacts) or bool(research.instagram_url),
         "content_sufficient_for_full_site": len(valid_themes) >= 3,
-        "media_sufficient_for_full_site": 5 <= len(media) <= 8,
+        "media_sufficient_for_full_site": len(media) >= 5,
         "no_critical_contradiction": not any(token in " ".join(research.unknowns).lower() for token in ("contradict", "conflict", "different business")),
     }
     can_micro = all(checks[key] for key in ("business_identified", "business_type", "product_identified", "language_confirmed", "contact_path", "no_critical_contradiction")) and bool(valid_themes)
     can_full = can_micro and checks["content_sufficient_for_full_site"] and checks["media_sufficient_for_full_site"]
-    scope = PageScope.FULL if can_full else (PageScope.MICRO if can_micro else PageScope.BLOCKED)
+    requested = research.requested_product_type
+    explicitly_compact = requested in {"campaign_landing", "micro_site"}
+    scope = (
+        PageScope.MICRO if explicitly_compact and can_micro
+        else PageScope.FULL if not explicitly_compact and can_full
+        else PageScope.BLOCKED
+    )
     level = EvidenceLevel.A if scope is PageScope.FULL else (EvidenceLevel.B if scope is PageScope.MICRO else EvidenceLevel.C)
     score = min(100, sum(checks.values()) * 12 + min(len(valid_themes), 3) * 2 + min(len(media), 8))
     reasons = [key.replace("_", " ") for key, value in checks.items() if not value]
+    missing = [key for key, value in checks.items() if not value and key in {
+        "product_identified", "language_confirmed", "content_sufficient_for_full_site",
+        "media_sufficient_for_full_site", "contact_path",
+    }]
     if scope is PageScope.MICRO:
-        reasons.append("full site is not allowed; only an intentional micro-site may be generated")
+        reasons.append("explicit compact product request permits an intentional micro-site")
     if scope is PageScope.BLOCKED:
-        reasons.append("product identification, confirmed language, and at least one sourced content theme are mandatory before generation")
+        reasons.append(
+            "BLOCKED_INSUFFICIENT_BUSINESS_CONTENT: the requested product cannot be honestly assembled from the current evidence"
+        )
     return EvidenceAssessment(
-        level=level, score=score, checks=checks, page_scope=scope, exact_product=product,
+        level=level, score=score, checks=checks, page_scope=scope,
+        requested_product_type=requested, exact_product=product,
         content_theme_count=len(valid_themes), usable_media_count=len(media),
         required_concepts=3 if scope is PageScope.FULL else (1 if scope is PageScope.MICRO else 0),
         reasons=reasons, unresolved_questions=research.unknowns,
+        missing_content_manifest=missing,
     )
 
 

@@ -292,7 +292,7 @@ class CreativeStudioTests(unittest.TestCase):
                 run = next(Path("runs").glob("studio-test"))
                 source = run / "studio" / "selected" / "staging"
                 source.mkdir(parents=True, exist_ok=True)
-                (source / "index.html").write_text("<html><body><main class='case-file'><h1>Selected</h1><a href='https://instagram.com'>Message</a><section>Offer</section><section>Process</section><section>Proof</section><section>Contact</section></main></body></html>" + " " * 160, encoding="utf-8")
+                (source / "index.html").write_text("<html><body><main class='case-file'><h1>Selected</h1><form><input aria-label='Name'></form><section data-decision-role='identity_value'>Identity</section><section data-decision-role='offer_services'>Offer</section><section data-decision-role='proof'>Proof</section><section data-decision-role='brand_about'>About</section><section data-decision-role='trust_process'>Process</section><section data-decision-role='commercial_decision'>Consultation</section><section data-decision-role='objection_handling'>FAQ</section><section data-decision-role='final_conversion'>Contact</section></main></body></html>" + " " * 160, encoding="utf-8")
             return SimpleNamespace(returncode=0, stdout="", stderr="")
 
         research, strategy, spec = fixtures()
