@@ -169,3 +169,27 @@ repeat the same brief in every chat.
 - Multi-page Product Director acceptance must verify the requested page set,
   navigation, language controls, portfolio behavior, and conversion form, not
   infer a complete product from the home page alone.
+
+## Eliz human product audit and preview contract (2026-07-18)
+
+- The user accepts Eliz de Fleur Concept C as a high-quality full commercial
+  website with limited revisions. Preserve its design, CTA system and complete
+  Portfolio; the only required visual correction is clearer header/footer
+  navigation typography without weakening the editorial language.
+- A successful human-audit candidate must be delivered as an isolated public
+  preview URL. Preview is not customer production: use a separate project/run
+  identity, `noindex,nofollow` in HTML and response headers, authorised media
+  only, no custom domain, no Telegram production delivery and no mutation of
+  the customer production project.
+- A preview form may use an honest `copy_to_clipboard`, `mailto`, Instagram,
+  Telegram or visual-demo fallback. It must never claim backend delivery that
+  did not occur, and the reported `form_mode` is part of the handoff.
+- Creative/demo copy is allowed when provenance distinguishes verified facts,
+  inferred brand copy, generated demo content and missing required facts.
+  Numeric prices, staff, licences, reviews, guarantees, addresses and similar
+  factual claims remain blocked unless verified. Factual demo placeholders
+  block production until confirmed, replaced or safely reframed.
+- Plan a separate future `SiteRevisionAgent` for edits to an existing project:
+  preserve its design system and business context, publish a new preview after
+  QA, and update production only after explicit approval. Do not merge it into
+  the new-site generation path.

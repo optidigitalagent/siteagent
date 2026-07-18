@@ -28,3 +28,12 @@ outcome-led. Category is context, not a template selector.
 
 Shared technical primitives are acceptable. Shared page composition, visual
 language, narrative, and copy are not.
+
+## Project revision lifecycle
+
+SiteAgent must eventually support a separate `SiteRevisionAgent` for an existing
+accepted project. It receives a normal-language change request, loads the saved
+business and design context, edits the current site instead of regenerating it,
+runs tests and visual QA, and publishes a new isolated preview. Customer
+production changes remain a later, explicit human-approved action. This
+revision workflow must stay separate from new-site generation.

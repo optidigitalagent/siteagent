@@ -22,3 +22,6 @@
 | Award source lists a candidate | Original live URL is resolved, captured and stored with source/award provenance; gallery itself is never selected | discovery candidates + raw record |
 | Candidate is blank, 404, parked, mismatched, incomplete without scope, or near-duplicate | It remains raw/excluded and cannot enter selection | reference_decisions.json + focused test |
 | Curator and Auditor disagree at low confidence | Candidate is excluded without routine user intervention | reference_decisions.json |
+| Human-audit preview is requested | A separate preview project is deployed with an isolated run URL; customer production, custom domains, queue and Telegram stay unchanged | preview deployment metadata + Cloudflare environment + live checks |
+| Preview crawler protection is inspected | Every HTML page contains `noindex,nofollow` and every response includes `X-Robots-Tag: noindex, nofollow` | five live responses + browser DOM checks |
+| Preview form has no backend | The site reports its fallback mode and never claims a server-side submission | interaction report + final handoff `form_mode` |

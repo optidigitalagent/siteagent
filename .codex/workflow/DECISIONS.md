@@ -48,3 +48,15 @@
   principles and non-copy constraints; low-confidence disagreement is excluded automatically.
 - The former `human_review_decisions.json` export was invalidated as accidental input. The local
   reference page is diagnostic only and cannot rank, select or exclude production references.
+- Eliz de Fleur Concept C is accepted by the human product audit as the current
+  product-quality calibration with limited navigation-readability revisions;
+  this is not customer production approval and does not repair the historical
+  strict-blind benchmark contamination.
+- Human-review delivery uses a separate preview project/run with HTML robots
+  meta plus response-level `X-Robots-Tag: noindex, nofollow`. Preview must not
+  call the customer-production publisher, change a custom domain, send a
+  Telegram production result or write normal production deployment state.
+- A future `SiteRevisionAgent` will modify an existing accepted project from its
+  saved context and publish a fresh preview after QA. It remains separate from
+  the new-site generation pipeline and may update production only after human
+  approval.
