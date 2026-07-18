@@ -22,5 +22,17 @@
     "site_url": "",
     "repo_url": "",
     "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+  },
+  {
+    "id": "f684eed531f74dd8995b2a58ac77739e",
+    "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
+    "chat_id": 5674963513,
+    "user_id": 5674963513,
+    "status": "pending",
+    "received_at": "2026-07-18T15:44:01.634531+00:00",
+    "updated_at": "2026-07-18T15:44:01.634545+00:00",
+    "site_url": "",
+    "repo_url": "",
+    "error": ""
   }
 ]
