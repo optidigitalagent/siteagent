@@ -259,7 +259,13 @@ class CodexStudioRunner:
         # A technically rejected staging build is not reusable as-is. Its
         # files remain as evidence, but the retryable task must receive a
         # material full-build revision rather than looping on the same DOM.
-        if not self._static_site_is_valid(staging_source) or self._task_state(studio).get("full_creative_build", {}).get("status") == "retryable":
+        build_state = self._task_state(studio).get("full_creative_build", {})
+        retryable_staging_can_revalidate = self._retryable_staging_can_revalidate(
+            studio, staging_source, build_state
+        )
+        if not self._static_site_is_valid(staging_source) or (
+            build_state.get("status") == "retryable" and not retryable_staging_can_revalidate
+        ):
             self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen, readiness))
         source_workspace = selected_source.parent
         # A source workspace is the last atomically promoted, reviewable build.
@@ -274,7 +280,14 @@ class CodexStudioRunner:
         initial_dir = studio / "selected" / "initial_validation"
         gate, _ = self.inspector.inspect(promotion_source / "index.html", initial_dir)
         if not gate.passed:
-            self._mark_task(studio, "full_creative_build", "retryable", "initial technical validation failed")
+            self._mark_task(
+                studio,
+                "full_creative_build",
+                "retryable",
+                "initial technical validation failed",
+                failed_source_checksum=directory_checksum(promotion_source),
+                validator_checksum=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            )
             raise StudioError("Full creative build failed initial technical validation; preserved staging is retryable.")
         if not use_fixed_source:
             self._atomic_promote(staging_source, selected_source.parent)
@@ -282,8 +295,10 @@ class CodexStudioRunner:
         checkpoints("full_creative_build_completed")
 
         final_dir = studio / "final_reviews"
-        if not (final_dir / "desktop.png").is_file():
-            self.inspector.inspect(selected_source, final_dir)
+        # A recovered fixer may change the selected source after an earlier
+        # review. Always bind canonical screenshots and observations to the
+        # exact bytes now under review; file existence is not freshness.
+        self.inspector.inspect(selected_source, final_dir)
         self._require_screenshots(final_dir, tablet=True)
         self._write_commercial_reports(studio, research, spec, selected_source)
         art_report = studio / "art_director_report.json"
@@ -612,11 +627,19 @@ class CodexStudioRunner:
     def _task_completed(self, studio: Path, task: str) -> bool:
         return self._task_state(studio).get(task, {}).get("status") == "completed"
 
-    def _mark_task(self, studio: Path, task: str, status: str, error: str | None = None) -> None:
+    def _mark_task(
+        self,
+        studio: Path,
+        task: str,
+        status: str,
+        error: str | None = None,
+        **metadata: str,
+    ) -> None:
         state = self._task_state(studio)
         record: dict[str, str] = {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}
         if error:
             record["error"] = error
+        record.update(metadata)
         state[task] = record
         self._write_json(studio / "task_state.json", state)
 
@@ -663,7 +686,9 @@ class CodexStudioRunner:
         destination.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="siteagent-studio-promotion-", dir=destination.parent) as temp:
             staged = Path(temp) / "site"
-            shutil.copytree(source, staged)
+            # Builder recovery provenance can contain private run paths. Keep
+            # it beside staging evidence, never in the customer-facing bundle.
+            shutil.copytree(source, staged, ignore=shutil.ignore_patterns("provenance.json"))
             if destination.exists():
                 backup = destination.with_name(destination.name + ".last-valid")
                 if backup.exists():
@@ -698,6 +723,70 @@ class CodexStudioRunner:
             return True
         except StudioError:
             return False
+
+    def _staging_provenance_is_valid(self, studio: Path, folder: Path) -> bool:
+        """Accept a timed-out child output only when its bounded inputs verify.
+
+        Codex can finish writing a complete staging workspace just after the
+        supervising timeout fires. Reusing that output prevents a duplicate
+        45-minute material build, but an ordinary technically rejected staging
+        build still remains retryable and must be revised.
+        """
+        provenance_path = folder / "provenance.json"
+        selected_path = studio / "concept_reviews" / "selected_concept.json"
+        if not provenance_path.is_file() or not selected_path.is_file():
+            return False
+        try:
+            provenance = self._read_json(provenance_path)
+            selected = self._read_json(selected_path)
+            if provenance.get("selected_concept") != self._selected_id(selected, studio):
+                return False
+            inputs = provenance.get("source_inputs")
+            if not isinstance(inputs, dict) or not inputs:
+                return False
+            for record in inputs.values():
+                if not isinstance(record, dict):
+                    return False
+                raw_path = str(record.get("path", ""))
+                expected = str(record.get("sha256", "")).lower()
+                if not __import__("re").fullmatch(r"[0-9a-f]{64}", expected):
+                    return False
+                source = (self.project_root / raw_path).resolve()
+                try:
+                    source.relative_to(self.project_root.resolve())
+                except ValueError:
+                    return False
+                if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != expected:
+                    return False
+            files = provenance.get("site_files")
+            if not isinstance(files, list) or "index.html" not in files:
+                return False
+            if any(not (folder / str(name)).is_file() for name in files):
+                return False
+        except (OSError, ValueError, TypeError, StudioError):
+            return False
+        return True
+
+    def _retryable_staging_can_revalidate(
+        self, studio: Path, folder: Path, state: dict[str, Any]
+    ) -> bool:
+        if state.get("status") != "retryable" or not self._staging_provenance_is_valid(studio, folder):
+            return False
+        error = str(state.get("error", "")).lower()
+        if "timed out" in error:
+            return True
+        failed_checksum = str(state.get("failed_source_checksum", ""))
+        failed_validator = str(state.get("validator_checksum", ""))
+        validator_changed = bool(failed_validator) and (
+            hashlib.sha256(Path(__file__).read_bytes()).hexdigest() != failed_validator
+        )
+        return (
+            "initial technical validation failed" in error
+            and (
+                (bool(failed_checksum) and directory_checksum(folder) != failed_checksum)
+                or validator_changed
+            )
+        )
 
     @staticmethod
     def _validate_static_site(folder: Path) -> None:

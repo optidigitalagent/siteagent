@@ -1,26 +1,82 @@
 {
-  "status": "FULL_SITE_PRODUCT_CONTRACT_REBUILD_IN_PROGRESS",
-  "ready_for_human_audit": false,
+  "status": "AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT",
+  "ready_for_human_audit": true,
+  "production_approved": false,
+  "human_calibration_required": true,
   "orange_bella": {
-    "technical_status": "accepted",
+    "technical_status": "accepted_historical",
     "product_status": "rejected_by_human_audit",
-    "rejection_reason": "incomplete_commercial_website"
+    "rejection_reason": "incomplete_commercial_website",
+    "changed_or_published": false
   },
   "golden_calibration": {
     "business": "Eliz de Fleur",
-    "blind_media_recovery": {"images": 24, "videos": 2, "baseline_used_as_creative_input": false},
     "selected_concept": "concept_c",
-    "status": "full_creative_build_retryable",
-    "initial_technical_failures": ["four unavailable rendered Cloudinary images", "undersized navigation targets"],
-    "baseline_comparison_completed": false
+    "requested_product_type": "multi_page_commercial_site",
+    "pages": ["index.html", "services.html", "portfolio.html", "about.html", "contact.html"],
+    "media": {"portfolio_items": 24, "images": 22, "videos": 2},
+    "status": "completed_human_calibration_required",
+    "final_score": 89,
+    "site_tree_sha256": "e02cc6a865eb8d076293073dc078d001167f893ea1abd59988203e1676f22af2",
+    "blind_benchmark_integrity": {
+      "valid": false,
+      "reason": "The manual Eliz baseline was present in selected reference/design inputs before the final build.",
+      "recovery_constraint": "Preserve Concept C; do not regenerate research, references, or concepts.",
+      "required_human_decision": "Accept this only as a recovered product-quality calibration, or require a new clean blind run."
+    }
+  },
+  "media_reverification": {
+    "passed": true,
+    "root_cause": "pending lazy images were misclassified as broken",
+    "reuploaded": false,
+    "assets": [
+      "siteagent/e170ce25575f0e2b60e7c305",
+      "siteagent/f9a6c04ece0b0f3330a92861",
+      "siteagent/f3182f6c49fdb530b950af7c",
+      "siteagent/b47099f93aa7a98b9858c1af"
+    ],
+    "all_http_200_jpeg": true,
+    "all_prepared_checksums_match": true,
+    "all_authorized_business_media": true
+  },
+  "independent_reviews": {
+    "critic": {"approved": true, "score": 89, "critical_or_high": 0},
+    "art_director": {"approved": true, "score": 89, "critical_or_high": 0},
+    "product_director": {"approved": true, "score": 100, "multi_page_contract_passed": true},
+    "acceptance": {"approved": true, "score": 89},
+    "manual_baseline_comparison": {
+      "completed": true,
+      "final_product_materially_stronger": true,
+      "tablet_services_high_found_and_fixed": true,
+      "remaining_critical_or_high": 0,
+      "blind_integrity_proven": false
+    }
   },
   "verification": {
-    "focused_tests": {"passed": 53},
+    "focused_tests": {"passed": 47, "failed": 0},
+    "full_unittest": {"passed": 141, "failed": 0, "skipped": 1, "skip_reason": "credential-gated Cloudflare production smoke"},
+    "compileall": "passed",
+    "pip_check": "passed",
+    "smoke_build": "passed",
+    "browser_pages": 5,
+    "browser_viewports_each": ["1440x1100", "768x1024", "390x844"],
+    "overflow_media_network_console_links_tap_targets": "passed",
+    "interaction_accessibility_v2": "passed",
+    "portfolio_filter_counts": {"all": 24, "commercial": 3, "corporate": 7, "private": 12, "zones": 2},
     "git_diff_check": "passed",
-    "full_unittest": "not completed; shell timeout",
-    "smoke_build": "not completed",
-    "final_browser_qa": "not completed"
+    "secret_scan": "passed",
+    "customer_site_internal_path_scan": "passed"
   },
-  "external_actions": {"go": false, "telegram": false, "cloudflare": false, "customer_deployment": false},
-  "next_action": "Resume the Eliz full_creative_build retryable checkpoint; do not rerun research, media recovery, concepts or selection."
+  "external_actions": {
+    "go": false,
+    "telegram": false,
+    "cloudflare": false,
+    "customer_deployment": false,
+    "read_only_live_baseline_http_check": true
+  },
+  "commits": {
+    "recovery_checkpoint": "5041a730eae79e837539ae6fd3a17ecb4a21a573",
+    "final_main_head": "pending_final_commit"
+  },
+  "next_action": "Human visual/product audit and explicit decision on the blind-integrity disclosure; do not publish before approval."
 }

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from site_agent.commercial_usefulness import commercial_usefulness_report, semantic_repetition_report
+from site_agent.commercial_usefulness import commercial_usefulness_report, language_fit_report, semantic_repetition_report
 from site_agent.design_quality import EvidenceLevel, assess_evidence, audit_quality, build_context
 from site_agent.models import ContentTheme, ProductIdentity, ResearchBrief, SectionSpec, SiteSpec, StrategyBrief
 from site_agent.studio import CodexStudioRunner
@@ -139,6 +139,23 @@ class CommercialUsefulnessTests(unittest.TestCase):
         current = spec(language="en")
         report = audit_quality(current, build_context(research(primary_language="ru"), strategy(), current), technical_passed=True)
         self.assertLessEqual(report.category_scores["brand_fit"], 60)
+
+    def test_bilingual_language_descriptor_uses_verified_primary_language(self) -> None:
+        report = language_fit_report(
+            spec(language="pl (with en support for headings/media captions if possible)"),
+            research(primary_language="pl"),
+        )
+        self.assertTrue(report.approved, report.model_dump())
+
+    def test_polish_spatial_floristry_copy_can_create_evidence_backed_desire(self) -> None:
+        current = spec()
+        context = build_context(research(), strategy(), current)
+        report = commercial_usefulness_report(
+            current,
+            context,
+            html_text="<main>Scenografia i instalacje kwiatowe nadają kolor i atmosferę przestrzeni wydarzenia.</main>",
+        )
+        self.assertTrue(report.checks["desire_created"], report.model_dump())
 
     def test_art_director_cannot_approve_when_commercial_gate_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

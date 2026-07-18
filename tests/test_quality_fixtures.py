@@ -36,8 +36,16 @@ class DesignQualityFixtureTests(unittest.TestCase):
             patterns.add(context.ux_architecture.pattern)
             fingerprints.add(report.fingerprint)
             ctas.add(spec.primary_cta)
-            self.assertTrue(report.approved, name)
-        self.assertGreaterEqual(len(patterns), 5)
+            if name == "sparse":
+                self.assertFalse(report.approved, name)
+                self.assertEqual(context.evidence.page_scope.value, "blocked")
+                self.assertIn("insufficient evidence", report.blocking_reasons)
+            else:
+                self.assertTrue(report.approved, name)
+        # Only the four evidence-complete businesses receive a buildable
+        # journey. The sparse normal-business input is intentionally blocked
+        # before creative differentiation rather than assigned a fifth layout.
+        self.assertGreaterEqual(len(patterns), 4)
         self.assertEqual(len(fingerprints), len(FIXTURES))
         self.assertEqual(len(ctas), len(FIXTURES))
 

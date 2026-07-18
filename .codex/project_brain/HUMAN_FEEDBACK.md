@@ -154,3 +154,18 @@ repeat the same brief in every chat.
 - A normal business request defaults to a full commercial website. Evidence controls allowed claims and can block with an exact missing-content manifest; it must never silently change the ordered product into a micro-site. Micro-sites are only for explicit campaign, teaser, event, link-in-bio or narrow lead-magnet requests.
 - Full-site acceptance requires a complete customer journey: identity/value, services, proof, brand/about, trust/process, commercial decision, evidence-backed objection handling and final conversion. Three semantic sections, a redirect, repeated CTA or clean technical report cannot compensate for missing coverage.
 - Acceptance needs an independent Product Director who sees the request, research, final site/screenshots and media provenance but not internal critic scores or scope-shrink rationale. The human gate remains enabled until a golden result is visually and product-wise approved.
+
+## Golden calibration integrity and recovery (2026-07-18)
+
+- A manual baseline for the same business must be excluded not only from the
+  builder prompt but also from reference discovery, selected references, design
+  inputs, implementation packages, and critic context until after the final
+  site bytes are fixed. A post-build comparison cannot retroactively make a
+  contaminated run blind.
+- Recovery must preserve complete, checksum-clean work, but every reusable
+  critic/review must be bound to the full authored HTML/CSS/JS tree. An
+  `index.html`-only checksum is insufficient because CSS or secondary-page
+  changes can materially alter the product.
+- Multi-page Product Director acceptance must verify the requested page set,
+  navigation, language controls, portfolio behavior, and conversion form, not
+  infer a complete product from the home page alone.

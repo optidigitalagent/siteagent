@@ -1,32 +1,25 @@
 # Next Action
 
-Checkpoint: `FULL_SITE_PRODUCT_CONTRACT_REBUILD_IN_PROGRESS`.
+Checkpoint: `AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT`.
 
-The former Orange Beauty Studio and Bella Dent Clinic acceptance is invalid for
-product quality. Their historical calibration artifacts remain preserved with
-`technical_status=accepted`, `product_status=rejected_by_human_audit` and
-`rejection_reason=incomplete_commercial_website`. Do not publish or cosmetically
-repair either run.
+The Eliz de Fleur Concept C recovery is a complete five-page commercial site.
+Fresh critic, Art Director, multi-page Product Director, acceptance, browser,
+interaction/accessibility, media, focused, full-suite, compile, dependency, and
+smoke checks pass with no critical/high issue. Orange and Bella remain
+product-rejected historical artifacts. No production action ran.
 
-The full-site product contract is implemented locally: normal business input
-defaults to `full_commercial_site`; sparse evidence produces
-`BLOCKED_INSUFFICIENT_BUSINESS_CONTENT`, not an inferred micro-site; acceptance
-requires a blind `ProductDirectorAuditor`; and a full commercial site requires
-explicit identity, services, proof, about, process/trust, commercial-decision,
-objection-handling and final-conversion coverage.
+Human calibration remains blocking. The auditor must review the final desktop,
+tablet, and mobile evidence under
+`runs/eliz-de-fleur-golden-calibration/studio/full_site_qa/` and the correction
+handoff in `.codex/handoffs/FULL_SITE_PRODUCT_CORRECTION_REPORT.md`.
 
-Eliz de Fleur golden calibration is recoverable at
-`runs/eliz-de-fleur-golden-calibration/`. Its blind 24-photo/2-video input,
-research, authorised-media manifest, Design Director brief, three concepts,
-native desktop/tablet/mobile concept screenshots and selection are complete.
-Concept C was selected. The full build remains retryable: initial technical
-validation found four unavailable rendered Cloudinary images and undersized
-navigation targets. A recovery fix ensures any retryable full build invokes a
-material rebuild rather than looping on the failed staging output.
+Important disclosure: the manual Eliz baseline was present in selected
+reference/design inputs, so this recovered run is not valid evidence of a
+strictly blind benchmark. Concept C was preserved because the recovery contract
+forbade regenerating research/references/concepts. Human review must either
+accept it as product-quality calibration only or require a new clean blind run.
 
-Exact next action: resume only `runs/eliz-de-fleur-golden-calibration` from
-`studio/task_state.json`, complete the material full-build revision, then run
-fresh desktop/tablet/mobile inspection, independent Product Director audit,
-blind baseline comparison, full tests and final handoff. Do not run `go`,
-Telegram, Cloudflare or customer publishing. Keep
+Exact next action: perform the human visual/product audit and explicitly decide
+the blind-integrity exception. Do not run `go`, Telegram, Cloudflare, or customer
+publishing before approval. Keep
 `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true`.

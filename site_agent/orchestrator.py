@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -274,11 +275,21 @@ class SiteAgentOrchestrator:
 
         final_critique: CritiqueReport | None = None
         for iteration in range(1, settings.max_fix_iterations + 1):
+            index_path = site_dir / "index.html"
+            critique_path = critiques_dir / f"critique_iteration_{iteration}.json"
+            critique_provenance_path = critiques_dir / f"critique_iteration_{iteration}.provenance.json"
             critique = self._read_model(
-                critiques_dir / f"critique_iteration_{iteration}.json", CritiqueReport
+                critique_path, CritiqueReport
             )
+            if critique is not None and not self._critique_matches_site(critique_provenance_path, index_path):
+                # Preserve the historical decision, but never let it trigger a
+                # fixer against different bytes after crash recovery.
+                write_json(
+                    critiques_dir / f"critique_iteration_{iteration}.stale.json",
+                    critique,
+                )
+                critique = None
             if critique is None:
-                index_path = site_dir / "index.html"
                 if iteration != 1 or not index_path.is_file() or index_path.stat().st_size == 0:
                     if builder_mode == "codex_studio":
                         assert self.studio_runner is not None
@@ -309,7 +320,13 @@ class SiteAgentOrchestrator:
                     site_spec=spec,
                     evidence=evidence,
                 )
-                write_json(critiques_dir / f"critique_iteration_{iteration}.json", critique)
+                write_json(critique_path, critique)
+                write_json(critique_provenance_path, {
+                    "site_sha256": self._site_checksum(site_dir),
+                    "hash_scope": "html_css_js_tree",
+                    "site_path": str(site_dir),
+                    "iteration": iteration,
+                })
             final_critique = critique
             self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
             if builder_mode == "codex_studio":
@@ -492,6 +509,33 @@ class SiteAgentOrchestrator:
             return model_type.model_validate_json(path.read_text(encoding="utf-8"))
         except Exception:
             return None
+
+    @staticmethod
+    def _critique_matches_site(provenance_path: Path, index_path: Path) -> bool:
+        if not provenance_path.is_file() or not index_path.is_file():
+            return False
+        try:
+            import json
+
+            payload = json.loads(provenance_path.read_text(encoding="utf-8"))
+            expected = str(payload.get("site_sha256", ""))
+            return bool(expected) and SiteAgentOrchestrator._site_checksum(index_path.parent) == expected
+        except (OSError, ValueError, AttributeError):
+            return False
+
+    @staticmethod
+    def _site_checksum(site_dir: Path) -> str:
+        """Bind reusable reviews to every authored file, not only index.html."""
+        digest = hashlib.sha256()
+        for path in sorted(
+            item for item in site_dir.rglob("*")
+            if item.is_file() and item.suffix.lower() in {".html", ".css", ".js"}
+        ):
+            digest.update(path.relative_to(site_dir).as_posix().encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+        return digest.hexdigest()
 
     def _read_json(self, path: Path):
         if not path.is_file() or not path.stat().st_size:

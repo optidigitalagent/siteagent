@@ -382,3 +382,31 @@ Live end-to-end verification requires local runtime credentials:
   single bitmap, so viewport screenshot evidence is the applicable browser artifact.
 - Stop checkpoint: `HUMAN_REFERENCE_LIBRARY_REVIEW`. No `go`, Telegram, Cloudflare, publishing,
   Orange Beauty Studio, or Bella Dent Clinic action was performed.
+
+## Full-site product correction and Eliz recovery (2026-07-18)
+
+- Preserved Concept C and recovered its material five-page build. Corrected the
+  lazy-image and hidden-control inspector false positives, checksum-bounded
+  staging recovery, canonical screenshot freshness, full-tree critic
+  provenance, Polish language/commercial signals, and fail-closed multi-page
+  Product Director coverage.
+- Reverified the four reported Cloudinary failures as authorised business JPEGs
+  returning HTTP 200 with delivery checksums identical to prepared files. No
+  reupload was required. All five pages passed desktop/tablet/mobile technical
+  inspection; interaction/accessibility checks covered keyboard focus,
+  skip-link, navigation, PL/EN, filters, form errors/result fallback, reduced
+  motion, and core AA contrast.
+- Independent baseline review found and then re-approved a fixed tablet Services
+  composition. Fresh critic 89, Art Director 89, Product Director 100, and
+  acceptance 89 are approved with no critical/high issue. The final site is
+  materially stronger than the manual one-page baseline in completeness, IA,
+  media use, portfolio depth, mobile journey, and conversion.
+- Verification: 47 focused tests passed; full suite 141 passed with one
+  credential-gated Cloudflare smoke skipped; compileall, pip check, smoke build,
+  diff check, and secret checks complete at final handoff.
+- Calibration-integrity disclosure: the same-business manual baseline was
+  present in selected reference/design inputs. The recovered product is ready
+  for human quality audit but cannot be represented as a clean blind benchmark.
+  A new isolated run is required if strict blindness is mandatory.
+- Stop checkpoint: `AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT`. No `go`,
+  Telegram, Cloudflare, or customer deployment ran; the human gate remains on.

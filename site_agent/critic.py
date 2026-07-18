@@ -104,6 +104,14 @@ class TechnicalInspector:
         # criticism sees the same authorised proof a visitor can scroll to.
         page.evaluate(
             """async () => {
+              // Ask Chromium to fetch every authorised image before walking
+              // the page. A pending lazy image is not a broken image, and a
+              // full-page screenshot alone does not reliably activate it.
+              for (const image of Array.from(document.images)) {
+                image.loading = "eager";
+                if (!image.src && image.dataset.src) image.src = image.dataset.src;
+                if (!image.srcset && image.dataset.srcset) image.srcset = image.dataset.srcset;
+              }
               const max = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
               const step = Math.max(window.innerHeight * 0.8, 320);
               for (let y = 0; y < max; y += step) {
@@ -117,8 +125,13 @@ class TechnicalInspector:
                       image.addEventListener('load', resolve, {once: true});
                       image.addEventListener('error', resolve, {once: true});
                     }),
-                    new Promise(resolve => setTimeout(resolve, 1000)),
+                    new Promise(resolve => setTimeout(resolve, 5000)),
                   ])
+              ));
+              await Promise.all(Array.from(document.images).map(image =>
+                image.complete && image.naturalWidth > 0 && image.decode
+                  ? image.decode().catch(() => undefined)
+                  : Promise.resolve()
               ));
               window.scrollTo(0, 0);
               await new Promise(resolve => setTimeout(resolve, 120));
@@ -161,7 +174,10 @@ class TechnicalInspector:
               const body = document.body;
               const horizontalScroll = doc.scrollWidth > doc.clientWidth + 1 || body.scrollWidth > body.clientWidth + 1;
               const missingImages = Array.from(document.images)
-                .filter(img => !img.complete || img.naturalWidth === 0)
+                // `complete === false` means the request is still pending. It
+                // is not evidence of a missing asset; request failures are
+                // independently captured by the network watcher above.
+                .filter(img => img.complete && img.naturalWidth === 0)
                 .map(img => img.currentSrc || img.src || img.alt || "unknown image");
               const brokenLinks = Array.from(document.querySelectorAll("a[href]"))
                 .map(a => a.getAttribute("href"))
@@ -170,6 +186,10 @@ class TechnicalInspector:
                 .filter(el => {
                   const style = window.getComputedStyle(el);
                   if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
+                  // Controls inside a hidden ancestor have their own computed
+                  // display value but no rendered box. They are not currently
+                  // interactive and must not be reported as 0x0 tap targets.
+                  if (el.getClientRects().length === 0) return false;
                   const r = el.getBoundingClientRect();
                   return r.width < 44 || r.height < 44;
                 })

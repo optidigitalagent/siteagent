@@ -258,6 +258,61 @@ class CreativeStudioTests(unittest.TestCase):
             self.assertTrue(runner._task_completed(studio, "creative_fixer"))
             self.assertIn("fixed", (source / "index.html").read_text(encoding="utf-8"))
 
+    def test_timed_out_staging_requires_checksum_clean_bounded_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            staging = studio / "selected" / "staging"
+            concept = studio / "concepts" / "concept_c" / "index.html"
+            selection = studio / "concept_reviews" / "selected_concept.json"
+            staging.mkdir(parents=True)
+            concept.parent.mkdir(parents=True)
+            selection.parent.mkdir(parents=True)
+            (staging / "index.html").write_text("<html><body>" + "x" * 200 + "</body></html>", encoding="utf-8")
+            concept.write_text("concept", encoding="utf-8")
+            selection.write_text(json.dumps({"selected_concept": "concept_c"}), encoding="utf-8")
+            relative = str(concept.relative_to(Path.cwd())).replace("\\", "/")
+            expected = __import__("hashlib").sha256(concept.read_bytes()).hexdigest()
+            provenance = {
+                "selected_concept": "concept_c",
+                "source_inputs": {"prototype": {"path": relative, "sha256": expected}},
+                "site_files": ["index.html"],
+            }
+            (staging / "provenance.json").write_text(json.dumps(provenance), encoding="utf-8")
+            runner = CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())
+            self.assertTrue(runner._staging_provenance_is_valid(studio, staging))
+            state = {
+                "status": "retryable",
+                "error": "initial technical validation failed",
+                "failed_source_checksum": __import__("site_agent.skill_lock", fromlist=["directory_checksum"]).directory_checksum(staging),
+                "validator_checksum": "0" * 64,
+            }
+            self.assertTrue(runner._retryable_staging_can_revalidate(studio, staging, state))
+            provenance["source_inputs"]["prototype"]["sha256"] += "0"
+            (staging / "provenance.json").write_text(json.dumps(provenance), encoding="utf-8")
+            self.assertFalse(runner._staging_provenance_is_valid(studio, staging))
+            self.assertFalse(runner._retryable_staging_can_revalidate(studio, staging, state))
+
+    def test_atomic_promotion_excludes_private_builder_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source"
+            destination = root / "site"
+            source.mkdir()
+            (source / "index.html").write_text(
+                "<html><body><main>Customer site</main></body></html>" + " " * 128,
+                encoding="utf-8",
+            )
+            (source / "provenance.json").write_text(
+                json.dumps({"source_input": "runs/private/workflow.json"}),
+                encoding="utf-8",
+            )
+            CodexStudioRunner(project_root=Path.cwd(), inspector=StubInspector())._atomic_promote(
+                source, destination
+            )
+            self.assertTrue((destination / "index.html").is_file())
+            self.assertFalse((destination / "provenance.json").exists())
+
     def test_workspace_has_concepts_screenshots_selection_and_atomic_site_promotion(self) -> None:
         calls = []
 

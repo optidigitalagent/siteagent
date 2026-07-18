@@ -169,8 +169,10 @@ def semantic_repetition_report(
 def language_fit_report(spec: Any, research: Any) -> LanguageFitReport:
     selected = (spec.language or "").strip().lower()
     evidence_language = (research.primary_language or "").strip().lower()
+    selected_primary = (re.match(r"[a-z]{2,3}", selected) or [""])[0]
+    evidence_primary = (re.match(r"[a-z]{2,3}", evidence_language) or [""])[0]
     if evidence_language:
-        approved = selected == evidence_language or selected.startswith(evidence_language + "-")
+        approved = bool(selected_primary) and selected_primary == evidence_primary
         return LanguageFitReport(
             selected_language=selected,
             evidence_language=evidence_language,
@@ -221,6 +223,8 @@ def commercial_usefulness_report(
     desire_terms = (
         "private", "evening", "experience", "time on the water", "occasion",
         "квіт", "простір", "світл", "жив", "момент", "атмосфер", "церемон",
+        "kwiat", "przestrze", "światł", "swiatl", "kolor", "materia wydarzenia",
+        "scenograf", "instalacj", "atmosfer", "ceremoni",
     )
     evidence_backed_value = any(
         phrase.strip().lower() in all_text.lower()

@@ -36,6 +36,10 @@ class _PageParser(HTMLParser):
         self.sections = 0
         self.anchors: list[str] = []
         self.has_form = False
+        self.language_options: set[str] = set()
+        self.portfolio_filters: set[str] = set()
+        self.image_count = 0
+        self.video_count = 0
         self.meta_redirect = False
         self.script_redirect = False
 
@@ -53,6 +57,14 @@ class _PageParser(HTMLParser):
             self.anchors.append(data["href"])
         if tag == "form":
             self.has_form = True
+        if tag == "button" and data.get("data-lang"):
+            self.language_options.add(data["data-lang"].strip().lower())
+        if tag == "button" and data.get("data-filter"):
+            self.portfolio_filters.add(data["data-filter"].strip().lower())
+        if tag == "img" and data.get("src"):
+            self.image_count += 1
+        if tag == "video":
+            self.video_count += 1
         if tag == "meta" and data.get("http-equiv", "").lower() == "refresh":
             self.meta_redirect = True
 
@@ -93,6 +105,36 @@ class ProductDirectorAuditor:
             (not parser.has_form and bool(external) and len(roles - {"identity_value", "final_conversion"}) < 2)
         )
         media_count = len([item for item in media_manifest.get("media", []) if item.get("url")])
+        multi_page_request = requested_product_type == "multi_page_commercial_site"
+        required_pages = ("index.html", "services.html", "portfolio.html", "about.html", "contact.html")
+        required_navigation = {"services.html", "portfolio.html", "about.html", "contact.html"}
+        page_contract: dict[str, dict[str, Any]] = {}
+        for page_name in required_pages:
+            page_path = site_dir / page_name
+            page_parser = _PageParser()
+            if page_path.is_file():
+                page_parser.feed(page_path.read_text(encoding="utf-8"))
+            local_links = {
+                href.split("#", 1)[0]
+                for href in page_parser.anchors
+                if href and not href.startswith(("#", "http://", "https://", "mailto:", "tel:"))
+            }
+            page_contract[page_name] = {
+                "exists": page_path.is_file(),
+                "navigation_complete": required_navigation.issubset(local_links),
+                "language_switch_complete": {"pl", "en"}.issubset(page_parser.language_options),
+                "has_form": page_parser.has_form,
+                "portfolio_filters": sorted(page_parser.portfolio_filters),
+                "image_count": page_parser.image_count,
+                "video_count": page_parser.video_count,
+            }
+        missing_pages = [name for name, state in page_contract.items() if not state["exists"]]
+        incomplete_navigation = [name for name, state in page_contract.items() if state["exists"] and not state["navigation_complete"]]
+        incomplete_language_switches = [name for name, state in page_contract.items() if state["exists"] and not state["language_switch_complete"]]
+        portfolio_filters_complete = {"all", "commercial", "corporate", "private", "zones"}.issubset(
+            set(page_contract["portfolio.html"]["portfolio_filters"])
+        )
+        contact_form_present = bool(page_contract["contact.html"]["has_form"])
         score = 100
         caps: list[dict[str, Any]] = []
         if "offer_services" not in roles:
@@ -103,6 +145,12 @@ class ProductDirectorAuditor:
             caps.append({"reason": "three semantic sections cannot satisfy a normal business-site request", "maximum_score": 45})
         if redirect_only:
             caps.append({"reason": "redirect-only output is not a commercial website", "maximum_score": 0})
+        if multi_page_request and missing_pages:
+            caps.append({"reason": "requested multi-page product is missing required pages", "maximum_score": 45})
+        if multi_page_request and (incomplete_navigation or incomplete_language_switches):
+            caps.append({"reason": "multi-page navigation or language switching is incomplete", "maximum_score": 60})
+        if multi_page_request and (not portfolio_filters_complete or not contact_form_present):
+            caps.append({"reason": "portfolio filtering or contact conversion is incomplete", "maximum_score": 55})
         for cap in caps:
             score = min(score, cap["maximum_score"])
         complete = not missing and parser.sections >= 7 and not redirect_only if full_request else bool(roles & {"offer_services", "final_conversion"}) and not redirect_only
@@ -122,6 +170,16 @@ class ProductDirectorAuditor:
             reasons.append("business research lacks a sourced product identity")
         if media_count == 0:
             reasons.append("media manifest is empty")
+        if multi_page_request and missing_pages:
+            reasons.append("missing required pages: " + ", ".join(missing_pages))
+        if multi_page_request and incomplete_navigation:
+            reasons.append("incomplete cross-page navigation: " + ", ".join(incomplete_navigation))
+        if multi_page_request and incomplete_language_switches:
+            reasons.append("missing PL/EN switching: " + ", ".join(incomplete_language_switches))
+        if multi_page_request and not portfolio_filters_complete:
+            reasons.append("portfolio page lacks the required business filters")
+        if multi_page_request and not contact_form_present:
+            reasons.append("contact page lacks a working-form surface")
         accepted = complete and screenshot_complete and not reasons
         return {
             "schema_version": 1,
@@ -135,6 +193,15 @@ class ProductDirectorAuditor:
             "redirect_only": redirect_only,
             "screenshots": screenshots,
             "media_manifest_count": media_count,
+            "multi_page_contract": {
+                "required": multi_page_request,
+                "pages": page_contract,
+                "missing_pages": missing_pages,
+                "incomplete_navigation": incomplete_navigation,
+                "incomplete_language_switches": incomplete_language_switches,
+                "portfolio_filters_complete": portfolio_filters_complete,
+                "contact_form_present": contact_form_present,
+            },
             "score_caps": caps,
             "reasons": reasons,
             "blind_input_contract": {
