@@ -1,0 +1,38 @@
+{
+  "provider": "cloudflare_pages",
+  "environment": "preview",
+  "project_id": "siteagent-preview-eliz-de-fleur-769afda793",
+  "run_id": "eliz-de-fleur-golden-calibration",
+  "branch": "eliz-human-audit-20260718",
+  "preview_url": "https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev",
+  "preview_alias_url": "https://eliz-human-audit-20260718.siteagent-preview-eliz-de-fleur-769afda793.pages.dev",
+  "deployment_id": "eb4d89cf-7f84-4299-932d-1ac90c430349",
+  "commit_sha": "15bd51e89539f76cd9510f04d214ad8a1784c009",
+  "site_tree_sha256": "b845641dd68b434ba286760d8e5d93029c0d83663e63447047b0db5da0090363",
+  "site_files": 8,
+  "site_bytes": 146828,
+  "http_200_pages": [
+    "index.html",
+    "services.html",
+    "portfolio.html",
+    "about.html",
+    "contact.html"
+  ],
+  "robots_meta_verified": true,
+  "x_robots_tag_verified": true,
+  "business_marker_verified": true,
+  "run_marker_verified": true,
+  "desktop_tablet_mobile_browser_qa": "passed",
+  "interaction_qa": "passed",
+  "form_mode": "copy_to_clipboard+instagram_redirect",
+  "form_additional_fallbacks": [
+    "web_share_when_available",
+    "manual_copy"
+  ],
+  "content_placeholders_count": 0,
+  "customer_production_changed": false,
+  "custom_domain_changed": false,
+  "telegram_delivery_sent": false,
+  "production_go_ran": false,
+  "verification_status": "verified"
+}

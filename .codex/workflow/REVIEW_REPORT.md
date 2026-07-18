@@ -54,3 +54,30 @@ reusable for that exact output. It is not a live-production verification. No cri
 visual issue emerged from the recovery review; the recorded medium mobile material-pause note
 remains. Before any future rollout, reconcile the contradictory deterministic commercial report
 (`desire_created: false` while approved at 95) and historical skill-provenance checksum mismatch.
+
+## Eliz navigation and preview review (2026-07-18)
+
+The human-audit correction is intentionally narrow. The only confirmed visual
+defect was microscopic navigation typography: PL/EN and footer copy were about
+10.4px, while header navigation was about 13.6–14px. The revision raises visible
+navigation type to 14–14.4px and footer metadata to 12px without changing CTA,
+Portfolio, colors, layout or Concept C composition.
+
+Fresh local and live desktop/tablet/mobile technical evidence for all five pages
+passes with no overflow, missing images, failed requests, console errors, broken
+links or visible targets below 44×44. The open mobile menu was screenshot-reviewed;
+its current link retains rose text plus a bottom border, and real keyboard Tab
+focus produces a 3px solid outline with 4px offset. PL/EN, complete navigation,
+Portfolio filters 24/3/7/12/2, invalid-form focus, prepared enquiry,
+copy-to-clipboard and Instagram fallback pass live.
+
+The deployment is Cloudflare environment `Preview`, project
+`siteagent-preview-eliz-de-fleur-769afda793`, deployment
+`eb4d89cf-7f84-4299-932d-1ac90c430349`. All five pages return HTTP 200 after
+canonical redirects and carry both HTML and response-header
+`noindex,nofollow`. There is no customer production deployment, Telegram
+delivery or custom-domain change. The independent post-fix critic inspected the
+tracked preview plus fresh local/live screenshots and accepted the revision with
+no critical/high issue. The `.html` aliases use empty 308 redirects before the
+protected canonical 200 pages; this is non-blocking because the redirect bodies
+contain no indexable page content.

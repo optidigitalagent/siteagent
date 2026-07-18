@@ -1,25 +1,35 @@
 # Next Action
 
-Checkpoint: `AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT`.
+Checkpoint: `ELIZ_PREVIEW_READY_FOR_USER_REVIEW`.
 
-The Eliz de Fleur Concept C recovery is a complete five-page commercial site.
-Fresh critic, Art Director, multi-page Product Director, acceptance, browser,
-interaction/accessibility, media, focused, full-suite, compile, dependency, and
-smoke checks pass with no critical/high issue. Orange and Bella remain
-product-rejected historical artifacts. No production action ran.
+The human product audit accepts Eliz de Fleur Concept C as a high-quality full
+commercial website with limited revisions. Product-quality calibration is
+accepted; the historically contaminated strict-blind benchmark is deferred.
+Customer production is not approved.
 
-Human calibration remains blocking. The auditor must review the final desktop,
-tablet, and mobile evidence under
-`runs/eliz-de-fleur-golden-calibration/studio/full_site_qa/` and the correction
-handoff in `.codex/handoffs/FULL_SITE_PRODUCT_CORRECTION_REPORT.md`.
+The required revision changed only header/footer navigation typography. CTA
+copy/system, Concept C composition and the complete Portfolio remain intact.
+Fresh local and live desktop/tablet/mobile technical and interaction QA pass on
+all five pages with no critical/high issue, overflow, broken media/link,
+console/network error or sub-44px target.
 
-Important disclosure: the manual Eliz baseline was present in selected
-reference/design inputs, so this recovered run is not valid evidence of a
-strictly blind benchmark. Concept C was preserved because the recovery contract
-forbade regenerating research/references/concepts. Human review must either
-accept it as product-quality calibration only or require a new clean blind run.
+Preview:
 
-Exact next action: perform the human visual/product audit and explicitly decide
-the blind-integrity exception. Do not run `go`, Telegram, Cloudflare, or customer
-publishing before approval. Keep
-`CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true`.
+- URL: `https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`
+- project: `siteagent-preview-eliz-de-fleur-769afda793`
+- run: `eliz-de-fleur-golden-calibration`
+- environment: Cloudflare `Preview`
+- `noindex,nofollow`: verified in all HTML and response headers
+- form mode: `copy_to_clipboard+instagram_redirect`, plus Web Share/manual fallback
+- demo placeholders: `0`
+
+Production blockers:
+
+- explicit user production approval is still required;
+- preview-only robots directives and run markers must be removed before production;
+- production preflight and live QA must be repeated on approved production bytes.
+
+Exact next action: the user opens the preview URL and either sends a scoped
+revision brief or explicitly approves a later production publish. Do not run
+production `go`, Telegram customer delivery, customer deployment or custom
+domain changes before that approval.

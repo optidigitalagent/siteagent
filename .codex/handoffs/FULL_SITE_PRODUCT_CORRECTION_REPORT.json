@@ -1,8 +1,12 @@
 {
-  "status": "AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT",
-  "ready_for_human_audit": true,
+  "status": "ELIZ_PREVIEW_READY_FOR_USER_REVIEW",
+  "ready_for_human_audit": false,
+  "ready_for_user_preview_review": true,
   "production_approved": false,
   "human_calibration_required": true,
+  "human_product_audit": "accepted_with_revisions",
+  "product_quality_calibration": true,
+  "strict_blind_benchmark": "deferred",
   "orange_bella": {
     "technical_status": "accepted_historical",
     "product_status": "rejected_by_human_audit",
@@ -15,15 +19,37 @@
     "requested_product_type": "multi_page_commercial_site",
     "pages": ["index.html", "services.html", "portfolio.html", "about.html", "contact.html"],
     "media": {"portfolio_items": 24, "images": 22, "videos": 2},
-    "status": "completed_human_calibration_required",
+    "status": "accepted_with_navigation_revision",
     "final_score": 89,
-    "site_tree_sha256": "e02cc6a865eb8d076293073dc078d001167f893ea1abd59988203e1676f22af2",
+    "site_tree_sha256": "6647df57d4fe0b4784c0995f0aa116700f378914e9da46006833e8ad80ed0996",
     "blind_benchmark_integrity": {
       "valid": false,
       "reason": "The manual Eliz baseline was present in selected reference/design inputs before the final build.",
       "recovery_constraint": "Preserve Concept C; do not regenerate research, references, or concepts.",
-      "required_human_decision": "Accept this only as a recovered product-quality calibration, or require a new clean blind run."
+      "human_decision": "Accepted as product-quality calibration; strict-blind benchmark deferred to a future clean run."
     }
+  },
+  "preview": {
+    "provider": "cloudflare_pages",
+    "environment": "preview",
+    "project_id": "siteagent-preview-eliz-de-fleur-769afda793",
+    "run_id": "eliz-de-fleur-golden-calibration",
+    "branch": "eliz-human-audit-20260718",
+    "deployment_id": "eb4d89cf-7f84-4299-932d-1ac90c430349",
+    "preview_url": "https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev",
+    "preview_alias_url": "https://eliz-human-audit-20260718.siteagent-preview-eliz-de-fleur-769afda793.pages.dev",
+    "site_tree_sha256": "b845641dd68b434ba286760d8e5d93029c0d83663e63447047b0db5da0090363",
+    "http_200_pages": 5,
+    "robots_meta_verified": true,
+    "x_robots_tag_verified": true,
+    "browser_viewports_each": ["1440x1100", "768x1024", "390x844"],
+    "technical_qa": "passed",
+    "interaction_qa": "passed",
+    "form_mode": "copy_to_clipboard+instagram_redirect",
+    "content_placeholders_count": 0,
+    "customer_production_changed": false,
+    "telegram_sent": false,
+    "custom_domain_changed": false
   },
   "media_reverification": {
     "passed": true,
@@ -44,6 +70,12 @@
     "art_director": {"approved": true, "score": 89, "critical_or_high": 0},
     "product_director": {"approved": true, "score": 100, "multi_page_contract_passed": true},
     "acceptance": {"approved": true, "score": 89},
+    "navigation_preview_post_fix": {
+      "approved": true,
+      "critical_or_high": 0,
+      "tracked_preview_reviewed": true,
+      "local_and_live_screenshots_reviewed": true
+    },
     "manual_baseline_comparison": {
       "completed": true,
       "final_product_materially_stronger": true,
@@ -63,6 +95,13 @@
     "overflow_media_network_console_links_tap_targets": "passed",
     "interaction_accessibility_v2": "passed",
     "portfolio_filter_counts": {"all": 24, "commercial": 3, "corporate": 7, "private": 12, "zones": 2},
+    "navigation_readability_revision": "passed",
+    "header_navigation_minimum_font_px": 14.4,
+    "language_switch_font_px": 14,
+    "footer_link_font_px": 14,
+    "footer_metadata_font_px": 12,
+    "live_preview_http_and_robots": "passed",
+    "live_preview_interactions": "passed",
     "git_diff_check": "passed",
     "secret_scan": "passed",
     "customer_site_internal_path_scan": "passed"
@@ -70,14 +109,22 @@
   "external_actions": {
     "go": false,
     "telegram": false,
-    "cloudflare": false,
+    "cloudflare_preview": true,
+    "cloudflare_customer_production": false,
     "customer_deployment": false,
+    "custom_domain_change": false,
     "read_only_live_baseline_http_check": true
   },
   "commits": {
     "recovery_checkpoint": "5041a730eae79e837539ae6fd3a17ecb4a21a573",
     "implementation_and_autonomous_audit": "1caed8c250898b5391be74132b01f7fe2701f873",
+    "preview_checkpoint": "15bd51e89539f76cd9510f04d214ad8a1784c009",
     "report_finalization": "pushed main HEAD; see final response"
   },
-  "next_action": "Human visual/product audit and explicit decision on the blind-integrity disclosure; do not publish before approval."
+  "production_blockers": [
+    "Explicit user production approval is still required.",
+    "Preview-only robots directives and run markers must be removed before production publish.",
+    "Production preflight and live QA must be repeated on the approved production bytes."
+  ],
+  "next_action": "User reviews the preview URL and either sends a scoped revision brief or explicitly approves a later production publish."
 }

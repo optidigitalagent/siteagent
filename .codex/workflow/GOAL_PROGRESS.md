@@ -410,3 +410,28 @@ Live end-to-end verification requires local runtime credentials:
   A new isolated run is required if strict blindness is mandatory.
 - Stop checkpoint: `AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT`. No `go`,
   Telegram, Cloudflare, or customer deployment ran; the human gate remains on.
+
+## Eliz human-audit preview (2026-07-18)
+
+- Recorded the human decision that Concept C passes product-quality calibration
+  with limited revisions; strict-blind calibration is deferred and customer
+  production remains unapproved.
+- Preserved the full five-page design, CTA system and all 24 Portfolio items.
+  Increased only navigation typography: header/menu labels are at least 14.4px,
+  PL/EN and footer links 14px, footer metadata 12px. Existing rose+underline
+  active state, visible 3px keyboard focus and 44px targets remain intact.
+- Fresh local and live technical QA passed Home, Services, Portfolio, About and
+  Contact at 1440×1100, 768×1024 and 390×844 with no overflow, missing media,
+  broken links, failed requests, console errors or undersized targets. Live
+  PL/EN, navigation, focus, filters 24/3/7/12/2 and the honest form fallback
+  passed.
+- Published only the dedicated Cloudflare `Preview` environment at
+  `https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`.
+  All five pages return HTTP 200 after redirects and expose `noindex,nofollow`
+  through both robots meta and `X-Robots-Tag`.
+- No production `go`, Telegram delivery, customer production deployment or
+  custom-domain action ran. Stop checkpoint:
+  `ELIZ_PREVIEW_READY_FOR_USER_REVIEW`.
+- Independent post-fix acceptance passed with no critical/high issue. The full
+  regression suite also remains green: 141 tests passed and one
+  credential-gated Cloudflare production smoke was skipped.

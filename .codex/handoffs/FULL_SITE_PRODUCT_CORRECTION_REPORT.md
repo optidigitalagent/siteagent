@@ -2,18 +2,43 @@
 
 ## Status
 
-`AUTONOMOUS_FULL_SITE_AGENT_READY_FOR_HUMAN_AUDIT`
+`ELIZ_PREVIEW_READY_FOR_USER_REVIEW`
 
-The autonomous product and QA pass is complete. This is not production approval:
-`CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true` remains blocking, and no
-publishing or customer delivery ran.
+The human product audit accepts Eliz de Fleur Concept C as a high-quality full
+commercial website with limited revisions. This acceptance calibrates product
+quality; it is not customer production approval. The strict-blind benchmark is
+deferred because the manual Eliz baseline was present in selected
+reference/design inputs. `CREATIVE_STUDIO_HUMAN_CALIBRATION_REQUIRED=true`
+remains globally enabled.
 
-One calibration-integrity disclosure remains material. The manual Eliz baseline
-was present in the selected reference/design inputs, so the strict blind-input
-claim cannot be proven for this recovered run. The recovery contract required
-preserving Concept C and forbade regenerating research/references/concepts. The
-final product can therefore be audited for quality, but this run cannot be used
-as clean evidence of a blind benchmark without explicit human acceptance.
+The required navigation-only revision and isolated public preview are complete.
+CTA copy/system, Concept C composition and the complete Portfolio were
+preserved. No customer production, production `go`, Telegram delivery or custom
+domain action ran.
+
+## Human-audit preview
+
+- Preview URL:
+  `https://eb4d89cf.siteagent-preview-eliz-de-fleur-769afda793.pages.dev`
+- Project: `siteagent-preview-eliz-de-fleur-769afda793`
+- Run: `eliz-de-fleur-golden-calibration`
+- Cloudflare environment: `Preview`
+- Branch: `eliz-human-audit-20260718`
+- Deployment: `eb4d89cf-7f84-4299-932d-1ac90c430349`
+- Form mode: `copy_to_clipboard+instagram_redirect`, with Web Share when
+  available and manual-copy fallback.
+- Demo/factual placeholders: `0`.
+
+All five pages return HTTP 200 after canonical redirects. Each live response
+has `X-Robots-Tag: noindex, nofollow`, and every page has matching robots meta.
+The index also contains the expected non-secret business/run markers. The
+deployment is an isolated preview project with no customer custom domain.
+
+Fresh local and live desktop/tablet/mobile browser checks passed on Home,
+Services, Portfolio, About and Contact: no overflow, missing media, broken
+links, failed requests, console errors or targets under 44×44. Live PL/EN,
+navigation, keyboard focus, active state, Portfolio filters `24/3/7/12/2`, form
+validation, generated enquiry, clipboard fallback and Instagram action passed.
 
 ## Root cause and invalidated acceptance
 
@@ -122,19 +147,22 @@ No reupload was needed. Evidence is recorded in
 
 ## External actions, blockers, and next action
 
-No `go`, Telegram notification/delivery, Cloudflare action, or customer
-deployment ran. The live baseline was read-only HTTP comparison only.
+One external action ran: an isolated Cloudflare Pages preview deployment. It is
+recorded separately in
+`runs/eliz-de-fleur-golden-calibration/preview_deployment.json`; normal
+`deployment.json` was not written. Customer production, production `go`, queue,
+Telegram delivery and custom domains were not touched.
 
-Product QA has no remaining critical/high issue. Production remains blocked by
-the human calibration gate. The human auditor must also decide whether the
-disclosed baseline/reference contamination invalidates this golden run as a
-strict blind benchmark. If strict blindness is mandatory, a new clean run is
-required; this recovered Concept C run must not be relabelled blind.
+No critical/high product, visual, accessibility, interaction or technical issue
+remains for preview review. Production remains blocked until the user reviews
+the preview and explicitly authorises production. Before production, remove the
+preview-only robots directives/markers and repeat production preflight/live QA.
+Strict-blind calibration remains deferred to a future clean business run.
 
-Checkpoint commit: `5041a730eae79e837539ae6fd3a17ecb4a21a573`.
-Implementation and autonomous-audit commit:
-`1caed8c250898b5391be74132b01f7fe2701f873`. The report-finalization commit is
+Preview checkpoint commit:
+`15bd51e89539f76cd9510f04d214ad8a1784c009`. The report-finalization commit is
 the pushed `main` HEAD and is recorded in the final response.
 
-Exact next action: human visual/product audit of the Eliz screenshots and the
-blind-integrity disclosure. Do not publish before explicit approval.
+Exact next action: open the preview URL and either send a scoped revision brief
+or explicitly approve a later production publish. Do not update customer
+production without that approval.
