@@ -59,7 +59,7 @@
     "checkpoints": {
       "ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW": "completed_and_valid",
       "research_completed": "completed_and_valid",
-      "media_ingested": "12_business_social_images_preview_only",
+      "media_ingested": "11_business_social_images_preview_only",
       "creative_acceptance_completed": "approved_94",
       "technical_gate_completed": "passed_desktop_tablet_mobile",
       "live_browser_qa_completed": "passed_desktop_mobile",

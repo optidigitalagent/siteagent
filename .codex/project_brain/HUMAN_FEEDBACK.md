@@ -229,3 +229,20 @@ repeat the same brief in every chat.
 - Acceptance must inspect the live, scrolled page. Lazy media, mobile menu,
   FAQ, footer, CTA geometry and response headers need browser evidence; an
   upload or a self-score alone is insufficient.
+
+## One-link recovery provenance hardening (2026-07-19)
+
+- A `preview_ready` queue status is not permission to trust cached approval.
+  Recovery must revalidate the normalized business source, the full authored
+  HTML/CSS/JS tree, the acceptance report, final desktop/tablet/mobile screenshot
+  hashes and the live noindex preview before reusing a deployment.
+- A failed retry must never overwrite a previously verified preview deployment
+  record or destroy the durable `preview_ready` checkpoint. Record retry failure
+  separately and fail the invocation without erasing valid recovery evidence.
+- Metadata-only video URLs are source provenance, not renderable Studio media.
+  They cannot satisfy media sufficiency until an actual authorised delivery asset
+  exists. Exact numeric evidence must also be enforced in final customer copy,
+  not only sanitized in research.
+- Isolated review publishing fails closed when dedicated Cloudflare Pages
+  credentials are unavailable. Do not silently substitute an unauthenticated
+  temporary Workers deployment for the approved Pages preview contract.

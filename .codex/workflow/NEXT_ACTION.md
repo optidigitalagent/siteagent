@@ -9,7 +9,10 @@ is `preview_ready`. Its isolated noindex Cloudflare Preview URL is:
 
 The requested one-link research, preview-only media ingestion, full commercial
 build, independent criticism, Product Director audit, acceptance, deployment
-and live browser QA are complete. The queue deliberately has no production
+and live browser QA are complete. The 2026-07-19 recovery audit additionally
+checksum-bound the full HTML/CSS/JS tree, acceptance and final screenshots,
+corrected the preview-only media count to 11 and revalidated the same live URL
+without another upload. The queue deliberately has no production
 `site_url`/`repo_url`; Telegram notification remains `not_started`.
 
 Exact next action: wait for explicit user review/approval. Do not publish to

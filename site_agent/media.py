@@ -52,7 +52,7 @@ class PreviewMediaIngestor:
         processed = output_dir / "processed"
         originals.mkdir(exist_ok=True)
         processed.mkdir(exist_ok=True)
-        media, rejected, seen_raw, seen_prepared = [], [], set(), set()
+        media, metadata_only_media, rejected, seen_raw, seen_prepared = [], [], [], set(), set()
 
         for index, candidate in enumerate(list(candidates)[: self.max_assets]):
             url = str(candidate.get("url", "")).strip()
@@ -69,7 +69,7 @@ class PreviewMediaIngestor:
                 if digest in seen_raw:
                     continue
                 seen_raw.add(digest)
-                media.append(self._entry(
+                metadata_only_media.append(self._entry(
                     candidate, submitted_source_url, digest, kind="video", original_file="",
                     processed_file="", width=int(candidate.get("width", 0) or 0),
                     height=int(candidate.get("height", 0) or 0), download_status="metadata_only",
@@ -126,9 +126,13 @@ class PreviewMediaIngestor:
             "purpose": "isolated_preview",
             "submitted_source_url": submitted_source_url,
             "media": media,
+            # These entries preserve discovery and rights provenance, but they
+            # are not renderable Studio inputs and never satisfy media depth.
+            "metadata_only_media": metadata_only_media,
             "media_count": len(media),
             "image_count": images,
             "video_count": videos,
+            "metadata_only_media_count": len(metadata_only_media),
             "full_preview_media_sufficient": sufficient,
             "composition_mode": "full_media" if sufficient else ("adapted_media" if media else "blocked"),
             "rejected": rejected,

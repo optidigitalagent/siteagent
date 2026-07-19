@@ -142,6 +142,49 @@ class RecoveryQueueTests(unittest.TestCase):
 
 
 class RecoveryCliTests(unittest.TestCase):
+    def test_delivery_resume_rejects_stale_full_tree_critic_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp)
+            reports_dir = run_dir / "generation_reports"
+            critiques_dir = run_dir / "critique_reports"
+            site_dir = run_dir / "site"
+            reports_dir.mkdir()
+            critiques_dir.mkdir()
+            site_dir.mkdir()
+            index_path = site_dir / "index.html"
+            index_path.write_text("<html><body>Accepted</body></html>", encoding="utf-8")
+            provenance_path = critiques_dir / "critique_iteration_1.provenance.json"
+            provenance_path.write_text(
+                json.dumps({
+                    "site_sha256": cli.SiteAgentOrchestrator._site_checksum(site_dir),
+                    "hash_scope": "html_css_js_tree",
+                }),
+                encoding="utf-8",
+            )
+            # A post-review CSS edit must invalidate the saved critic even when
+            # index.html and the approved report themselves are unchanged.
+            (site_dir / "styles.css").write_text("body { color: red; }", encoding="utf-8")
+
+            orchestrator = object.__new__(cli.SiteAgentOrchestrator)
+            orchestrator._read_model = Mock(side_effect=[
+                SimpleNamespace(instagram_url=INSTAGRAM_URL),
+                SimpleNamespace(approved_for_delivery=True),
+            ])
+            orchestrator.acceptance_auditor = Mock()
+
+            result = orchestrator._resume_delivery_if_ready(
+                instagram_url=INSTAGRAM_URL,
+                job_id="job-preview",
+                run_dir=run_dir,
+                reports_dir=reports_dir,
+                site_dir=site_dir,
+                production=False,
+                preview=True,
+            )
+
+            self.assertIsNone(result)
+            orchestrator.acceptance_auditor.audit.assert_not_called()
+
     def test_resumed_job_notifies_before_queue_completion(self) -> None:
         job = SimpleNamespace(
             id="job-1",
@@ -234,6 +277,69 @@ class RecoveryCliTests(unittest.TestCase):
         queue.complete.assert_not_called()
         queue.mark_notification_sending.assert_not_called()
         notifier_class.assert_not_called()
+
+    def test_preview_ready_revalidates_same_run_without_duplicate_queue_event(self) -> None:
+        ready = SimpleNamespace(
+            id="job-preview",
+            run_id="job-preview",
+            instagram_url=INSTAGRAM_URL,
+            chat_id=42,
+            status="preview_ready",
+            run_dir=r"runs\job-preview",
+            preview_url="https://hash.siteagent-preview.pages.dev",
+            telegram_notification_status="not_started",
+        )
+        queue = Mock()
+        queue.get.return_value = ready
+        orchestrator = Mock()
+        orchestrator.run.return_value = SimpleNamespace(
+            publish=SimpleNamespace(
+                deployment_url=ready.preview_url,
+                production_url="",
+            )
+        )
+
+        with (
+            patch.object(cli, "_pending_job_queue", return_value=queue),
+            patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
+        ):
+            cli.run_preview_job("job-preview")
+
+        orchestrator.run.assert_called_once_with(
+            INSTAGRAM_URL,
+            production=False,
+            preview=True,
+            run_id="job-preview",
+            run_path=Path(r"runs\job-preview"),
+        )
+        queue.mark_preview_ready.assert_not_called()
+        queue.reclaim_failed_preview.assert_not_called()
+
+    def test_preview_ready_validation_failure_does_not_destroy_checkpoint(self) -> None:
+        ready = SimpleNamespace(
+            id="job-preview",
+            run_id="job-preview",
+            instagram_url=INSTAGRAM_URL,
+            chat_id=42,
+            status="preview_ready",
+            run_dir=r"runs\job-preview",
+            preview_url="https://hash.siteagent-preview.pages.dev",
+            telegram_notification_status="not_started",
+        )
+        queue = Mock()
+        queue.get.return_value = ready
+        orchestrator = Mock()
+        orchestrator.run.side_effect = RuntimeError("cached preview validation failed")
+
+        with (
+            patch.object(cli, "_pending_job_queue", return_value=queue),
+            patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
+            self.assertRaisesRegex(RuntimeError, "cached preview validation failed"),
+        ):
+            cli.run_preview_job("job-preview")
+
+        queue.fail.assert_not_called()
+        queue.mark_preview_ready.assert_not_called()
 
 
 if __name__ == "__main__":

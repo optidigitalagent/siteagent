@@ -72,3 +72,13 @@
   and non-production branch. Exact business meta, HTML/response noindex and a
   crawler-blocking robots file are live gates; no production URL, custom domain
   or Telegram notification is allowed.
+- Cached one-link preview reuse requires normalized-source equality, matching
+  full-tree critic provenance, matching acceptance/report provenance, exact
+  final screenshot hashes and a fresh live noindex check. `preview_ready` never
+  bypasses these gates.
+- Missing Pages credentials fail closed. Temporary unauthenticated Workers
+  previews are outside the one-link review contract, and a failed retry writes a
+  separate failure record instead of replacing verified deployment metadata.
+- Metadata-only videos remain research provenance and do not count as renderable
+  media or Studio sufficiency. Immutable exact-duration claims are checked again
+  in final customer-facing HTML before acceptance or cached recovery.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ from site_agent.json_io import write_json
 from site_agent.publisher import (
     CloudflarePagesPublisher,
     LiveVerificationError,
+    PublisherConfigurationError,
     PublisherError,
     SiteValidationError,
     validate_site_directory,
@@ -33,9 +35,7 @@ X_ROBOTS_CONTENT = "noindex, nofollow, noarchive, nosnippet"
 
 
 class PreviewDeploymentResult(BaseModel):
-    provider: Literal[
-        "cloudflare_pages_preview", "cloudflare_workers_temporary_preview"
-    ] = "cloudflare_pages_preview"
+    provider: Literal["cloudflare_pages_preview"] = "cloudflare_pages_preview"
     project_name: str
     preview_url: str
     deployment_url: str
@@ -88,6 +88,17 @@ class PreviewPublisher(CloudflarePagesPublisher):
         run_id: str,
     ) -> PreviewDeploymentResult:
         metadata_path = run_dir / "preview_deployment.json"
+        preserve_verified_metadata = False
+        if metadata_path.is_file():
+            try:
+                existing = json.loads(metadata_path.read_text(encoding="utf-8"))
+                preserve_verified_metadata = (
+                    existing.get("status") == "success"
+                    and existing.get("verification_status") == "verified"
+                    and existing.get("environment") == "preview"
+                )
+            except (OSError, ValueError, AttributeError):
+                preserve_verified_metadata = False
         branch = preview_branch_name(run_id)
         provider = "cloudflare_pages_preview"
         try:
@@ -102,19 +113,9 @@ class PreviewPublisher(CloudflarePagesPublisher):
                     "Preview index.html does not contain the expected SiteAgent business marker."
                 )
 
-            self._check_toolchain()
             project_name = preview_project_name(source_url, run_id)
-            if not self.config.cloudflare_api_token and not self.config.cloudflare_account_id:
-                provider = "cloudflare_workers_temporary_preview"
-                return self._publish_temporary(
-                    metadata_path=metadata_path,
-                    staging_dir=staging_dir,
-                    local_checks=local_checks,
-                    expected_marker=expected_marker,
-                    project_name=project_name,
-                    branch=branch,
-                )
             self._validate_configuration()
+            self._check_toolchain()
             self._ensure_preview_project(project_name)
             deploy_result = self._run_wrangler(
                 [
@@ -170,7 +171,11 @@ class PreviewPublisher(CloudflarePagesPublisher):
         except Exception as exc:
             safe_message = self._redact(str(exc))
             write_json(
-                metadata_path,
+                (
+                    metadata_path.with_name("preview_deployment_failure.json")
+                    if preserve_verified_metadata
+                    else metadata_path
+                ),
                 {
                     "provider": provider,
                     "status": "failed",
@@ -188,88 +193,16 @@ class PreviewPublisher(CloudflarePagesPublisher):
                 raise
             raise PublisherError(safe_message) from exc
 
-    def _publish_temporary(
-        self,
-        *,
-        metadata_path: Path,
-        staging_dir: Path,
-        local_checks: dict[str, Any],
-        expected_marker: str,
-        project_name: str,
-        branch: str,
-    ) -> PreviewDeploymentResult:
-        """Use Cloudflare's unauthenticated, expiring preview account only.
-
-        The claim URL is a bearer credential. It is intentionally neither
-        persisted nor returned; this workflow needs a review URL, not account
-        ownership or a production deployment.
-        """
-        deployed = self._run_wrangler(
-            [
-                "deploy",
-                str(staging_dir),
-                "--temporary",
-                "--name",
-                project_name,
-            ],
-            purpose="temporary isolated preview upload",
-        )
-        deployment_url = self._temporary_deployment_url(deployed.stdout)
-        if not deployment_url:
-            raise PublisherError(
-                "Wrangler completed the temporary preview upload but returned no workers.dev URL."
+    def _validate_configuration(self) -> None:
+        if not self.config.cloudflare_api_token.strip():
+            raise PublisherConfigurationError(
+                "CLOUDFLARE_API_TOKEN is required for Cloudflare Pages publishing."
             )
-        parsed = urlsplit(deployment_url)
-        if parsed.scheme != "https" or not (parsed.hostname or "").endswith(".workers.dev"):
-            raise PublisherError("Cloudflare did not return a direct temporary Workers preview URL.")
-        live_checks = PreviewLiveVerifier(
-            http_get=self.http_get,
-            sleep=self.sleep,
-            retries=self.config.cloudflare_live_retries,
-            backoff_seconds=self.config.cloudflare_live_backoff_seconds,
-            timeout_seconds=self.config.cloudflare_live_timeout_seconds,
-        ).verify(
-            deployment_url,
-            site_dir=staging_dir,
-            expected_marker=expected_marker,
-        )
-        result = PreviewDeploymentResult(
-            provider="cloudflare_workers_temporary_preview",
-            project_name=project_name,
-            preview_url=deployment_url,
-            deployment_url=deployment_url,
-            deployment_id=(parsed.hostname or "").split(".")[0],
-            branch=branch,
-            deployed_at=_now(),
-            staging_dir=str(staging_dir),
-            checks={
-                **local_checks,
-                **live_checks,
-                "dedicated_project": project_name.startswith("siteagent-preview-"),
-                "non_production_branch": True,
-                "temporary_account": True,
-                "claim_url_persisted": False,
-                "custom_domain_changed": False,
-                "telegram_delivery_sent": False,
-                "production_deployment_started": False,
-            },
-        )
-        write_json(metadata_path, result)
-        return result
-
-    @staticmethod
-    def _temporary_deployment_url(output: str) -> str:
-        urls = re.findall(r"https://[^\s\]\[<>\"']+\.workers\.dev", output or "")
-        return urls[-1].rstrip(".,)") if urls else ""
-
-    def _redact(self, value: str) -> str:
-        value = super()._redact(value)
-        return re.sub(
-            r"https://dash\.cloudflare\.com/claim-preview\?[^\s]+",
-            "[REDACTED_CLAIM_URL]",
-            value,
-            flags=re.I,
-        )
+        if not self.config.cloudflare_account_id.strip():
+            raise PublisherConfigurationError(
+                "CLOUDFLARE_ACCOUNT_ID is required for Cloudflare Pages publishing."
+            )
+        super()._validate_configuration()
 
     def _ensure_preview_project(self, project_name: str) -> None:
         projects = self._list_projects()

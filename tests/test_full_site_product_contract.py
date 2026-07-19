@@ -78,6 +78,44 @@ class FullSiteProductContractTests(unittest.TestCase):
             (root / "styles.css").write_text("body { color: red; }", encoding="utf-8")
             self.assertFalse(SiteAgentOrchestrator._critique_matches_site(provenance, site))
 
+    def test_acceptance_provenance_binds_site_tree_report_and_final_screenshots(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            site = root / "site"
+            studio = root / "studio"
+            final_reviews = studio / "final_reviews"
+            site.mkdir()
+            final_reviews.mkdir(parents=True)
+            (site / "index.html").write_text("<html>accepted</html>", encoding="utf-8")
+            (site / "styles.css").write_text("body { color: black; }", encoding="utf-8")
+            for name in ("desktop.png", "tablet.png", "mobile.png"):
+                (final_reviews / name).write_bytes(name.encode("utf-8"))
+            acceptance = root / "acceptance_audit.json"
+            acceptance.write_text('{"approved": true}', encoding="utf-8")
+            provenance = root / "acceptance_audit.provenance.json"
+            provenance.write_text(
+                json.dumps(SiteAgentOrchestrator._acceptance_provenance(
+                    acceptance_path=acceptance,
+                    site_dir=site,
+                    studio_dir=studio,
+                )),
+                encoding="utf-8",
+            )
+
+            self.assertTrue(SiteAgentOrchestrator._acceptance_matches_site(
+                provenance,
+                acceptance_path=acceptance,
+                site_dir=site,
+                studio_dir=studio,
+            ))
+            (final_reviews / "mobile.png").write_bytes(b"changed")
+            self.assertFalse(SiteAgentOrchestrator._acceptance_matches_site(
+                provenance,
+                acceptance_path=acceptance,
+                site_dir=site,
+                studio_dir=studio,
+            ))
+
     def test_normal_business_defaults_to_full_and_sparse_input_blocks(self) -> None:
         item = research(content_themes=research().content_themes[:1], best_media=research().best_media[:1])
         assessment = assess_studio_readiness(item)

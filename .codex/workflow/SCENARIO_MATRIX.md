@@ -34,3 +34,8 @@
 | Preview HTML contains the business ID only in an asset path | Publisher injects/verifies an exact business-id meta; incidental substring cannot pass | preview publisher regression test + live DOM |
 | Preview upload succeeds but deployment-list JSON uses capitalized Wrangler keys | Existing non-production deployment is parsed and verified without creating a duplicate job | publisher tests + deployment metadata |
 | Live page uses lazy media | Browser scroll-through loads every image before missing-media judgment | live browser QA report |
+| CSS/JS or a final screenshot changes after critic approval | Cached critic/acceptance is rejected and the normal review path resumes | full-tree and screenshot provenance regression tests |
+| A verified preview exists and a later retry fails locally | Verified deployment metadata and `preview_ready` remain intact; failure is recorded separately | preview publisher and CLI recovery tests |
+| Intake discovers four images plus only video metadata | Video remains provenance-only; fallback continues and Studio sufficiency stays false | one-link media intake tests |
+| Preview Pages credentials are missing or partial | No Wrangler/toolchain/deployment command runs and no temporary Workers fallback occurs | preview publisher credential tests |
+| Exact source says 20 years but final HTML says 20+ | Acceptance/recovery fails closed before reporting or publishing the preview | final-copy exact-duration regression test |

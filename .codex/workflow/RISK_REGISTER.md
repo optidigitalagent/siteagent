@@ -32,3 +32,7 @@
 | Exact evidence is inflated during strategy or copy generation | Preview publishes an unsupported numeric claim | Normalize exact-duration claims before Studio input and regression-test plus/over variants |
 | A business ID appears in an image URL but not the required meta | Wrong or unbound preview can pass a substring check | Parse DOM and require exact `siteagent-business-id` meta locally and live |
 | Wrangler changes deployment-list field capitalization | A successful upload is mistaken for a missing preview and is duplicated | Parse both API-style and humanized JSON keys and test representative Wrangler output |
+| Cached preview approval survives a CSS/JS or screenshot change | Recovery reuses an unreviewed site while the old acceptance still says approved | Bind critic and acceptance to the full HTML/CSS/JS tree, acceptance report and final screenshot hashes; revalidate before reuse |
+| A failed preview retry overwrites verified deployment metadata | A valid public review URL becomes locally unrecoverable | Preserve verified metadata and write retry failures to a separate preview failure artifact |
+| Metadata-only video is counted as renderable media | Intake claims sufficiency, then Studio blocks because no delivery URL exists | Store metadata video separately and exclude it from renderable counts and readiness |
+| Missing Pages credentials trigger an unauthenticated temporary deploy | Preview escapes the dedicated Pages project/branch contract | Fail closed before toolchain execution; never substitute temporary Workers hosting |

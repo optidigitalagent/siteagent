@@ -126,13 +126,10 @@ def run_preview_job(job_id: str) -> None:
     """
     queue = _pending_job_queue(preview_local=True)
     job = queue.get(job_id)
-    if job.status == "preview_ready" and job.preview_url:
-        print("Preview готово:")
-        print(job.preview_url)
-        return
+    was_preview_ready = job.status == "preview_ready" and bool(job.preview_url)
     if job.status == "failed":
         job = queue.reclaim_failed_preview(job_id)
-    elif job.status == "running" and job.telegram_notification_status == "not_started":
+    elif job.status in {"running", "preview_ready"} and job.telegram_notification_status == "not_started":
         pass
     else:
         raise PreviewRecoveryNotAllowed(job_id, f"job status is {job.status}")
@@ -151,21 +148,27 @@ def run_preview_job(job_id: str) -> None:
             run_path=Path(run_dir),
         )
         preview_url = _preview_url_from_result(result)
-        queue.mark_preview_ready(
-            job.id,
-            preview_url=preview_url,
-            checkpoints={
-                "research_completed": "completed_and_valid",
-                "generation_completed": "completed_and_valid",
-                "technical_gate_completed": "completed_and_valid",
-                "critics_completed": "completed_and_valid",
-                "acceptance_completed": "completed_and_valid",
-                "preview_deployment_completed": "completed_and_valid",
-                "preview_live_verified": "completed_and_valid",
-            },
-        )
+        if not (was_preview_ready and job.preview_url == preview_url):
+            queue.mark_preview_ready(
+                job.id,
+                preview_url=preview_url,
+                checkpoints={
+                    "research_completed": "completed_and_valid",
+                    "generation_completed": "completed_and_valid",
+                    "technical_gate_completed": "completed_and_valid",
+                    "critics_completed": "completed_and_valid",
+                    "acceptance_completed": "completed_and_valid",
+                    "preview_deployment_completed": "completed_and_valid",
+                    "preview_live_verified": "completed_and_valid",
+                },
+            )
     except Exception as exc:
-        queue.fail(job.id, str(exc))
+        # A read-only consistency check of an already delivered preview must
+        # not erase its durable review checkpoint or make the job ineligible
+        # for its original recovery lane. The exception still fails this
+        # invocation and prevents an unverified URL from being reported.
+        if not was_preview_ready:
+            queue.fail(job.id, str(exc))
         raise
 
     print("Preview готово:")

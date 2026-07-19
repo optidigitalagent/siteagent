@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 from site_agent.media import authorised_media_assets
+from site_agent.models import ResearchBrief
 from site_agent.orchestrator import SiteAgentOrchestrator
 
 
@@ -10,6 +13,12 @@ SOURCE = "https://instagram.com/amidental_kiev"
 
 
 class OneLinkPreviewContractTests(unittest.TestCase):
+    def test_recovery_compares_normalized_business_source_not_tracking_query(self) -> None:
+        self.assertTrue(SiteAgentOrchestrator._same_business_source(
+            "https://www.instagram.com/amidental_kiev/?igsh=tracking",
+            "https://instagram.com/amidental_kiev",
+        ))
+
     def test_exact_twenty_year_source_is_not_upgraded_to_plus_claim(self) -> None:
         business = {
             "research": {
@@ -43,6 +52,26 @@ class OneLinkPreviewContractTests(unittest.TestCase):
         self.assertNotIn("20+", serialized)
         self.assertIn("20 years", serialized)
         self.assertTrue(any("exact duration" in item for item in result["research"]["forbidden_claims"]))
+
+    def test_final_customer_copy_cannot_reintroduce_plus_duration(self) -> None:
+        research = ResearchBrief(
+            instagram_url=SOURCE,
+            business_name="Ami Dental",
+            niche="dental clinic",
+            forbidden_claims=[
+                "Do not upgrade the verified exact duration of 20 years to over 20 years or 20+."
+            ],
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            index = Path(temp) / "index.html"
+            index.write_text("<main>Trusted for 20+ years.</main>", encoding="utf-8")
+            self.assertFalse(
+                SiteAgentOrchestrator._exact_duration_contract_passes(research, index)
+            )
+            index.write_text("<main>20 years of experience.</main>", encoding="utf-8")
+            self.assertTrue(
+                SiteAgentOrchestrator._exact_duration_contract_passes(research, index)
+            )
 
     def test_missing_phone_email_and_public_price_do_not_shrink_or_block_preview_brief(self) -> None:
         business = {"research": {}, "recommended_scope": "blocked"}

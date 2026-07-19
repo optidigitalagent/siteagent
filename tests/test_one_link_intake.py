@@ -107,6 +107,38 @@ class OneLinkResearchTests(unittest.TestCase):
         self.assertEqual(len(result.image_urls), 6)
         self.assertEqual(result.source_ledger[-1].source_kind, "official_site")
 
+    def test_metadata_only_video_does_not_stop_renderable_media_fallback(self) -> None:
+        html = """<html><head><title>Atelier</title>
+        <meta property='og:video' content='https://cdn.example/reel.mp4'>
+        </head><body>
+        <img src='https://cdn.example/0.jpg'><img src='https://cdn.example/1.jpg'>
+        <img src='https://cdn.example/2.jpg'><img src='https://cdn.example/3.jpg'>
+        </body></html>""".encode()
+        calls = []
+
+        def web(url):
+            calls.append("web")
+            return None
+
+        def browser(url):
+            calls.append("browser")
+            return {
+                "url": url,
+                "source_kind": "browser",
+                "image_urls": ["https://cdn.example/4.jpg", "https://cdn.example/5.jpg"],
+            }
+
+        result = OneLinkResearcher(
+            scraper=InstagramScraper(get=lambda *args, **kwargs: _Response(html)),
+            web_fallback=web,
+            browser_fallback=browser,
+        ).collect("https://instagram.com/atelier")
+
+        self.assertEqual(calls, ["web", "browser"])
+        self.assertEqual(len(result.image_urls), 6)
+        self.assertEqual(result.video_urls, ["https://cdn.example/reel.mp4"])
+        self.assertTrue(result.has_full_preview_media)
+
 
 class PreviewMediaIntakeTests(unittest.TestCase):
     def test_auto_writes_manifest_preserves_originals_and_never_authorizes_production(self) -> None:
@@ -141,7 +173,7 @@ class PreviewMediaIntakeTests(unittest.TestCase):
             with self.assertRaisesRegex(MediaInputBlocked, "source_kind=business"):
                 MediaPreparer().prepare(loaded, Path(temp) / "production")
 
-    def test_four_images_plus_video_metadata_is_full_preview_media(self) -> None:
+    def test_metadata_only_video_is_provenance_not_studio_ready_media(self) -> None:
         urls = [f"https://cdn.example/{index}.jpg" for index in range(4)]
 
         def get(url, **kwargs):
@@ -158,8 +190,18 @@ class PreviewMediaIntakeTests(unittest.TestCase):
                 candidates, Path(temp) / "media_input", submitted_source_url="https://instagram.com/atelier"
             )
         self.assertEqual(manifest["image_count"], 4)
-        self.assertEqual(manifest["video_count"], 1)
-        self.assertTrue(manifest["full_preview_media_sufficient"])
+        self.assertEqual(manifest["video_count"], 0)
+        self.assertEqual(manifest["media_count"], 4)
+        self.assertEqual(manifest["metadata_only_media_count"], 1)
+        self.assertFalse(manifest["full_preview_media_sufficient"])
+        self.assertEqual(manifest["composition_mode"], "adapted_media")
+        metadata = manifest["metadata_only_media"][0]
+        self.assertEqual(metadata["asset_url"], "https://cdn.example/reel.mp4")
+        self.assertEqual(metadata["source_kind"], "business_social")
+        self.assertTrue(metadata["user_authorized_for_preview"])
+        self.assertFalse(metadata["allowed_for_customer_production"])
+        self.assertEqual(metadata["download_status"], "metadata_only")
+        self.assertNotIn("url", metadata)
 
     def test_zero_real_media_writes_blocked_manifest_then_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

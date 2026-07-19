@@ -483,7 +483,7 @@ Live end-to-end verification requires local runtime credentials:
   without a duplicate queue item, production completion or Telegram delivery.
 - Added bounded static/web/rendered-browser/official-site research fallbacks,
   a durable source ledger, exact-duration protection, preview-only business
-  social-media provenance and 12 preserved/uploaded images.
+  social-media provenance and 11 preserved/uploaded images.
 - Produced and materially revised a bespoke full commercial Amidental Kiev
   site from three concepts. Final deterministic gates: technical pass at
   1440/768/390, commercial 100, semantic repetition pass, Product Director 100,
@@ -500,3 +500,27 @@ Live end-to-end verification requires local runtime credentials:
   JSON, exact DOM marker validation and retryable acceptance failures.
 - Current stop checkpoint:
   `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW`.
+
+## One-link recovery audit hardening (2026-07-19)
+
+- Audited recovery commit `e02922f` against current main and found a stale
+  critic-provenance gap before merge: cached recovery could reuse approved
+  acceptance/deployment after CSS, JavaScript or final screenshot changes.
+- Added full HTML/CSS/JS critic binding, acceptance-report and final-screenshot
+  binding, normalized-source recovery, fresh live preview verification and
+  `preview_ready` consistency checks. A failed validation no longer destroys the
+  durable checkpoint or overwrites verified deployment metadata.
+- Corrected automatic media semantics: the authoritative Amidental manifest has
+  11 preview-only business images, with four rendered; metadata-only video is
+  separate provenance and cannot satisfy Studio readiness. Corrected the queue
+  checkpoint from 12 to 11.
+- Final customer copy now deterministically blocks inflation of exact 20-year
+  evidence. Preview publishing requires the dedicated Cloudflare Pages account
+  contract and no longer falls back to temporary Workers hosting.
+- Fresh independent review checksum-bound the current site tree, final and live
+  screenshots and deployed staging bytes. Idempotent resume of the exact existing
+  job reused the verified public preview without upload, production, custom-domain
+  or Telegram action.
+- Final recovery-branch regression passed: 177 tests, with only the explicit
+  credential-gated Cloudflare production smoke skipped. `compileall`, `pip check`,
+  the local smoke build, diff validation and the patch secret-pattern scan passed.

@@ -38,8 +38,9 @@ from site_agent.models import (
     StrategyBrief,
 )
 from site_agent.models import SectionSpec
-from site_agent.publisher import Publisher
-from site_agent.preview import PreviewPublisher
+from site_agent.publisher import LiveVerificationError, Publisher, SiteValidationError
+from site_agent.preview import PreviewLiveVerifier, PreviewPublisher
+from site_agent.identifiers import stable_business_id
 from site_agent.research import bootstrap_one_link_intake, normalize_business_source
 from site_agent.product_director import ProductDirectorAuditor
 from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
@@ -234,7 +235,9 @@ class SiteAgentOrchestrator:
                 raise GenerationBlocked(str(exc)) from exc
         else:
             research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
-            if research is None or research.instagram_url != instagram_url:
+            if research is None or not self._same_business_source(
+                research.instagram_url, instagram_url
+            ):
                 research = self.research_agent.run(instagram_url)
                 write_json(reports_dir / "01_research.json", research)
             self._checkpoint(reports_dir, "research_completed")
@@ -377,6 +380,7 @@ class SiteAgentOrchestrator:
                 write_json(critique_provenance_path, {
                     "site_sha256": self._site_checksum(site_dir),
                     "hash_scope": "html_css_js_tree",
+                    "critique_sha256": self._file_checksum(critique_path),
                     "site_path": str(site_dir),
                     "iteration": iteration,
                 })
@@ -394,6 +398,11 @@ class SiteAgentOrchestrator:
                 quality = audit_quality(spec, context, technical_passed=critique.technical_gate.passed, historical_fingerprints=history, guideline_findings=(guideline.output["findings"] if guideline else []), html_text=html_text)
                 write_json(reports_dir / f"quality_report_iteration_{iteration}.json", quality)
             if critique.approved_for_delivery and (quality is None or quality.approved):
+                if not self._exact_duration_contract_passes(research, index_path):
+                    raise GenerationBlocked(
+                        "Exact-duration evidence violation: final customer copy upgrades "
+                        "a verified exact duration to a plus/over claim."
+                    )
                 if builder_mode == "codex_studio" and studio_dir is not None:
                     product_report = ProductDirectorAuditor().audit(
                         requested_product_type=research.requested_product_type,
@@ -411,6 +420,14 @@ class SiteAgentOrchestrator:
                     preview=preview,
                 )
                 write_json(reports_dir / "acceptance_audit.json", acceptance)
+                write_json(
+                    reports_dir / "acceptance_audit.provenance.json",
+                    self._acceptance_provenance(
+                        acceptance_path=reports_dir / "acceptance_audit.json",
+                        site_dir=site_dir,
+                        studio_dir=studio_dir,
+                    ),
+                )
                 if not acceptance.approved:
                     raise GenerationBlocked(
                         "Acceptance audit blocked deployment: " + "; ".join(acceptance.reasons)
@@ -501,23 +518,36 @@ class SiteAgentOrchestrator:
             run_dir / "critique_reports" / "critique_iteration_1.json", CritiqueReport
         )
         index_path = site_dir / "index.html"
+        critique_provenance_path = (
+            run_dir / "critique_reports" / "critique_iteration_1.provenance.json"
+        )
         if (
             research is None
-            or research.instagram_url != instagram_url
+            or not self._same_business_source(research.instagram_url, instagram_url)
             or critique is None
             or not critique.approved_for_delivery
             or not index_path.is_file()
             or index_path.stat().st_size == 0
+            or not self._critique_matches_site(critique_provenance_path, index_path)
+            or not self._exact_duration_contract_passes(research, index_path)
         ):
             return None
 
+        acceptance_path = reports_dir / "acceptance_audit.json"
         acceptance = self._read_model(
-            reports_dir / "acceptance_audit.json", AcceptanceAuditResult
+            acceptance_path, AcceptanceAuditResult
         )
-        if acceptance is None or not acceptance.approved:
-            acceptance = self.acceptance_auditor.audit(critique=critique, site_dir=site_dir)
-            write_json(reports_dir / "acceptance_audit.json", acceptance)
-        if not acceptance.approved:
+        studio_dir = run_dir / "studio" if settings.site_builder == "codex_studio" else None
+        if (
+            acceptance is None
+            or not acceptance.approved
+            or not self._acceptance_matches_site(
+                reports_dir / "acceptance_audit.provenance.json",
+                acceptance_path=acceptance_path,
+                site_dir=site_dir,
+                studio_dir=studio_dir,
+            )
+        ):
             return None
 
         if production and settings.site_builder == "codex_studio":
@@ -536,6 +566,21 @@ class SiteAgentOrchestrator:
             from site_agent.preview import PreviewDeploymentResult
             deployment = self._read_model(run_dir / "preview_deployment.json", PreviewDeploymentResult)
             deployment_ready = deployment is not None and deployment.verification_status == "verified"
+            if deployment_ready:
+                try:
+                    PreviewLiveVerifier(
+                        http_get=self.preview_publisher.http_get,
+                        sleep=self.preview_publisher.sleep,
+                        retries=settings.cloudflare_live_retries,
+                        backoff_seconds=settings.cloudflare_live_backoff_seconds,
+                        timeout_seconds=settings.cloudflare_live_timeout_seconds,
+                    ).verify(
+                        deployment.preview_url,
+                        site_dir=run_dir / "preview_publish",
+                        expected_marker=stable_business_id(instagram_url),
+                    )
+                except (LiveVerificationError, SiteValidationError, OSError, ValueError):
+                    deployment_ready = False
         else:
             deployment = self._read_model(run_dir / "deployment.json", PublishResult)
             deployment_ready = deployment is not None and deployment.is_verified_production
@@ -596,9 +641,102 @@ class SiteAgentOrchestrator:
 
             payload = json.loads(provenance_path.read_text(encoding="utf-8"))
             expected = str(payload.get("site_sha256", ""))
-            return bool(expected) and SiteAgentOrchestrator._site_checksum(index_path.parent) == expected
+            critique_path = provenance_path.with_name(
+                provenance_path.name.removesuffix(".provenance.json") + ".json"
+            )
+            expected_critique = str(payload.get("critique_sha256", ""))
+            critique_matches = (
+                not expected_critique
+                or (
+                    critique_path.is_file()
+                    and SiteAgentOrchestrator._file_checksum(critique_path) == expected_critique
+                )
+            )
+            return (
+                bool(expected)
+                and critique_matches
+                and SiteAgentOrchestrator._site_checksum(index_path.parent) == expected
+            )
         except (OSError, ValueError, AttributeError):
             return False
+
+    @staticmethod
+    def _file_checksum(path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    @classmethod
+    def _acceptance_provenance(
+        cls,
+        *,
+        acceptance_path: Path,
+        site_dir: Path,
+        studio_dir: Path | None,
+    ) -> dict:
+        screenshots: dict[str, str] = {}
+        if studio_dir is not None:
+            for name in ("desktop.png", "tablet.png", "mobile.png"):
+                path = studio_dir / "final_reviews" / name
+                if path.is_file():
+                    screenshots[f"studio/final_reviews/{name}"] = cls._file_checksum(path)
+        return {
+            "site_sha256": cls._site_checksum(site_dir),
+            "hash_scope": "html_css_js_tree",
+            "acceptance_sha256": cls._file_checksum(acceptance_path),
+            "screenshots": screenshots,
+        }
+
+    @classmethod
+    def _acceptance_matches_site(
+        cls,
+        provenance_path: Path,
+        *,
+        acceptance_path: Path,
+        site_dir: Path,
+        studio_dir: Path | None,
+    ) -> bool:
+        if not provenance_path.is_file() or not acceptance_path.is_file():
+            return False
+        try:
+            import json
+
+            payload = json.loads(provenance_path.read_text(encoding="utf-8"))
+            if payload.get("hash_scope") != "html_css_js_tree":
+                return False
+            if payload.get("site_sha256") != cls._site_checksum(site_dir):
+                return False
+            if payload.get("acceptance_sha256") != cls._file_checksum(acceptance_path):
+                return False
+            screenshots = payload.get("screenshots")
+            if not isinstance(screenshots, dict):
+                return False
+            if studio_dir is None:
+                return True
+            for name in ("desktop.png", "tablet.png", "mobile.png"):
+                key = f"studio/final_reviews/{name}"
+                path = studio_dir / "final_reviews" / name
+                if not path.is_file() or screenshots.get(key) != cls._file_checksum(path):
+                    return False
+            return True
+        except (OSError, ValueError, AttributeError, TypeError):
+            return False
+
+    @staticmethod
+    def _exact_duration_contract_passes(research: ResearchBrief, index_path: Path) -> bool:
+        rules = " ".join(research.forbidden_claims).casefold()
+        if "exact duration" not in rules:
+            return True
+        try:
+            from bs4 import BeautifulSoup
+
+            text = BeautifulSoup(index_path.read_text(encoding="utf-8"), "html.parser").get_text(" ")
+        except (OSError, UnicodeError):
+            return False
+        forbidden = re.compile(
+            r"(?:\b20\s*\+|\bover\s+20\b|\bпонад\s+20\b|\bбільше\s+20\b|"
+            r"РїРѕРЅР°Рґ\s+20|Р±С–Р»СЊС€Рµ\s+20)",
+            flags=re.IGNORECASE,
+        )
+        return forbidden.search(text) is None
 
     @staticmethod
     def _site_checksum(site_dir: Path) -> str:
@@ -622,6 +760,13 @@ class SiteAgentOrchestrator:
             return json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
+
+    @staticmethod
+    def _same_business_source(left: str, right: str) -> bool:
+        try:
+            return normalize_business_source(left)[0] == normalize_business_source(right)[0]
+        except ValueError:
+            return False
 
     def _checkpoint(self, reports_dir: Path, *names: str) -> None:
         path = reports_dir / "checkpoints.json"

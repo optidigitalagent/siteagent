@@ -146,56 +146,95 @@ class PreviewStagingTests(unittest.TestCase):
 
 
 class PreviewPublisherTests(unittest.TestCase):
-    def test_unauthenticated_deploy_uses_temporary_workers_preview_without_persisting_claim_url(self) -> None:
+    def test_failed_retry_preserves_existing_verified_preview_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             run_dir = root / "run"
-            site = make_site(root)
-            deployment_url = "https://siteagent-preview-example.temporary-account.workers.dev"
-            claim_url = "https://dash.cloudflare.com/claim-preview?claimToken=bearer-secret"
-            runner = ScriptedRunner([
-                completed(
-                    f"Temporary account ready\nClaim URL: {claim_url}\nDeployed {deployment_url}\n"
-                )
-            ])
-
-            def http_get(url: str, **kwargs):
-                if url.endswith("robots.txt"):
-                    return FakeResponse("Disallow: /", headers={})
-                return FakeResponse(protected_html(marker=url.rstrip("/") == deployment_url))
-
-            temporary_config = Settings(
+            run_dir.mkdir()
+            verified = {
+                "provider": "cloudflare_pages_preview",
+                "project_name": "siteagent-preview-existing",
+                "preview_url": "https://hash.siteagent-preview-existing.pages.dev",
+                "deployment_url": "https://hash.siteagent-preview-existing.pages.dev",
+                "branch": "preview-existing",
+                "environment": "preview",
+                "status": "success",
+                "deployed_at": "2026-07-18T12:00:00+00:00",
+                "verification_status": "verified",
+                "staging_dir": "preview_publish",
+            }
+            metadata_path = run_dir / "preview_deployment.json"
+            metadata_path.write_text(json.dumps(verified), encoding="utf-8")
+            no_credentials = Settings(
                 _env_file=None,
                 HOSTING_PROVIDER="cloudflare_pages",
                 PUBLISH_REQUIRED=True,
                 CLOUDFLARE_ACCOUNT_ID="",
                 CLOUDFLARE_API_TOKEN="",
-                CLOUDFLARE_LIVE_RETRIES=1,
-                CLOUDFLARE_LIVE_BACKOFF_SECONDS=0,
-            )
-            result = PreviewPublisher(
-                temporary_config,
-                runner=runner,
-                which=lambda command: f"/{command}",
-                http_get=http_get,
-                sleep=lambda _: None,
-            ).publish(
-                run_dir=run_dir,
-                site_dir=site,
-                source_url=SOURCE_URL,
-                run_id=RUN_ID,
             )
 
-            command = runner.calls[0][0]
-            self.assertEqual(result.provider, "cloudflare_workers_temporary_preview")
-            self.assertEqual(result.preview_url, deployment_url)
-            self.assertIn("--temporary", command)
-            self.assertNotIn("pages", command)
-            metadata = (run_dir / "preview_deployment.json").read_text(encoding="utf-8")
-            self.assertNotIn("claimToken", metadata)
-            self.assertNotIn("bearer-secret", metadata)
-            self.assertTrue(result.checks["temporary_account"])
-            self.assertFalse(result.checks["production_deployment_started"])
+            with self.assertRaisesRegex(PublisherError, "CLOUDFLARE_API_TOKEN"):
+                PreviewPublisher(
+                    no_credentials,
+                    runner=ScriptedRunner([]),
+                    which=lambda command: self.fail("toolchain lookup must not run"),
+                ).publish(
+                    run_dir=run_dir,
+                    site_dir=make_site(root),
+                    source_url=SOURCE_URL,
+                    run_id=RUN_ID,
+                )
+
+            self.assertEqual(json.loads(metadata_path.read_text(encoding="utf-8")), verified)
+            failure = json.loads(
+                (run_dir / "preview_deployment_failure.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(failure["status"], "failed")
+            self.assertFalse(failure["production_deployment_started"])
+
+    def test_missing_or_incomplete_pages_credentials_fail_closed_without_runner(self) -> None:
+        cases = (
+            ("both missing", "", "", "CLOUDFLARE_API_TOKEN"),
+            ("token missing", "account-id", "", "CLOUDFLARE_API_TOKEN"),
+            ("account missing", "", "preview-secret-token", "CLOUDFLARE_ACCOUNT_ID"),
+            ("token whitespace", "account-id", "   ", "CLOUDFLARE_API_TOKEN"),
+            ("account whitespace", "   ", "preview-secret-token", "CLOUDFLARE_ACCOUNT_ID"),
+        )
+        for label, account_id, api_token, expected_error in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                run_dir = root / "run"
+                runner = ScriptedRunner([])
+                incomplete_config = Settings(
+                    _env_file=None,
+                    HOSTING_PROVIDER="cloudflare_pages",
+                    PUBLISH_REQUIRED=True,
+                    CLOUDFLARE_ACCOUNT_ID=account_id,
+                    CLOUDFLARE_API_TOKEN=api_token,
+                )
+
+                with self.assertRaisesRegex(PublisherError, expected_error):
+                    PreviewPublisher(
+                        incomplete_config,
+                        runner=runner,
+                        which=lambda command: self.fail(
+                            f"toolchain lookup should not run without Pages credentials: {command}"
+                        ),
+                    ).publish(
+                        run_dir=run_dir,
+                        site_dir=make_site(root),
+                        source_url=SOURCE_URL,
+                        run_id=RUN_ID,
+                    )
+
+                self.assertEqual(runner.calls, [])
+                metadata = json.loads(
+                    (run_dir / "preview_deployment.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(metadata["provider"], "cloudflare_pages_preview")
+                self.assertEqual(metadata["status"], "failed")
+                self.assertFalse(metadata["production_deployment_started"])
+                self.assertFalse((run_dir / "deployment.json").exists())
 
     def test_deploys_only_non_production_branch_and_writes_preview_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

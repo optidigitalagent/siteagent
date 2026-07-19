@@ -68,7 +68,10 @@ class OneLinkResearch:
 
     @property
     def has_full_preview_media(self) -> bool:
-        return len(self.image_urls) >= 6 or (len(self.image_urls) >= 4 and bool(self.video_urls))
+        # Video candidates are provenance-only until they have been downloaded,
+        # validated, and uploaded for Studio delivery.  They must not stop the
+        # bounded fallbacks before six renderable image candidates are found.
+        return len(self.image_urls) >= 6
 
     def media_candidates(self) -> list[dict]:
         candidates = [
@@ -253,9 +256,8 @@ class OneLinkResearcher:
     def _enough(self, sources: list[PublicSource]) -> bool:
         media_sources = self._business_media_sources(sources)
         images = self._unique_url((source.image_urls for source in media_sources), self.max_images)
-        videos = self._unique_url((source.video_urls for source in media_sources), self.max_videos)
         identity = any(source.title or source.description or source.text for source in sources)
-        return identity and (len(images) >= 6 or (len(images) >= 4 and bool(videos)))
+        return identity and len(images) >= 6
 
     @staticmethod
     def _business_media_sources(sources: list[PublicSource]) -> list[PublicSource]:

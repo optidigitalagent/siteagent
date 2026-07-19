@@ -130,3 +130,24 @@ failure, small target, header/footer issue or clipped CTA. Mobile navigation and
 FAQ interactions pass. The isolated Pages URL returns HTTP 200 with exact
 business meta, HTML/response noindex and crawler-blocking robots. Production,
 custom domain and Telegram delivery were not started.
+
+## Amidental recovery provenance re-audit (2026-07-19)
+
+The pre-merge recovery audit rejected the cached evidence once because the saved
+critic tree checksum no longer matched the current HTML/CSS/JS output and the
+final screenshot hashes were not bound to acceptance. The current tree, critic,
+acceptance report, native desktop/tablet/mobile captures, live top/footer/full-page
+captures and deployed preview bytes are now separately checksum-bound. A fresh
+independent reviewer found no critical/high visual or product issue.
+
+The exact existing job resumes idempotently from its normalized Instagram source
+and reuses the verified Pages preview only after a fresh live HTTP, exact-business
+meta, HTML/response noindex and robots check. The authoritative media count is 11
+preview-only business images, four rendered, zero production-authorised. No new
+job, upload, production deployment, custom domain or Telegram notification was
+created during this re-audit.
+
+The final recovery-branch regression ran 177 tests successfully; the single
+skip is the deliberately opt-in, credential-gated Cloudflare production smoke.
+Compileall, dependency validation, the local smoke build and diff validation also
+passed. No critical/high issue remains in the audited preview scope.
