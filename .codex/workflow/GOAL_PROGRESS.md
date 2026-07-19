@@ -1,5 +1,38 @@
 ﻿# Goal Progress
 
+## Telegram preview notification completion (2026-07-19)
+
+- Added `TelegramNotifier.send_preview_ready()` with strict verified-preview,
+  direct Pages deployment, business-name and token preflight plus a Russian
+  review message and `Открыть сайт` button. The production `send_done()` path
+  remains unchanged and cannot accept preview results.
+- Added preview-only `not_started/sending/sent/unknown` queue state, attempt and
+  deployment/URL binding, safe receipt, error, authorization and history fields.
+  Queue writes are atomic; sending compare-and-set is process-locked; equivalent
+  URL forms and prior deployment keys cannot create a duplicate.
+- Added automatic delivery after `go`, `preview-notify` for an existing
+  not-started preview, and an explicitly authorised `preview-resend`. Missing
+  token/live-validation failures never rerun generation or upload; uncertain
+  transport blocks automatic resend while preserving `preview_ready`.
+- Independent reviewers initially rejected duplicate-authorisation, payload
+  leakage, URL-canonicalization, production-interleaving and redirect-chain
+  bypasses. All were reproduced, fixed and re-reviewed. Final code and
+  adversarial verdicts are `ACCEPT`, with no critical/high finding.
+- Regression: 83 focused tests passed; full discovery ran 219 tests successfully
+  with one credential-gated Cloudflare production smoke skipped. `compileall`,
+  `pip check`, smoke build, diff validation and secret-pattern scan passed.
+- Reused the exact existing Amidental job/run and deployment
+  `227fe3c8-08d4-4593-8814-0b06adb4c698`. `preview-notify` freshly verified the
+  public URL, exact business marker, noindex headers/meta and crawler-blocking
+  robots without orchestrator, publisher or upload, then Telegram accepted one
+  preview message.
+- Post-delivery queue evidence: `status=preview_ready`, `workflow_lane=preview`,
+  preview notification `sent`, safe receipt keys only
+  (`status/sent_at/preview_url_sha256/deployment_id/attempt_id`), empty
+  production site/repository URLs and no production authorization. No new job,
+  run, Cloudflare deployment, production promotion or custom-domain action ran.
+- Final checkpoint: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
+
 ## Explicit go: Amidental production input gate (2026-07-19)
 
 - Executed `python -m site_agent.cli go` from the user's explicit command. The

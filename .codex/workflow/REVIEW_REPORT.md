@@ -1,5 +1,27 @@
 ﻿# Review Report
 
+## Telegram preview notification final audit (2026-07-19)
+
+APPROVE; critical/high issues: 0.
+
+- Exact job/run `053656c35b5d4ef58221c5be7171b625` retained its existing
+  verified direct Pages deployment and remains `preview_ready` in the preview
+  lane. No generation, upload, production promotion or custom-domain action was
+  repeated.
+- Telegram accepted one review-preview message for Amidental Kiev. Its receipt
+  is bound to the existing deployment ID, preview URL checksum and attempt ID;
+  it contains no chat ID, message ID, token or request payload. Production URL,
+  repository URL and production authorization remain empty.
+- At-most-once and crash safety passed independent adversarial review: concurrent
+  first-send/resend claims, authorization reuse, sent/unknown/sending recovery,
+  canonical URL variants, old deployment reuse, production-lane interleaving,
+  raw error payloads, invalid receipt timestamps, external redirects and
+  bounce-away-and-back redirect chains all fail closed.
+- Verification: 83 focused tests and 219 full-suite tests passed, with the one
+  explicit credential-gated Cloudflare production smoke skipped. Compileall,
+  dependency validation, smoke build, diff check and secret scan passed.
+- Final decision: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
+
 ## Amidental isolated-preview final audit (2026-07-19)
 
 APPROVE within isolated-preview scope; critical/high issues: 0.

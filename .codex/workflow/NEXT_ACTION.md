@@ -1,13 +1,10 @@
 # Next Action
 
-Checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_READY`.
+Checkpoint: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
 
-Active next action: implement and verify the separate at-most-once Telegram
-preview notification state machine, then live-revalidate and send exactly one
-preview-ready message for job `053656c35b5d4ef58221c5be7171b625`
-using its existing deployment. The job must remain `preview_ready`; no new
-job/run/upload, production promotion, production URL, repository URL or custom
-domain is allowed.
+The preview-ready Telegram delivery boundary is complete for exact job/run
+`053656c35b5d4ef58221c5be7171b625`. No automatic next action remains in the
+preview lane.
 
 The preview-default and brand-fidelity recovery is complete for the exact job
 and run `053656c35b5d4ef58221c5be7171b625`. No automatic next action remains in
@@ -16,10 +13,11 @@ the preview lane.
 Accepted isolated preview:
 `https://227fe3c8.siteagent-preview-amidental-kiev-3a8654d4fd.pages.dev`.
 
-The queue is `preview_ready`; production URL fields are empty, Telegram remains
-`not_started`, and production authorization is absent. Do not promote, attach a
-custom domain, or send Telegram delivery unless a later user explicitly invokes
-the separate `production-promote --job-id 053656c35b5d4ef58221c5be7171b625
+The queue is `preview_ready`; preview notification is `sent` with a safe
+Telegram-accepted receipt. Production URL fields and production authorization
+are empty. Do not promote, attach a custom domain, or send the production
+success notification unless a later user explicitly invokes the separate
+`production-promote --job-id 053656c35b5d4ef58221c5be7171b625
 --authorize-production` lane and all production rights/contact/copy/preflight
 gates pass.
 
@@ -32,11 +30,15 @@ Completed evidence:
   issue and acceptance bound to the current site checksum;
 - live desktop/tablet/mobile browser QA and an independent published-preview
   audit passed;
-- 200 tests passed with one credential-gated production smoke skipped;
+- 219 tests passed with one credential-gated production smoke skipped;
 - compileall, pip check, smoke build, diff validation and secret scan passed.
+- independent code and adversarial safety reviewers accepted the final state
+  with no critical/high issue;
+- `preview-notify` freshly live-verified and sent the existing direct deployment
+  URL once; the receipt contains no Telegram chat/message identifier.
 
-Production, custom-domain changes and Telegram delivery remain forbidden for
-this completed preview recovery.
+Production, custom-domain changes and production Telegram delivery remain
+forbidden for this completed preview recovery.
 
 ## Superseded recovery instructions
 

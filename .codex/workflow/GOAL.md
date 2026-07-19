@@ -1,6 +1,6 @@
 # Current Goal
 
-Status: active from checkpoint `TELEGRAM_GO_PREVIEW_DEFAULT_READY` on
+Status: achieved at checkpoint `TELEGRAM_PREVIEW_NOTIFICATION_READY` on
 2026-07-19 for the exact existing job/run
 `053656c35b5d4ef58221c5be7171b625`.
 
@@ -40,4 +40,6 @@ The existing accepted isolated preview is
 Production promotion remains a separate blocked action until its explicit
 authorization contract is satisfied.
 
-Target checkpoint: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
+The verified preview notification was accepted by Telegram. The queue remains
+`preview_ready`, preview notification is `sent`, and production URL,
+repository URL and production authorization remain empty.
