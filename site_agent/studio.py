@@ -640,7 +640,22 @@ class CodexStudioRunner:
         codex_command = shutil.which(os.getenv("CODEX_COMMAND", "codex"))
         if not codex_command:
             raise StudioError("Codex CLI command not found. Install Codex or set CODEX_COMMAND.")
-        command = [codex_command, "exec", "-C", str(self.project_root), "--sandbox", "workspace-write", "-"]
+        # The app-level Code Mode host can retain an stdin-driven PowerShell
+        # wrapper after a command runner exits on Windows. Studio needs the
+        # regular bounded shell tool instead; otherwise the outer 900-second
+        # phase timeout sees a live descendant even though no concept bytes
+        # were produced. Keep the workspace sandbox and disable only that host.
+        command = [
+            codex_command,
+            "exec",
+            "--disable",
+            "code_mode_host",
+            "-C",
+            str(self.project_root),
+            "--sandbox",
+            "workspace-write",
+            "-",
+        ]
         for image in images or []:
             if image.is_file():
                 command[2:2] = ["--image", str(image)]

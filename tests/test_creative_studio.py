@@ -63,6 +63,25 @@ class StubInspector:
 
 
 class CreativeStudioTests(unittest.TestCase):
+    def test_studio_disables_windows_code_mode_host_for_bounded_child_tasks(self) -> None:
+        captured = {}
+
+        def fake_codex(command, **kwargs):
+            captured["command"] = command
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        runner = CodexStudioRunner(
+            project_root=Path.cwd(),
+            command_runner=fake_codex,
+            inspector=StubInspector(),
+        )
+        runner._invoke_codex("bounded creative task", task="concept_generation")
+
+        command = captured["command"]
+        self.assertIn("--disable", command)
+        self.assertEqual(command[command.index("--disable") + 1], "code_mode_host")
+        self.assertIn("workspace-write", command)
+
     def _write_provenance_workspace(
         self, root: Path, *, source_kind: str, body: str, url: str = "https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg"
     ) -> tuple[Path, Path]:
