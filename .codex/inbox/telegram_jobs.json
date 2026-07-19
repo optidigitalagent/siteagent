@@ -11,14 +11,22 @@
     "site_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur/site/index.html",
     "repo_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur",
     "preview_url": "",
+    "preview_deployment_id": "",
+    "preview_project_name": "",
+    "preview_branch": "",
     "requested_product_type": "full_commercial_site",
     "error": "",
     "run_dir": "",
     "checkpoints": {},
     "telegram_notification_status": "not_started",
+    "telegram_preview_notification_status": "not_started",
     "telegram_receipt": {},
     "manual_resend_authorization": {},
-    "recovery_events": []
+    "recovery_events": [],
+    "recovery_eligible": true,
+    "recovery_failure_code": "",
+    "workflow_lane": "preview",
+    "production_authorization": {}
   },
   {
     "id": "d8176c55f451439cacf0e8a892ca97e7",
@@ -32,14 +40,22 @@
     "site_url": "",
     "repo_url": "",
     "preview_url": "",
+    "preview_deployment_id": "",
+    "preview_project_name": "",
+    "preview_branch": "",
     "requested_product_type": "full_commercial_site",
     "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
     "run_dir": "",
     "checkpoints": {},
     "telegram_notification_status": "not_started",
+    "telegram_preview_notification_status": "not_started",
     "telegram_receipt": {},
     "manual_resend_authorization": {},
-    "recovery_events": []
+    "recovery_events": [],
+    "recovery_eligible": true,
+    "recovery_failure_code": "",
+    "workflow_lane": "preview",
+    "production_authorization": {}
   },
   {
     "id": "f684eed531f74dd8995b2a58ac77739e",
@@ -49,18 +65,37 @@
     "user_id": 5674963513,
     "status": "preview_ready",
     "received_at": "2026-07-18T15:44:01.634531+00:00",
-    "updated_at": "2026-07-18T19:19:22.643052+00:00",
+    "updated_at": "2026-07-19T08:07:13.099610+00:00",
     "site_url": "",
     "repo_url": "",
-    "preview_url": "",
+    "preview_url": "https://748478b0.siteagent-preview-amidental-kiev-088e5323bc.pages.dev",
+    "preview_deployment_id": "748478b0-cff5-4f76-a41f-2efcdb19c864",
+    "preview_project_name": "siteagent-preview-amidental-kiev-088e5323bc",
+    "preview_branch": "preview-f684eed531f74dd8995b2a58ac77739e",
     "requested_product_type": "full_commercial_site",
     "error": "",
-    "run_dir": "",
-    "checkpoints": {},
+    "run_dir": "runs\\f684eed531f74dd8995b2a58ac77739e",
+    "checkpoints": {
+      "research_completed": "completed_and_valid",
+      "generation_completed": "completed_and_valid",
+      "technical_gate_completed": "completed_and_valid",
+      "critics_completed": "completed_and_valid",
+      "acceptance_completed": "completed_and_valid",
+      "preview_deployment_completed": "completed_and_valid",
+      "preview_live_verified": "completed_and_valid",
+      "ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW": "completed_and_valid"
+    },
     "telegram_notification_status": "not_started",
+    "telegram_preview_notification_status": "not_started",
     "telegram_receipt": {},
     "manual_resend_authorization": {},
-    "recovery_events": []
+    "recovery_events": [
+      "preview_metadata_reconciled:2026-07-19T08:07:13.099610+00:00"
+    ],
+    "recovery_eligible": true,
+    "recovery_failure_code": "",
+    "workflow_lane": "preview",
+    "production_authorization": {}
   },
   {
     "id": "053656c35b5d4ef58221c5be7171b625",
@@ -74,15 +109,23 @@
     "site_url": "",
     "repo_url": "",
     "preview_url": "",
+    "preview_deployment_id": "",
+    "preview_project_name": "",
+    "preview_branch": "",
     "requested_product_type": "full_commercial_site",
     "error": "BLOCKED_INSUFFICIENT_BUSINESS_CONTENT: product_identified; language_confirmed; content_sufficient_for_full_site",
     "run_dir": "runs\\053656c35b5d4ef58221c5be7171b625",
     "checkpoints": {},
     "telegram_notification_status": "not_started",
+    "telegram_preview_notification_status": "not_started",
     "telegram_receipt": {},
     "manual_resend_authorization": {},
     "recovery_events": [
       "preview_reclaimed:2026-07-19T06:00:37.958432+00:00:media-input checkpoint blocked: provide runs\\053656c35b5d4ef58221c5be7171b625\\media_input\\manifest.json with authorised media entries."
-    ]
+    ],
+    "recovery_eligible": true,
+    "recovery_failure_code": "",
+    "workflow_lane": "preview",
+    "production_authorization": {}
   }
 ]
