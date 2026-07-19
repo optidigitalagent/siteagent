@@ -206,3 +206,26 @@ repeat the same brief in every chat.
 - Persist these as generation, responsive, accessibility, Product Director and
   browser-QA requirements for every future site, while leaving visual treatment
   bespoke to the business.
+
+## One-link preview recovery and evidence calibration (2026-07-18)
+
+- A single submitted business URL authorises autonomous public research for an
+  isolated review preview. Static fetch failure must escalate through rendered
+  browser capture, public search and the discovered official business site;
+  missing facts remain explicit production blockers instead of shrinking the
+  requested full commercial site or inventing content.
+- Exact numeric wording is immutable evidence. A source that says exactly
+  `20 років` must never become `20+`, `over 20` or `понад 20` in research,
+  copy, provenance or critic context.
+- Business-social media discovered from the submitted profile may be used only
+  in the isolated preview when its manifest says
+  `user_authorized_for_preview=true`. This does not grant customer-production
+  or portfolio rights.
+- Preview publication must use the existing run, a dedicated Cloudflare project
+  and non-production branch, exact business-identity meta, HTML and response
+  `noindex`, crawler-blocking `robots.txt`, no custom domain and no Telegram
+  delivery. A matching business ID hidden in an asset URL is not proof that the
+  required meta marker exists.
+- Acceptance must inspect the live, scrolled page. Lazy media, mobile menu,
+  FAQ, footer, CTA geometry and response headers need browser evidence; an
+  upload or a self-score alone is insufficient.

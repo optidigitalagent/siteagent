@@ -165,7 +165,7 @@ def write_markdown(path: Path, title: str, payload: dict) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def implementation_package(*, business_research: dict, media_manifest: dict, design_brief: dict, references: list[dict]) -> dict:
+def implementation_package(*, business_research: dict, media_manifest: dict, design_brief: dict, references: list[dict], target: str = "production") -> dict:
     research = business_research.get("research", {})
     required_research = (
         "product_identity", "primary_language", "content_themes", "verified_facts",
@@ -180,6 +180,7 @@ def implementation_package(*, business_research: dict, media_manifest: dict, des
     package = {
         "schema_version": 3,
         "requested_product_type": research.get("requested_product_type", "full_commercial_site"),
+        "delivery_target": target,
         "business_research": business_research,
         "authorised_media_manifest": media_manifest,
         "design_implementation_brief": design_brief,
@@ -203,6 +204,8 @@ def implementation_package(*, business_research: dict, media_manifest: dict, des
         },
         "acceptance_contract": {
             "use_only_authorised_cloudinary_business_media": True,
+            "isolated_preview_business_social_media_allowed": target == "isolated_preview",
+            "preview_media_never_implies_production_rights": True,
             "no_reference_copying": True,
             "first_viewport_requires_offer_and_cta": True,
             "persistent_navigation_required_on_scrollable_pages": True,

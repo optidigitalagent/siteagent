@@ -95,3 +95,10 @@ Do not approve the result without screenshot-led commercial, UX, copy, media,
 responsive, accessibility, technical, and anti-template review. Browser QA must
 scroll-test the header, inspect the complete footer, and check primary CTA text
 geometry on desktop, tablet and mobile for every declared page.
+
+For isolated one-link previews, source public business facts from the bounded
+research ledger and keep exact numeric language exact. Preview-authorised
+business-social media is usable only when the manifest explicitly allows the
+preview and forbids customer production. Do not turn source/provenance notes
+into customer-facing copy; communicate the verified fact naturally and leave
+missing confirmations in the production-blocker artifact.

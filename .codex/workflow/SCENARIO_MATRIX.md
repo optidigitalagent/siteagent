@@ -28,3 +28,9 @@
 | A generated page is long enough to scroll | Header/navigation remains usable at the top, midpoint and near-bottom; sticky controls remain below it | desktop/tablet/mobile browser shell report |
 | Final page reaches its footer | Footer exposes declared-IA navigation, a primary CTA and only verified social/contact routes | DOM plus footer screenshots on every page |
 | Primary CTA contains nested decorative elements or translated text | Label stays fully visible inside a ≥44×44 clickable box in default/hover/focus/active states | CTA geometry/state assertions plus screenshots |
+| One-link static fetch lacks usable evidence or media | Rendered browser, public search and discovered official-site providers continue; every attempt is ledgered | `00_one_link_intake.json` + source ledger |
+| Source says exactly `20 років` | Research and copy retain exact 20; no `20+`, `over 20` or `понад 20` appears | provenance regression test + final HTML |
+| Profile media is authorised only for preview | Preview accepts business-social Cloudinary assets; production acceptance rejects them | media manifest + focused acceptance tests |
+| Preview HTML contains the business ID only in an asset path | Publisher injects/verifies an exact business-id meta; incidental substring cannot pass | preview publisher regression test + live DOM |
+| Preview upload succeeds but deployment-list JSON uses capitalized Wrangler keys | Existing non-production deployment is parsed and verified without creating a duplicate job | publisher tests + deployment metadata |
+| Live page uses lazy media | Browser scroll-through loads every image before missing-media judgment | live browser QA report |

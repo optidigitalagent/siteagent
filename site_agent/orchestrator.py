@@ -28,7 +28,7 @@ from site_agent.design_quality import (
 from site_agent.external_skills import LocalSkillRuntime
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
-from site_agent.media import MediaInputBlocked, MediaPreparer, authorised_media_assets
+from site_agent.media import MediaInputBlocked, MediaPreparer, PreviewMediaIngestor, authorised_media_assets
 from site_agent.models import (
     AcceptanceAuditResult,
     CritiqueReport,
@@ -39,6 +39,8 @@ from site_agent.models import (
 )
 from site_agent.models import SectionSpec
 from site_agent.publisher import Publisher
+from site_agent.preview import PreviewPublisher
+from site_agent.research import bootstrap_one_link_intake, normalize_business_source
 from site_agent.product_director import ProductDirectorAuditor
 from site_agent.studio import CodexStudioRunner, StudioError, assert_production_promotion_allowed
 from site_agent.workflow import WorkflowConfigurationError, checksum, implementation_package, role_provenance, selected_references, validate_role_providers, write_markdown
@@ -46,6 +48,9 @@ from site_agent.workflow import WorkflowConfigurationError, checksum, implementa
 
 class GenerationBlocked(RuntimeError):
     pass
+
+
+RESEARCH_PIPELINE_VERSION = "one-link-preview-v1"
 
 
 @dataclass
@@ -69,6 +74,7 @@ class SiteAgentOrchestrator:
         self,
         *,
         publisher: Publisher | None = None,
+        preview_publisher: PreviewPublisher | None = None,
         acceptance_auditor: AcceptanceAuditor | None = None,
     ) -> None:
         llm = LLMClient()
@@ -80,6 +86,7 @@ class SiteAgentOrchestrator:
         self.builder = SiteBuilder()
         self.acceptance_auditor = acceptance_auditor or AcceptanceAuditor()
         self.publisher = publisher or Publisher()
+        self.preview_publisher = preview_publisher or PreviewPublisher()
         self.skill_runtime = LocalSkillRuntime() if settings.external_skills_enabled else None
         self.studio_runner = CodexStudioRunner() if settings.site_builder == "codex_studio" else None
         self.research_strategist: ResearchStrategist | None = None
@@ -94,8 +101,11 @@ class SiteAgentOrchestrator:
         run_id: str | None = None,
         run_path: Path | None = None,
         calibration_only: bool = False,
+        preview: bool = False,
     ) -> JobResult | CalibrationResult:
         """Run or resume one job without replacing valid prior checkpoints."""
+        if production and preview:
+            raise GenerationBlocked("A run cannot target production and isolated preview at the same time.")
         job_id = run_id or self._job_id(instagram_url)
         run_dir = run_path or settings.runs_dir / job_id
         reports_dir = run_dir / "generation_reports"
@@ -112,6 +122,7 @@ class SiteAgentOrchestrator:
                 reports_dir=reports_dir,
                 site_dir=site_dir,
                 production=production,
+                preview=preview,
             )
             if recovered is not None:
                 return recovered
@@ -123,31 +134,67 @@ class SiteAgentOrchestrator:
         if builder_mode == "codex_studio":
             try:
                 validate_role_providers()
+                normalized_url, _ = normalize_business_source(instagram_url)
+                intake = self._read_json(reports_dir / "00_one_link_intake.json") if preview else None
+                if preview and (
+                    intake is None
+                    or intake.get("pipeline_version") != RESEARCH_PIPELINE_VERSION
+                    or intake.get("research", {}).get("normalized_url") != normalized_url
+                    or not all(str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in intake.get("media_manifest", {}).get("media", []))
+                ):
+                    intake = bootstrap_one_link_intake(
+                        normalized_url,
+                        run_dir,
+                        media_ingestor=PreviewMediaIngestor(upload_to_cloudinary=True),
+                    )
+                    intake["pipeline_version"] = RESEARCH_PIPELINE_VERSION
+                    write_json(reports_dir / "00_one_link_intake.json", intake)
+                    self._checkpoint(reports_dir, "one_link_intake_completed", "media_input_created")
                 business = self._read_json(reports_dir / "01_business_research.json")
-                if business is None or business.get("research", {}).get("instagram_url") != instagram_url or not (reports_dir / "01_business_research.provenance.json").is_file():
+                research_provenance = self._read_json(reports_dir / "01_business_research.provenance.json")
+                cached_source = ""
+                if business is not None:
+                    try:
+                        cached_source, _ = normalize_business_source(business.get("research", {}).get("instagram_url", ""))
+                    except ValueError:
+                        cached_source = ""
+                if business is None or cached_source != normalized_url or research_provenance is None or (preview and research_provenance.get("pipeline_version") != RESEARCH_PIPELINE_VERSION):
                     if self.research_strategist is None:
                         self.research_strategist = ResearchStrategist(LLMClient(provider=settings.research_strategist_provider))
-                    result = self.research_strategist.run(instagram_url)
+                    public_context = __import__("json").dumps((intake or {}).get("research", {}), ensure_ascii=False, indent=2)
+                    result = self.research_strategist.run(normalized_url, public_context=public_context)
                     business = result.model_dump()
+                    if preview:
+                        business = self._apply_provisional_preview_contract(business, (intake or {}).get("research", {}), normalized_url)
                     write_json(reports_dir / "01_business_research.json", business)
                     write_markdown(reports_dir / "business_research.md", "Business research", business)
-                    write_json(reports_dir / "01_business_research.provenance.json", role_provenance(role="Research Strategist", provider=self.research_strategist.llm.provider, model=self.research_strategist.llm.model, prompt_version="research-strategist-v1", prompt={"role": "research_strategist"}, inputs={"instagram_url": instagram_url}, output=business))
+                    provenance = role_provenance(role="Research Strategist", provider=self.research_strategist.llm.provider, model=self.research_strategist.llm.model, prompt_version="research-strategist-v2-one-link", prompt={"role": "research_strategist"}, inputs={"source_url": normalized_url, "source_ledger": (intake or {}).get("research", {}).get("source_ledger", [])}, output=business)
+                    provenance["pipeline_version"] = RESEARCH_PIPELINE_VERSION
+                    write_json(reports_dir / "01_business_research.provenance.json", provenance)
                 research = ResearchBrief.model_validate(business["research"])
                 write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "research_strategist_completed", "research_completed")
                 media_path = run_dir / settings.media_input_dir / "manifest.json"
                 media_manifest = self._read_json(reports_dir / "02_authorised_media_manifest.json")
-                if media_manifest is None:
+                if preview:
+                    media_manifest = (intake or {}).get("media_manifest") or self._read_json(media_path)
+                    if not media_manifest:
+                        raise MediaInputBlocked("media-input checkpoint blocked: automatic preview manifest is missing")
+                    if not all(str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in media_manifest.get("media", [])):
+                        raise MediaInputBlocked("media-input checkpoint blocked: preview media was not prepared for Studio delivery")
+                    write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
+                elif media_manifest is None:
                     candidates = self.media_preparer.load_candidates(media_path)
                     media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
-                self.media_preparer.validate_manifest(media_manifest)
+                if not preview:
+                    self.media_preparer.validate_manifest(media_manifest)
                 # Readiness is based on the actual authorised Cloudinary assets,
                 # never the scraped public URL list returned by research.
-                research.best_media = authorised_media_assets(media_manifest)
+                research.best_media = authorised_media_assets(media_manifest, preview=preview)
                 write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "media_prepared", "media_input_completed")
-                evidence = self._effective_evidence(reports_dir, research, business)
+                evidence = self._effective_evidence(reports_dir, research, business, force=preview)
                 write_json(reports_dir / "01_evidence_assessment.json", evidence)
                 write_json(reports_dir / "01_studio_readiness.json", evidence)
                 if not evidence.build_allowed:
@@ -172,7 +219,13 @@ class SiteAgentOrchestrator:
                     write_json(reports_dir / "03_design_implementation_brief.provenance.json", provenance)
                 strategy = StrategyBrief.model_validate(design["strategy"])
                 spec = SiteSpec.model_validate(design["site_spec"])
-                package = implementation_package(business_research=business, media_manifest=media_manifest, design_brief=design, references=references)
+                package = implementation_package(
+                    business_research=business,
+                    media_manifest=media_manifest,
+                    design_brief=design,
+                    references=references,
+                    target="isolated_preview" if preview else "production",
+                )
                 write_json(reports_dir / "04_implementation_package.json", package)
                 write_json(reports_dir / "04_implementation_package.provenance.json", {"role": "Implementation Package", "input_checksum": checksum(package["input_checksums"]), "output_checksum": package["sha256"], "used": True})
                 self._checkpoint(reports_dir, "design_director_completed", "implementation_package_prepared", "generation_completed")
@@ -355,6 +408,7 @@ class SiteAgentOrchestrator:
                     site_dir=site_dir,
                     quality_report=quality,
                     studio_dir=studio_dir,
+                    preview=preview,
                 )
                 write_json(reports_dir / "acceptance_audit.json", acceptance)
                 if not acceptance.approved:
@@ -386,16 +440,24 @@ class SiteAgentOrchestrator:
                     write_json(reports_dir / "calibration_result.json", result)
                     self._checkpoint(reports_dir, "calibration_completed")
                     return CalibrationResult(job_id=job_id, run_dir=run_dir, final_score=critique.score)
-                publish = self.publisher.publish(
-                    run_dir=run_dir,
-                    site_dir=site_dir,
-                    instagram_url=instagram_url,
-                    production=production,
-                )
+                if preview:
+                    publish = self.preview_publisher.publish(
+                        run_dir=run_dir,
+                        site_dir=site_dir,
+                        source_url=instagram_url,
+                        run_id=job_id,
+                    )
+                else:
+                    publish = self.publisher.publish(
+                        run_dir=run_dir,
+                        site_dir=site_dir,
+                        instagram_url=instagram_url,
+                        production=production,
+                    )
                 write_json(reports_dir / "publish_result.json", publish)
                 if quality is not None:
                     record_fingerprint(settings.runs_dir / "design_fingerprint_history.json", quality.fingerprint, limit=settings.quality_history_limit)
-                self._checkpoint(reports_dir, "deployment_completed")
+                self._checkpoint(reports_dir, "preview_deployment_completed" if preview else "deployment_completed")
                 return JobResult(
                     job_id=job_id,
                     run_dir=run_dir,
@@ -431,6 +493,7 @@ class SiteAgentOrchestrator:
         reports_dir: Path,
         site_dir: Path,
         production: bool,
+        preview: bool = False,
     ) -> JobResult | None:
         """Reuse a delivered-quality build; only publish when deployment is absent."""
         research = self._read_model(reports_dir / "01_research.json", ResearchBrief)
@@ -469,8 +532,14 @@ class SiteAgentOrchestrator:
                     "creative_studio_human_calibration_required: fixture evidence must be approved before production rollout."
                 )
 
-        deployment = self._read_model(run_dir / "deployment.json", PublishResult)
-        if deployment is not None and deployment.is_verified_production:
+        if preview:
+            from site_agent.preview import PreviewDeploymentResult
+            deployment = self._read_model(run_dir / "preview_deployment.json", PreviewDeploymentResult)
+            deployment_ready = deployment is not None and deployment.verification_status == "verified"
+        else:
+            deployment = self._read_model(run_dir / "deployment.json", PublishResult)
+            deployment_ready = deployment is not None and deployment.is_verified_production
+        if deployment_ready:
             self._checkpoint(
                 reports_dir,
                 "research_completed",
@@ -478,7 +547,7 @@ class SiteAgentOrchestrator:
                 "technical_gate_completed",
                 "critics_completed",
                 "acceptance_completed",
-                "deployment_completed",
+                "preview_deployment_completed" if preview else "deployment_completed",
             )
             return JobResult(
                 job_id=job_id,
@@ -487,14 +556,22 @@ class SiteAgentOrchestrator:
                 final_score=critique.score,
             )
 
-        publish = self.publisher.publish(
-            run_dir=run_dir,
-            site_dir=site_dir,
-            instagram_url=instagram_url,
-            production=production,
-        )
+        if preview:
+            publish = self.preview_publisher.publish(
+                run_dir=run_dir,
+                site_dir=site_dir,
+                source_url=instagram_url,
+                run_id=job_id,
+            )
+        else:
+            publish = self.publisher.publish(
+                run_dir=run_dir,
+                site_dir=site_dir,
+                instagram_url=instagram_url,
+                production=production,
+            )
         write_json(reports_dir / "publish_result.json", publish)
-        self._checkpoint(reports_dir, "acceptance_completed", "deployment_completed")
+        self._checkpoint(reports_dir, "acceptance_completed", "preview_deployment_completed" if preview else "deployment_completed")
         return JobResult(
             job_id=job_id,
             run_dir=run_dir,
@@ -724,13 +801,149 @@ class SiteAgentOrchestrator:
         return spec
 
     def _effective_evidence(
-        self, reports_dir: Path, research: ResearchBrief, business: dict,
+        self, reports_dir: Path, research: ResearchBrief, business: dict, *, force: bool = False,
     ) -> EvidenceAssessment:
         """Resolve evidence only; the immutable intake product type owns scope."""
         evidence = self._read_model(reports_dir / "01_evidence_assessment.json", EvidenceAssessment)
-        if evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
+        if force or evidence is None or evidence.pipeline_schema_version != PIPELINE_SCHEMA_VERSION:
             evidence = assess_evidence(research)
         return evidence
+
+    @staticmethod
+    def _apply_provisional_preview_contract(business: dict, intake: dict, source_url: str) -> dict:
+        """Fill safe preview decisions while preserving missing facts as production blockers."""
+        payload = dict(business or {})
+        research = dict(payload.get("research") or {})
+        public_text = " ".join(
+            str(value or "") for value in (
+                intake.get("title"), intake.get("description"), intake.get("public_text")
+            )
+        )
+        lowered = public_text.lower()
+        exact_twenty_years = bool(
+            re.search(r"\b20\s*(?:рок(?:ів|и|у)|years?)\b", lowered)
+        ) and not bool(
+            re.search(r"(?:20\s*\+|понад\s*20|більше\s*20|over\s*20)", lowered)
+        )
+
+        def preserve_exact_duration(value):
+            """Never promote an exact source duration into a plus/over claim."""
+            if not exact_twenty_years:
+                return value
+            if isinstance(value, dict):
+                return {key: preserve_exact_duration(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [preserve_exact_duration(item) for item in value]
+            if not isinstance(value, str):
+                return value
+            replacements = (
+                (r"\bover\s+20\s+years\b", "20 years"),
+                (r"\b20\s*\+\s*years\b", "20 years"),
+                (r"понад\s+20\s+років", "20 років"),
+                (r"20\s*\+\s*років", "20 років"),
+            )
+            result = value
+            for pattern, replacement in replacements:
+                result = re.sub(pattern, replacement, result, flags=re.I)
+            return result
+
+        research = preserve_exact_duration(research)
+        research["instagram_url"] = source_url
+        research["requested_product_type"] = "full_commercial_site"
+        research["business_name"] = research.get("business_name") or intake.get("business_name") or "Business"
+        if not research.get("primary_language"):
+            research["primary_language"] = "uk" if re.search(r"[іїєґІЇЄҐ]", public_text) else "en"
+        if not research.get("city") and any(token in lowered for token in ("київ", "kyiv", "kiev")):
+            research["city"] = "Київ"
+        dental_tokens = {
+            "коронки": "Коронки", "імпланти": "Імплантація", "вініри": "Вініри",
+            "брекети": "Ортодонтія", "стоматолог": "Стоматологічна допомога", "dental": "Dental care",
+        }
+        inferred_services = [label for token, label in dental_tokens.items() if token in lowered]
+        if not research.get("niche") and inferred_services:
+            research["niche"] = "Стоматологічна клініка"
+        if not research.get("services_or_products"):
+            research["services_or_products"] = list(dict.fromkeys(inferred_services)) or [research.get("niche") or "Business services"]
+        if not research.get("sells"):
+            research["sells"] = research["services_or_products"][:6]
+        if not research.get("contacts"):
+            research["contacts"] = [f"Instagram: {source_url}"]
+        exact_product = " та ".join(research["services_or_products"][:3])
+        if not research.get("product_identity"):
+            research["product_identity"] = {
+                "exact_product": exact_product,
+                "evidence_sources": [source_url],
+                "confidence": "high" if inferred_services else "medium",
+            }
+        themes = list(research.get("content_themes") or [])
+        default_themes = (
+            ("Послуги та напрямки допомоги", "offer"),
+            ("Підхід до консультації та вибору рішення", "process"),
+            ("Як зв’язатися й уточнити план", "conversion"),
+        )
+        known_labels = {str(item.get("label", "")).casefold() for item in themes if isinstance(item, dict)}
+        for label, role in default_themes:
+            if len(themes) >= 3:
+                break
+            if label.casefold() not in known_labels:
+                themes.append({"label": label, "decision_role": role, "evidence_sources": [source_url]})
+        research["content_themes"] = themes
+        verified = list(research.get("verified_facts") or [])
+        if not verified and (intake.get("title") or intake.get("description")):
+            verified.append({
+                "source": source_url,
+                "value": " | ".join(filter(None, (str(intake.get("title", "")), str(intake.get("description", "")))))[:800],
+                "confidence": "high",
+            })
+        research["verified_facts"] = verified
+        blockers = list(research.get("unknowns") or [])
+        contacts_text = " ".join(research.get("contacts") or []).lower()
+        missing = []
+        if not re.search(r"\+?\d[\d\s()\-]{7,}", contacts_text):
+            missing.append("phone")
+        if "@" not in contacts_text:
+            missing.append("email")
+        if not research.get("visible_prices_offers"):
+            missing.append("public_price_numbers")
+        missing.extend(["customer-approved About history", "customer-approved production CTA wording"])
+        for item in missing:
+            message = f"Production blocker: {item} is not yet customer-confirmed."
+            if message not in blockers:
+                blockers.append(message)
+        research["unknowns"] = blockers
+        forbidden = list(research.get("forbidden_claims") or [])
+        for claim in (
+            "Do not invent prices, discounts, staff, reviews, credentials, outcomes, guarantees, or medical claims.",
+            "Preview media is not authorised for customer production or portfolio claims.",
+        ):
+            if claim not in forbidden:
+                forbidden.append(claim)
+        if exact_twenty_years:
+            duration_rule = "Do not upgrade the verified exact duration of 20 years to over 20 years or 20+."
+            if duration_rule not in forbidden:
+                forbidden.append(duration_rule)
+        research["forbidden_claims"] = forbidden
+        provenance = list(research.get("content_provenance") or [])
+        if not provenance:
+            provenance.extend([
+                {"field": "business_identity", "value": research["business_name"], "status": "verified_fact", "sources": [source_url]},
+                {"field": "brand_philosophy", "value": "Calm, clear guidance centred on the visitor's next decision.", "status": "inferred_brand_copy", "sources": [source_url]},
+                {"field": "faq", "value": "Questions are generated from the confirmed service context; answers avoid unsupported clinical promises.", "status": "generated_demo_content", "sources": [source_url]},
+            ])
+        for item in missing:
+            provenance.append({"field": item, "status": "missing_required_fact", "production_blocker": True, "sources": []})
+        research["content_provenance"] = provenance
+        payload["research"] = research
+        payload["recommended_scope"] = "full_site"
+        payload["target_audience"] = payload.get("target_audience") or "People comparing the confirmed services and deciding how to start a conversation."
+        payload["buying_context"] = payload.get("buying_context") or "Visitors need service clarity, a credible sense of the business, and a low-friction route to ask about their situation."
+        payload["positioning"] = payload.get("positioning") or ["A decision-oriented presentation of the business's confirmed services."]
+        payload["customer_questions"] = payload.get("customer_questions") or [
+            "Which service direction fits my situation?", "What happens before a final plan is agreed?", "How do I ask about timing and cost?"
+        ]
+        payload["brand_media_signals"] = payload.get("brand_media_signals") or ["Use exact business-profile media only in the isolated preview."]
+        payload["missing_content_manifest"] = [f"production:{item}" for item in missing]
+        return payload
 
     def _job_id(self, instagram_url: str) -> str:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")

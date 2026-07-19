@@ -106,3 +106,27 @@ screenshots and returned `ACCEPT`, with no critical, high, medium or low issue
 requiring revision. The full regression suite passes 144 tests with only the
 explicit credential-gated production smoke skipped. This approves the isolated
 preview for user review, not customer production.
+
+## Amidental one-link preview review (2026-07-18)
+
+The existing failed job was recovered in place. Public Instagram and official
+site evidence support the clinic identity, Kyiv, exactly 20 years, principal
+services, address, hours, phones and additional service categories. Prices,
+customer-approved production copy/contact freshness and production media rights
+remain explicit blockers rather than invented facts.
+
+The selected coral/lilac/ink concept was materially revised after two rejected
+reviews: repeated Instagram-helper sections were replaced with distinct offer,
+proof, experience, process, practical-decision, objection and conversion jobs;
+unsupported `20+` language was reduced to the exact source wording; official
+facts were added to bounded evidence; repeated CTAs and the oversized hero gap
+were removed. Independent final review approved the checksum-bound result at
+94/100 with no critical/high issue. Commercial usefulness is 100, Product
+Director 100 and acceptance is approved.
+
+Local desktop/tablet/mobile inspection and live desktop/mobile browser
+scroll-through pass without overflow, missing media, console/network/link
+failure, small target, header/footer issue or clipped CTA. Mobile navigation and
+FAQ interactions pass. The isolated Pages URL returns HTTP 200 with exact
+business meta, HTML/response noindex and crawler-blocking robots. Production,
+custom domain and Telegram delivery were not started.

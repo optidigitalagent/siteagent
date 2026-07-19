@@ -49,3 +49,9 @@ Read:
 Never say `done` merely because code exists or tests pass. Completion requires
 evidence that the user-visible product improved and that known failure patterns
 are prevented from recurring.
+
+For a one-link preview recovery, reuse the exact queue item and run. Treat
+public research, preview-only media rights, creative acceptance, noindex
+Cloudflare publication and Telegram non-delivery as separate gates. Require an
+exact `<meta name="siteagent-business-id">` check plus live response/browser
+evidence; never accept an incidental ID match inside an asset URL.

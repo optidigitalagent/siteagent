@@ -461,3 +461,42 @@ Live end-to-end verification requires local runtime credentials:
   No production `go`, Telegram delivery, customer production deployment or
   custom-domain action ran. Stop checkpoint:
   `ELIZ_REVISION_PREVIEW_READY_FOR_USER_REVIEW`.
+
+## Explicit production go and fail-closed evidence gate (2026-07-18)
+
+- Executed `python -m site_agent.cli go` from the explicit user command and
+  claimed the existing pending job without requesting its source URL again.
+- Research completed and persisted a durable checkpoint, but resolved the
+  requested full commercial site to `recommended_scope: blocked`: no verified
+  business identity, exact product, language, content themes, contacts, offer,
+  proof, or conversion route were available.
+- The run then stopped at `media_input_blocked` because its authorised
+  business-media manifest is absent. No site output, Cloudflare deployment,
+  public URL, or Telegram success notification was created.
+- Recovery must reuse `runs/f684eed531f74dd8995b2a58ac77739e`, add verified
+  business facts and an authorised media manifest, and resume the same job.
+  Duplicate generation or invented business facts remain prohibited.
+
+## Amidental one-link isolated preview recovery (2026-07-18)
+
+- Reclaimed the exact failed job/run `f684eed531f74dd8995b2a58ac77739e`
+  without a duplicate queue item, production completion or Telegram delivery.
+- Added bounded static/web/rendered-browser/official-site research fallbacks,
+  a durable source ledger, exact-duration protection, preview-only business
+  social-media provenance and 12 preserved/uploaded images.
+- Produced and materially revised a bespoke full commercial Amidental Kiev
+  site from three concepts. Final deterministic gates: technical pass at
+  1440/768/390, commercial 100, semantic repetition pass, Product Director 100,
+  independent final critic 94 and acceptance approved with no critical/high
+  issue.
+- Published only the dedicated Cloudflare Preview deployment at
+  `https://748478b0.siteagent-preview-amidental-kiev-088e5323bc.pages.dev`.
+  Live verification confirms exact business meta, HTTP 200, HTML and response
+  noindex, crawler-blocking robots, loaded media, usable mobile menu/FAQ/footer
+  and zero overflow/console/network failure. Production, custom domain and
+  Telegram flags remain false.
+- Fixed preview recovery defects exposed by the real run: Windows child-tree
+  timeout handling, canonical source reuse, capitalized Wrangler deployment
+  JSON, exact DOM marker validation and retryable acceptance failures.
+- Current stop checkpoint:
+  `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW`.

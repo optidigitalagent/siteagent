@@ -36,12 +36,14 @@ class ResearchStrategist:
         self.llm = llm
         self.scraper = scraper or InstagramScraper()
 
-    def run(self, instagram_url: str) -> BusinessResearch:
-        scraped = self.scraper.fetch(instagram_url)
+    def run(self, instagram_url: str, *, public_context: str = "") -> BusinessResearch:
+        scraped_context = public_context
+        if not scraped_context:
+            scraped_context = self.scraper.fetch(instagram_url).to_context()
         return self.llm.structured(
             system=prompts.RESEARCH_STRATEGIST_SYSTEM,
             user=prompts.RESEARCH_STRATEGIST_USER.format(
-                instagram_url=instagram_url, scraped_context=scraped.to_context()
+                instagram_url=instagram_url, scraped_context=scraped_context
             ),
             schema=BusinessResearch,
         )

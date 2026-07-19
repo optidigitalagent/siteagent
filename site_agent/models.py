@@ -20,10 +20,22 @@ class MediaAsset(BaseModel):
     width: int = 0
     height: int = 0
     asset_id: str = ""
-    source_kind: Literal["business", "stock", "fixture_stock", "unknown"] = "unknown"
+    source_kind: Literal["business", "business_social", "business_web", "stock", "fixture_stock", "unknown"] = "unknown"
     source_url: str = ""
     provenance_note: str = ""
     portfolio_claim: bool = False
+
+
+class ContentProvenance(BaseModel):
+    """One customer-facing claim and the evidence class controlling its use."""
+
+    field: str
+    value: str = ""
+    status: Literal[
+        "verified_fact", "inferred_brand_copy", "generated_demo_content", "missing_required_fact"
+    ]
+    sources: list[str] = Field(default_factory=list)
+    production_blocker: bool = False
 
 
 class ProductIdentity(BaseModel):
@@ -69,6 +81,7 @@ class ResearchBrief(BaseModel):
     content_themes: list[ContentTheme] = Field(default_factory=list)
     unknowns: list[str] = Field(default_factory=list)
     forbidden_claims: list[str] = Field(default_factory=list)
+    content_provenance: list[ContentProvenance] = Field(default_factory=list)
 
 
 class BusinessResearch(BaseModel):

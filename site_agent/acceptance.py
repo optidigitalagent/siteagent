@@ -18,6 +18,7 @@ class AcceptanceAuditor:
         site_dir: Path,
         quality_report: QualityReport | None = None,
         studio_dir: Path | None = None,
+        preview: bool = False,
     ) -> AcceptanceAuditResult:
         index_path = site_dir / "index.html"
         index_present = index_path.is_file() and index_path.stat().st_size > 0
@@ -95,7 +96,17 @@ class AcceptanceAuditor:
                         if supplied != actual:
                             reasons.append("Studio implementation package checksum does not match its content.")
                     used = [item for item in manifest.get("media", []) if item.get("url")]
-                    if any(item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True or not str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in used):
+                    if preview:
+                        invalid_media = any(
+                            item.get("source_kind") not in {"business", "business_social", "business_web"}
+                            or item.get("user_authorized_for_preview") is not True
+                            or item.get("allowed_for_customer_production") is not False
+                            or not str(item.get("url", "")).startswith("https://res.cloudinary.com/")
+                            for item in used
+                        )
+                        if invalid_media:
+                            reasons.append("Studio preview media lacks isolated-preview business-social provenance.")
+                    elif any(item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True or not str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in used):
                         reasons.append("Studio media manifest contains media without authorised Cloudinary business provenance.")
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")

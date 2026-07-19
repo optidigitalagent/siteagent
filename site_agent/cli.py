@@ -6,7 +6,11 @@ import subprocess
 from pathlib import Path
 
 from site_agent.config import settings
-from site_agent.job_queue import InterruptedDeliveryUncertain, TelegramJobQueue
+from site_agent.job_queue import (
+    InterruptedDeliveryUncertain,
+    PreviewRecoveryNotAllowed,
+    TelegramJobQueue,
+)
 from site_agent.identifiers import stable_business_id
 from site_agent.models import PublishResult
 from site_agent.orchestrator import SiteAgentOrchestrator
@@ -113,7 +117,76 @@ def run_pending_job() -> None:
     print(result.publish.production_url)
 
 
-def _pending_job_queue() -> TelegramJobQueue:
+def run_preview_job(job_id: str) -> None:
+    """Resume one existing run into an isolated review preview.
+
+    This lane deliberately performs no production completion and constructs no
+    Telegram notifier. The queue remains review-only until a later, explicitly
+    authorized production workflow promotes it.
+    """
+    queue = _pending_job_queue(preview_local=True)
+    job = queue.get(job_id)
+    if job.status == "preview_ready" and job.preview_url:
+        print("Preview готово:")
+        print(job.preview_url)
+        return
+    if job.status == "failed":
+        job = queue.reclaim_failed_preview(job_id)
+    elif job.status == "running" and job.telegram_notification_status == "not_started":
+        pass
+    else:
+        raise PreviewRecoveryNotAllowed(job_id, f"job status is {job.status}")
+
+    stored_run_dir = job.run_dir
+    run_dir = stored_run_dir or str(settings.runs_dir / (job.run_id or job.id))
+    if not stored_run_dir:
+        job = queue.set_run_dir(job.id, run_dir)
+
+    try:
+        result = SiteAgentOrchestrator().run(
+            job.instagram_url,
+            production=False,
+            preview=True,
+            run_id=job.run_id or job.id,
+            run_path=Path(run_dir),
+        )
+        preview_url = _preview_url_from_result(result)
+        queue.mark_preview_ready(
+            job.id,
+            preview_url=preview_url,
+            checkpoints={
+                "research_completed": "completed_and_valid",
+                "generation_completed": "completed_and_valid",
+                "technical_gate_completed": "completed_and_valid",
+                "critics_completed": "completed_and_valid",
+                "acceptance_completed": "completed_and_valid",
+                "preview_deployment_completed": "completed_and_valid",
+                "preview_live_verified": "completed_and_valid",
+            },
+        )
+    except Exception as exc:
+        queue.fail(job.id, str(exc))
+        raise
+
+    print("Preview готово:")
+    print(preview_url)
+
+
+def _preview_url_from_result(result: object) -> str:
+    direct = getattr(result, "preview_url", "")
+    if isinstance(direct, str) and direct.startswith("https://"):
+        return direct
+    publish = getattr(result, "publish", None)
+    for field in ("preview_url", "deployment_url", "production_url"):
+        value = getattr(publish, field, "")
+        if isinstance(value, str) and value.startswith("https://"):
+            return value
+    raise RuntimeError("Preview publishing did not return a live HTTPS preview URL.")
+
+
+def _pending_job_queue(*, preview_local: bool = False) -> TelegramJobQueue:
+    if preview_local:
+        return TelegramJobQueue(git_sync=False)
     if settings.telegram_inbox_git_sync:
         return TelegramJobQueue()
 
@@ -208,6 +281,10 @@ def main() -> None:
 
     if args.command_or_url.lower() in GO_ALIASES:
         run_pending_job()
+    elif args.command_or_url == "preview-resume":
+        if not args.job_id:
+            parser.error("preview-resume requires --job-id")
+        run_preview_job(args.job_id)
     elif args.command_or_url == "manual-resend":
         if not args.authorize_manual_resend or not args.job_id:
             parser.error("manual-resend requires --job-id and --authorize-manual-resend")

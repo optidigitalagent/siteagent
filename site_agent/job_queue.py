@@ -6,15 +6,33 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from site_agent.config import settings
+from site_agent.identifiers import normalize_instagram_url
+
+
+RECOVERABLE_PREVIEW_FAILURE_PATTERNS = (
+    "media_input/manifest.json",
+    "media input manifest",
+    "research failed",
+    "research returned no",
+    "scope blocked",
+    "generation is blocked because evidence",
+    "codex_studio_failed_retryable",
+    "codex_studio_fixer_failed_retryable",
+    "codex studio creative task failed with preserved retryable state",
+    "acceptance audit blocked deployment",
+)
 
 
 class TelegramJob(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex)
+    # ``run_id`` is explicit so recovery never has to derive a new run from a
+    # failed queue item. Old queue entries are upgraded in memory to their id.
+    run_id: str = ""
     instagram_url: str
     chat_id: int
     user_id: int | None = None
@@ -23,6 +41,8 @@ class TelegramJob(BaseModel):
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     site_url: str = ""
     repo_url: str = ""
+    preview_url: str = ""
+    requested_product_type: Literal["full_commercial_site"] = "full_commercial_site"
     error: str = ""
     # Stored checkpoints make recovery independent of volatile process memory.
     run_dir: str = ""
@@ -31,6 +51,10 @@ class TelegramJob(BaseModel):
     telegram_receipt: dict[str, str | int] = Field(default_factory=dict)
     manual_resend_authorization: dict[str, str] = Field(default_factory=dict)
     recovery_events: list[str] = Field(default_factory=list)
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.run_id:
+            self.run_id = self.id
 
 
 class TelegramJobQueue:
@@ -41,7 +65,14 @@ class TelegramJobQueue:
     def enqueue(self, instagram_url: str, *, chat_id: int, user_id: int | None = None) -> TelegramJob:
         self.pull()
         jobs = self._read()
-        job = TelegramJob(instagram_url=instagram_url, chat_id=chat_id, user_id=user_id)
+        normalized_url = normalize_instagram_url(instagram_url)
+        for existing in jobs:
+            if (
+                normalize_instagram_url(existing.instagram_url) == normalized_url
+                and existing.status in {"pending", "running", "failed", "retryable", "preview_ready"}
+            ):
+                return existing
+        job = TelegramJob(instagram_url=normalized_url, chat_id=chat_id, user_id=user_id)
         jobs.append(job)
         self._write(jobs)
         self.push(f"Add Telegram site job {job.id}")
@@ -100,6 +131,73 @@ class TelegramJobQueue:
             telegram_notification_status="sent",
             commit_message=f"Complete Telegram site job {job_id}",
         )
+
+    def reclaim_failed_preview(self, job_id: str) -> TelegramJob:
+        """Reclaim one known one-link intake failure without creating a new run.
+
+        This intentionally excludes deployment and Telegram delivery failures.
+        Those have separate recovery semantics because repeating them can create
+        external side effects or duplicate customer messages.
+        """
+        jobs = self._read_with_pull()
+        for index, job in enumerate(jobs):
+            if job.id != job_id:
+                continue
+            if job.status != "failed":
+                raise PreviewRecoveryNotAllowed(job_id, "job is not failed")
+            if job.telegram_notification_status != "not_started":
+                raise PreviewRecoveryNotAllowed(job_id, "Telegram delivery has started")
+            normalized_error = job.error.casefold().replace("\\", "/")
+            if not any(pattern in normalized_error for pattern in RECOVERABLE_PREVIEW_FAILURE_PATTERNS):
+                raise PreviewRecoveryNotAllowed(job_id, "failure is not a research/media-input blocker")
+            timestamp = self._now()
+            prior_error = job.error[:500]
+            job.status = "running"
+            job.error = ""
+            job.run_id = job.run_id or job.id
+            job.recovery_events.append(
+                f"preview_reclaimed:{timestamp}:{prior_error}"
+            )
+            job.updated_at = timestamp
+            jobs[index] = job
+            self._write(jobs)
+            self.push(f"Reclaim one-link preview job {job_id}")
+            return job
+        raise KeyError(f"Telegram job not found: {job_id}")
+
+    def mark_preview_ready(
+        self,
+        job_id: str,
+        *,
+        preview_url: str,
+        checkpoints: dict[str, str] | None = None,
+    ) -> TelegramJob:
+        """Record a review preview without completing or delivering the job."""
+        if not preview_url.startswith("https://"):
+            raise ValueError("Preview URL must use HTTPS.")
+        jobs = self._read_with_pull()
+        for index, job in enumerate(jobs):
+            if job.id != job_id:
+                continue
+            if job.telegram_notification_status != "not_started":
+                raise PreviewRecoveryNotAllowed(job_id, "Telegram delivery has started")
+            timestamp = self._now()
+            job.status = "preview_ready"
+            job.preview_url = preview_url
+            job.error = ""
+            job.checkpoints.update(
+                {
+                    "ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW": "completed_and_valid",
+                    **(checkpoints or {}),
+                }
+            )
+            job.recovery_events.append(f"preview_ready:{timestamp}")
+            job.updated_at = timestamp
+            jobs[index] = job
+            self._write(jobs)
+            self.push(f"Record one-link preview {job_id}")
+            return job
+        raise KeyError(f"Telegram job not found: {job_id}")
 
     def get(self, job_id: str) -> TelegramJob:
         for job in self._read_with_pull():
@@ -192,7 +290,7 @@ class TelegramJobQueue:
         self.pull()
         return sum(1 for job in self._read() if job.status == "pending")
 
-    def _update(self, job_id: str, *, commit_message: str, **changes: str) -> TelegramJob:
+    def _update(self, job_id: str, *, commit_message: str, **changes: Any) -> TelegramJob:
         jobs = self._read_with_pull()
         for index, job in enumerate(jobs):
             if job.id == job_id:
@@ -283,3 +381,11 @@ class InterruptedDeliveryUncertain(RuntimeError):
         super().__init__(
             f"Telegram delivery for interrupted job {job_id} is uncertain; refusing a duplicate send."
         )
+
+
+class PreviewRecoveryNotAllowed(RuntimeError):
+    """A failed queue item is outside the side-effect-free preview recovery lane."""
+
+    def __init__(self, job_id: str, reason: str) -> None:
+        self.job_id = job_id
+        super().__init__(f"Preview recovery is not allowed for job {job_id}: {reason}.")

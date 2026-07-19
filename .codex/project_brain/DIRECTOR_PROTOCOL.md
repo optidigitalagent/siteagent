@@ -57,3 +57,18 @@ Report:
 - exact next action.
 
 Persist recurring user feedback in the project brain before ending.
+
+## One-link preview recovery lane
+
+When a user asks to recover one submitted URL as a review preview:
+
+1. Reclaim the exact failed job/run; do not enqueue or regenerate a duplicate.
+2. Research through bounded fallbacks and preserve a source ledger.
+3. Separate verified facts, inferred brand copy, generated demo copy and
+   missing customer-confirmed production facts.
+4. Keep preview-only social media ineligible for production promotion.
+5. Require checksum-bound screenshots, independent criticism, Product Director
+   acceptance and live browser QA before publishing.
+6. Publish only to a dedicated noindex Cloudflare preview project/branch, then
+   record `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW`; never complete the
+   Telegram production job or send its success message from this lane.

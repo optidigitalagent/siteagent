@@ -65,3 +65,10 @@
   with IA navigation plus a verified conversion/contact route, and primary CTA
   labels must remain geometrically intact in every interaction state. The
   contract standardizes behavior and evidence, never visual composition.
+- One-link review recovery reuses the exact queue job/run and may use explicitly
+  preview-authorised business-social media without promoting those rights to
+  customer production. It ends at `preview_ready`, never `done`.
+- Isolated review publishing uses a dedicated Cloudflare Pages preview project
+  and non-production branch. Exact business meta, HTML/response noindex and a
+  crawler-blocking robots file are live gates; no production URL, custom domain
+  or Telegram notification is allowed.

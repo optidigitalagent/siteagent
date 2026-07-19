@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -263,11 +264,13 @@ class CodexStudioRunner:
         retryable_staging_can_revalidate = self._retryable_staging_can_revalidate(
             studio, staging_source, build_state
         )
-        if not self._static_site_is_valid(staging_source) or (
-            build_state.get("status") == "retryable" and not retryable_staging_can_revalidate
+        source_workspace = selected_source.parent
+        canonical_source_is_valid = self._static_site_is_valid(source_workspace)
+        if not canonical_source_is_valid and (
+            not self._static_site_is_valid(staging_source) or
+            (build_state.get("status") == "retryable" and not retryable_staging_can_revalidate)
         ):
             self._run_task(studio, "full_creative_build", self._full_build_prompt(run_dir, chosen, readiness))
-        source_workspace = selected_source.parent
         # A source workspace is the last atomically promoted, reviewable build.
         # Preserve it during retry recovery instead of replacing it with stale
         # staging merely because a prior fixer command returned no-op.
@@ -279,7 +282,13 @@ class CodexStudioRunner:
         self._validate_scope_compliance(studio, promotion_source, readiness)
         initial_dir = studio / "selected" / "initial_validation"
         gate, _ = self.inspector.inspect(promotion_source / "index.html", initial_dir)
-        if not gate.passed:
+        rejected_report = studio / "art_director_report.json"
+        reviewed_rejection_can_reenter_fixer = (
+            use_fixed_source
+            and self._art_director_is_valid(rejected_report)
+            and self._read_json(rejected_report).get("approved") is False
+        )
+        if not gate.passed and not reviewed_rejection_can_reenter_fixer:
             self._mark_task(
                 studio,
                 "full_creative_build",
@@ -302,7 +311,7 @@ class CodexStudioRunner:
         self._require_screenshots(final_dir, tablet=True)
         self._write_commercial_reports(studio, research, spec, selected_source)
         art_report = studio / "art_director_report.json"
-        if not self._art_director_is_valid(art_report) or self._read_json(art_report).get("approved") is not True:
+        if not self._art_director_is_valid(art_report):
             self._run_task(
                 studio,
                 "art_director",
@@ -613,7 +622,10 @@ class CodexStudioRunner:
         if model:
             command[2:2] = ["-m", model]
         try:
-            completed = self.command_runner(command, input=prompt, text=True, encoding="utf-8", capture_output=True, check=False, timeout=self.task_timeouts[task])
+            if self.command_runner is subprocess.run:
+                completed = self._run_subprocess_tree(command, prompt, timeout=self.task_timeouts[task])
+            else:
+                completed = self.command_runner(command, input=prompt, text=True, encoding="utf-8", capture_output=True, check=False, timeout=self.task_timeouts[task])
         except subprocess.TimeoutExpired as exc:
             raise StudioError(f"Codex Studio {task} timed out after {self.task_timeouts[task]} seconds; preserved state is retryable.") from exc
         except (OSError, subprocess.SubprocessError) as exc:
@@ -621,6 +633,54 @@ class CodexStudioRunner:
         if completed.returncode != 0:
             output = (completed.stderr or completed.stdout or "").strip()
             raise StudioError(f"Codex Studio generation failed: {output[:2000]}")
+
+    @staticmethod
+    def _run_subprocess_tree(command: list[str], prompt: str, *, timeout: int) -> subprocess.CompletedProcess[str]:
+        """Bound Codex and all descendants, including Windows wrapper processes."""
+        # Temporary files preserve diagnostic output without inheritable PIPE
+        # readers that can keep communicate() alive after the direct child exits.
+        with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stdout_file, tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=stdout_file,
+                stderr=stderr_file,
+                text=True,
+                encoding="utf-8",
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+                start_new_session=os.name != "nt",
+            )
+            try:
+                process.communicate(input=prompt, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                CodexStudioRunner._terminate_process_tree(process)
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+                raise
+            stdout_file.seek(0)
+            stderr_file.seek(0)
+            return subprocess.CompletedProcess(command, process.returncode, stdout_file.read(), stderr_file.read())
+
+    @staticmethod
+    def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
+        if process.poll() is not None:
+            return
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
 
     def _task_state(self, studio: Path) -> dict[str, Any]:
         path = studio / "task_state.json"

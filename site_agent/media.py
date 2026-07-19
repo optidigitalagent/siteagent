@@ -21,6 +21,186 @@ class MediaInputBlocked(RuntimeError):
     """Raised before design when publishable business media is unavailable."""
 
 
+class PreviewMediaIngestor:
+    """Download and prepare business-owned media for an isolated preview only.
+
+    Its manifest is intentionally incompatible with ``MediaPreparer``'s strict
+    production contract.  No field written here can authorize customer
+    production.
+    """
+
+    def __init__(
+        self,
+        *,
+        get=None,
+        uploader=None,
+        upload_to_cloudinary: bool = False,
+        timeout: int = 25,
+        max_assets: int = 24,
+        max_bytes: int = 30 * 1024 * 1024,
+    ) -> None:
+        self.get = get or requests.get
+        self.uploader = uploader
+        self.upload_to_cloudinary = upload_to_cloudinary
+        self.timeout = timeout
+        self.max_assets = max(1, max_assets)
+        self.max_bytes = max(1024, max_bytes)
+
+    def ingest(self, candidates: Iterable[dict], output_dir: Path, *, submitted_source_url: str) -> dict:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        originals = output_dir / "originals"
+        processed = output_dir / "processed"
+        originals.mkdir(exist_ok=True)
+        processed.mkdir(exist_ok=True)
+        media, rejected, seen_raw, seen_prepared = [], [], set(), set()
+
+        for index, candidate in enumerate(list(candidates)[: self.max_assets]):
+            url = str(candidate.get("url", "")).strip()
+            kind = str(candidate.get("kind", "image")).lower()
+            source_kind = str(candidate.get("source_kind", "business_social"))
+            if not self._public_url(url):
+                rejected.append({"url": url, "reason": "non_public_or_embedded_url"})
+                continue
+            if source_kind not in {"business_social", "business_web"}:
+                rejected.append({"url": url, "reason": "not_business_owned_media"})
+                continue
+            if kind == "video" and candidate.get("metadata_only", True):
+                digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
+                if digest in seen_raw:
+                    continue
+                seen_raw.add(digest)
+                media.append(self._entry(
+                    candidate, submitted_source_url, digest, kind="video", original_file="",
+                    processed_file="", width=int(candidate.get("width", 0) or 0),
+                    height=int(candidate.get("height", 0) or 0), download_status="metadata_only",
+                    processing={"method": "video_metadata", "crop": None},
+                ))
+                continue
+            try:
+                response = self.get(url, headers={"User-Agent": "Mozilla/5.0 SiteAgent preview intake"}, timeout=self.timeout)
+                response.raise_for_status()
+                raw = bytes(response.content)
+                if not raw or len(raw) > self.max_bytes:
+                    raise MediaInputBlocked("empty or oversized response")
+                raw_checksum = hashlib.sha256(raw).hexdigest()
+                if raw_checksum in seen_raw:
+                    continue
+                seen_raw.add(raw_checksum)
+                suffix = self._suffix(url, str(response.headers.get("Content-Type", "")), kind)
+                original = originals / f"{raw_checksum}{suffix}"
+                if not original.exists():
+                    original.write_bytes(raw)
+                if kind == "video":
+                    media.append(self._entry(
+                        candidate, submitted_source_url, raw_checksum, kind="video",
+                        original_file=str(original.relative_to(output_dir)), processed_file="",
+                        width=int(candidate.get("width", 0) or 0), height=int(candidate.get("height", 0) or 0),
+                        download_status="downloaded", processing={"method": "original_video", "crop": None},
+                    ))
+                    continue
+                entry, prepared_checksum = self._prepare_image(
+                    candidate, submitted_source_url, raw_checksum, original, processed, output_dir
+                )
+                if prepared_checksum in seen_prepared:
+                    continue
+                seen_prepared.add(prepared_checksum)
+                if self.upload_to_cloudinary:
+                    uploader = self.uploader or CloudinaryUploader()
+                    prepared_path = output_dir / entry["processed_file"]
+                    uploaded = uploader.upload(
+                        prepared_path,
+                        public_id=f"siteagent-preview/{hashlib.sha256(submitted_source_url.encode()).hexdigest()[:16]}/{raw_checksum[:24]}",
+                    )
+                    if isinstance(uploaded, str):
+                        uploaded = {"url": uploaded}
+                    entry.update(uploaded)
+                media.append(entry)
+            except Exception as exc:
+                rejected.append({"url": url, "reason": str(exc)})
+
+        images = sum(item["kind"] == "image" for item in media)
+        videos = sum(item["kind"] == "video" for item in media)
+        sufficient = images >= 6 or (images >= 4 and videos >= 1)
+        manifest = {
+            "schema_version": 1,
+            "purpose": "isolated_preview",
+            "submitted_source_url": submitted_source_url,
+            "media": media,
+            "media_count": len(media),
+            "image_count": images,
+            "video_count": videos,
+            "full_preview_media_sufficient": sufficient,
+            "composition_mode": "full_media" if sufficient else ("adapted_media" if media else "blocked"),
+            "rejected": rejected,
+            "production_policy": "preview authorisation never grants customer-production rights",
+        }
+        self._write_manifest(output_dir / "manifest.json", manifest)
+        if not media:
+            raise MediaInputBlocked("media-input checkpoint blocked: no provable business media remained after all fallbacks")
+        return manifest
+
+    def _prepare_image(self, candidate: dict, submitted_source_url: str, raw_checksum: str, original: Path, processed: Path, output_dir: Path) -> tuple[dict, str]:
+        try:
+            with Image.open(original) as source:
+                image = source.convert("RGB")
+        except Exception as exc:
+            raise MediaInputBlocked("download is not a supported image") from exc
+        crop = MediaPreparer._instagram_crop(image)
+        if crop.get("coordinates") and not crop.get("manual_review_required"):
+            image = image.crop(tuple(crop["coordinates"]))
+        width, height = image.size
+        if min(width, height) < 320:
+            raise MediaInputBlocked(f"image resolution {width}x{height} is below preview minimum")
+        prepared = processed / f"{raw_checksum[:24]}.jpg"
+        image.save(prepared, format="JPEG", quality=92, optimize=True)
+        prepared_checksum = hashlib.sha256(prepared.read_bytes()).hexdigest()
+        entry = self._entry(
+            candidate, submitted_source_url, raw_checksum, kind="image",
+            original_file=str(original.relative_to(output_dir)), processed_file=str(prepared.relative_to(output_dir)),
+            width=width, height=height, download_status="downloaded",
+            processing={"method": "deterministic_instagram_crop", "crop": crop, "prepared_checksum": prepared_checksum},
+        )
+        return entry, prepared_checksum
+
+    @staticmethod
+    def _entry(candidate: dict, submitted_source_url: str, checksum: str, *, kind: str, original_file: str, processed_file: str, width: int, height: int, download_status: str, processing: dict) -> dict:
+        source_kind = str(candidate.get("source_kind", "business_social"))
+        source_url = str(candidate.get("source_url") or submitted_source_url)
+        return {
+            "asset_id": checksum[:24], "kind": kind, "asset_url": str(candidate.get("url", "")),
+            "source_kind": source_kind, "source_url": source_url,
+            "user_authorized_for_preview": True, "allowed_for_customer_production": False,
+            # Legacy production flags are explicitly false so generic truthiness
+            # cannot accidentally promote a preview manifest.
+            "user_authorized": False, "allowed_for_public_site": False,
+            "original_checksum": checksum, "original_file": original_file, "processed_file": processed_file,
+            "width": width, "height": height, "download_status": download_status, "processing": processing,
+        }
+
+    @staticmethod
+    def _public_url(value: str) -> bool:
+        parsed = urlparse(value)
+        return not value.lower().startswith(("data:", "blob:", "javascript:")) and parsed.scheme in {"http", "https"} and bool(parsed.hostname)
+
+    @staticmethod
+    def _suffix(url: str, content_type: str, kind: str) -> str:
+        if kind == "video":
+            return ".webm" if "webm" in content_type else ".mp4"
+        content = content_type.lower()
+        if "png" in content:
+            return ".png"
+        if "webp" in content:
+            return ".webp"
+        suffix = Path(urlparse(url).path).suffix.lower()
+        return suffix if suffix in {".jpg", ".jpeg", ".png", ".webp"} else ".jpg"
+
+    @staticmethod
+    def _write_manifest(path: Path, manifest: dict) -> None:
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        temporary.replace(path)
+
+
 @dataclass(frozen=True)
 class MediaCandidate:
     path: Path | None = None
@@ -217,7 +397,7 @@ class MediaPreparer:
                 raise MediaInputBlocked("media-input checkpoint blocked: cached manifest contains a non-Cloudinary or wrong-account URL.")
 
 
-def authorised_media_assets(manifest: dict):
+def authorised_media_assets(manifest: dict, *, preview: bool = False):
     """Create Studio-readable media facts from the prepared, authorised manifest.
 
     This is intentionally one-way: public/scraped research URLs are never
@@ -228,12 +408,18 @@ def authorised_media_assets(manifest: dict):
 
     assets = []
     for item in manifest.get("media", []):
-        if not (
+        production_safe = (
             item.get("source_kind") == "business"
             and item.get("user_authorized") is True
             and item.get("allowed_for_public_site") is True
-            and str(item.get("url", "")).startswith("https://res.cloudinary.com/")
-        ):
+        )
+        preview_safe = (
+            preview
+            and item.get("source_kind") in {"business_social", "business_web"}
+            and item.get("user_authorized_for_preview") is True
+            and item.get("allowed_for_customer_production") is False
+        )
+        if not ((production_safe or preview_safe) and str(item.get("url", "")).startswith("https://res.cloudinary.com/")):
             continue
         width, height = int(item.get("width", 0) or 0), int(item.get("height", 0) or 0)
         if width < 480 or height < 480:
@@ -242,7 +428,11 @@ def authorised_media_assets(manifest: dict):
             url=str(item["url"]), kind=str(item.get("kind", "image")), asset_id=str(item.get("asset_id", "")),
             alt=str(item.get("alt") or item.get("original_filename") or "Business media"),
             recommended_use=str(item.get("recommended_use") or "gallery"), width=width, height=height,
-            source_kind="business", source_url=str(item.get("source_url", "")),
-            provenance_note=f"Authorised business media: {item.get('original_origin', '')}", portfolio_claim=True,
+            source_kind=str(item.get("source_kind", "business")), source_url=str(item.get("source_url", "")),
+            provenance_note=(
+                "Business-social media authorised only for this isolated preview; production rights not granted."
+                if preview_safe else f"Authorised business media: {item.get('original_origin', '')}"
+            ),
+            portfolio_claim=bool(production_safe),
         ))
     return assets
