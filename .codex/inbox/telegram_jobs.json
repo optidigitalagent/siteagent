@@ -1,6 +1,7 @@
 [
   {
     "id": "52fe9ecd726d41b8aafb13d23d729899",
+    "run_id": "52fe9ecd726d41b8aafb13d23d729899",
     "instagram_url": "https://www.instagram.com/eliz_de_fleur",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -9,10 +10,19 @@
     "updated_at": "2026-07-13T06:58:42.750608+00:00",
     "site_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur/site/index.html",
     "repo_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur",
-    "error": ""
+    "preview_url": "",
+    "requested_product_type": "full_commercial_site",
+    "error": "",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   },
   {
     "id": "d8176c55f451439cacf0e8a892ca97e7",
+    "run_id": "d8176c55f451439cacf0e8a892ca97e7",
     "instagram_url": "https://www.instagram.com/jet_yacht_rest_kyiv?igsh=OGw2cGpsZHZjeHh1",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -21,10 +31,19 @@
     "updated_at": "2026-07-14T07:14:24.062402+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+    "preview_url": "",
+    "requested_product_type": "full_commercial_site",
+    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   },
   {
     "id": "f684eed531f74dd8995b2a58ac77739e",
+    "run_id": "f684eed531f74dd8995b2a58ac77739e",
     "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -33,18 +52,35 @@
     "updated_at": "2026-07-18T19:19:22.643052+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": ""
+    "preview_url": "",
+    "requested_product_type": "full_commercial_site",
+    "error": "",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   },
   {
     "id": "053656c35b5d4ef58221c5be7171b625",
+    "run_id": "053656c35b5d4ef58221c5be7171b625",
     "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "pending",
+    "status": "running",
     "received_at": "2026-07-19T05:37:34.984210+00:00",
-    "updated_at": "2026-07-19T05:37:34.984223+00:00",
+    "updated_at": "2026-07-19T05:41:15.675105+00:00",
     "site_url": "",
     "repo_url": "",
-    "error": ""
+    "preview_url": "",
+    "requested_product_type": "full_commercial_site",
+    "error": "",
+    "run_dir": "",
+    "checkpoints": {},
+    "telegram_notification_status": "not_started",
+    "telegram_receipt": {},
+    "manual_resend_authorization": {},
+    "recovery_events": []
   }
 ]
