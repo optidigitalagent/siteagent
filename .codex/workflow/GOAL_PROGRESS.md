@@ -585,3 +585,40 @@ Live end-to-end verification requires local runtime credentials:
   prior accepted preview; brand cache checksums bind ownership provenance; and
   production rights materialize into a separate exact-ID manifest. Final
   independent verdict: no critical/high defect remains.
+
+## Preview-default and Amidental brand-fidelity completion (2026-07-19)
+
+- Resumed only the exact existing job/run
+  `053656c35b5d4ef58221c5be7171b625`; no duplicate queue item or run was
+  created. The old preview job `f684eed531f74dd8995b2a58ac77739e`
+  remains reconciled as historical preview metadata without a duplicate upload.
+- Brand Identity selected the official Instagram profile avatar as the logo at
+  high confidence (classifier score 90, cross-media confirmed). The accepted
+  recurring palette is `#389878`, `#F86888`, `#F8C8D8`, `#FFFFFF`, `#EFF7F4`,
+  `#1A1F1E`, `#5B6360`; all 11 account assets remain preview-only and production
+  media/logo rights remain blocking.
+- Materially rebuilt the Amidental site from three evidence-grounded concepts,
+  preserving the exact official logo and business media. Final structured
+  critic: 90/100, visual and business approved, technical pass, no critical/high
+  issue. Brand Fidelity: PASS. Acceptance is checksum-bound to the current site
+  tree and final desktop/tablet/mobile screenshots.
+- Published and live-verified only the isolated noindex Cloudflare Preview:
+  `https://227fe3c8.siteagent-preview-amidental-kiev-3a8654d4fd.pages.dev`.
+  Independent live audit confirmed HTTP 200, byte-identical staging/live HTML,
+  official-logo checksum match, crawler blocking, responsive interaction and no
+  console/network/link/overflow/CTA defect. Secret/local-path/Telegram-identity
+  scan returned zero matches.
+- Queue is durably `preview_ready` with dedicated preview project, branch and
+  deployment ID. `site_url` and `repo_url` are empty, Telegram is `not_started`,
+  and production authorization is absent. The stale interrupted
+  `creative_fixer=running` task marker was normalized to `completed` after the
+  later approved critic/acceptance/deployment checkpoints.
+- Final regression: `python -m unittest discover -s tests -q` ran 200 tests in
+  92.613 seconds, all passing with one credential-gated Cloudflare production
+  smoke skipped. `compileall`, `pip check`, local smoke build, `git diff
+  --check`, live browser QA and secret scan all passed. A first regression
+  attempt exposed local disk exhaustion in the 25 MiB preflight boundary test;
+  only reproducible npm cache was cleared, then the full suite passed.
+- Final checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_READY`. Production promotion,
+  custom domain and Telegram delivery were not performed and remain separately
+  blocked.

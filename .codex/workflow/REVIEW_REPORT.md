@@ -1,5 +1,29 @@
 ﻿# Review Report
 
+## Amidental isolated-preview final audit (2026-07-19)
+
+APPROVE within isolated-preview scope; critical/high issues: 0.
+
+- Exact job/run `053656c35b5d4ef58221c5be7171b625` reached
+  `preview_ready` at
+  `https://227fe3c8.siteagent-preview-amidental-kiev-3a8654d4fd.pages.dev`.
+- Live HTML is byte-identical to accepted staging. Desktop/tablet/mobile checks
+  confirm the offer and CTA in the first viewport, persistent navigation,
+  working mobile menu/FAQ, loaded media and no overflow, console/network/link or
+  CTA defect.
+- Brand Fidelity passed: the rendered logo checksum equals the processed
+  official Instagram profile avatar; the verified green/pink/neutral palette is
+  present and no unrelated identity replaced it.
+- The final structured critic approved at 90/100. Three medium and two low
+  observations remain about headline differentiation, repeated CTA wording,
+  gallery storytelling, editorial labels and placement of attributed 20-year
+  experience; none is critical/high or blocks this preview gate.
+- Preview isolation passed: dedicated project/branch, HTML and response noindex,
+  crawler-blocking robots, empty production URL fields, absent production
+  authorization and Telegram `not_started`. Production media/logo rights remain
+  unconfirmed and blocking for any later promotion.
+- Published-package secret, local-path and Telegram-identity scan: zero hits.
+
 ## Cloudflare Pages Publishing Review
 
 No critical or high implementation findings after local review.

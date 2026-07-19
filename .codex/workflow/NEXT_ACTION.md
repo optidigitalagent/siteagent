@@ -1,6 +1,37 @@
 # Next Action
 
-Checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_AND_BRAND_FIDELITY_REBUILD_REQUIRED`.
+Checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_READY`.
+
+The preview-default and brand-fidelity recovery is complete for the exact job
+and run `053656c35b5d4ef58221c5be7171b625`. No automatic next action remains in
+the preview lane.
+
+Accepted isolated preview:
+`https://227fe3c8.siteagent-preview-amidental-kiev-3a8654d4fd.pages.dev`.
+
+The queue is `preview_ready`; production URL fields are empty, Telegram remains
+`not_started`, and production authorization is absent. Do not promote, attach a
+custom domain, or send Telegram delivery unless a later user explicitly invokes
+the separate `production-promote --job-id 053656c35b5d4ef58221c5be7171b625
+--authorize-production` lane and all production rights/contact/copy/preflight
+gates pass.
+
+Completed evidence:
+
+- normal `go` is exactly `production=False, preview=True`;
+- legacy preview metadata was reconciled without another upload;
+- Brand Identity ran before Design Director and Brand Fidelity passed;
+- exact same-run recovery produced critic approval 90/100 with no critical/high
+  issue and acceptance bound to the current site checksum;
+- live desktop/tablet/mobile browser QA and an independent published-preview
+  audit passed;
+- 200 tests passed with one credential-gated production smoke skipped;
+- compileall, pip check, smoke build, diff validation and secret scan passed.
+
+Production, custom-domain changes and Telegram delivery remain forbidden for
+this completed preview recovery.
+
+## Superseded recovery instructions
 
 The fresh Telegram job `053656c35b5d4ef58221c5be7171b625` was incorrectly
 routed through the production lane by `run_pending_job(... production=True)`.
