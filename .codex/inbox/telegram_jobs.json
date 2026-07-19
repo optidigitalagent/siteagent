@@ -103,9 +103,9 @@
     "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "failed",
+    "status": "running",
     "received_at": "2026-07-19T05:37:34.984210+00:00",
-    "updated_at": "2026-07-19T08:54:32.788425+00:00",
+    "updated_at": "2026-07-19T08:58:27.790683+00:00",
     "site_url": "",
     "repo_url": "",
     "preview_url": "",
@@ -113,7 +113,7 @@
     "preview_project_name": "",
     "preview_branch": "",
     "requested_product_type": "full_commercial_site",
-    "error": "codex_studio_failed_retryable: Codex Studio concept_generation timed out after 900 seconds; preserved state is retryable.",
+    "error": "",
     "run_dir": "runs\\053656c35b5d4ef58221c5be7171b625",
     "checkpoints": {},
     "telegram_notification_status": "not_started",
@@ -123,7 +123,8 @@
     "recovery_events": [
       "preview_reclaimed:2026-07-19T06:00:37.958432+00:00:media-input checkpoint blocked: provide runs\\053656c35b5d4ef58221c5be7171b625\\media_input\\manifest.json with authorised media entries.",
       "preview_reclaimed:2026-07-19T08:08:00.247864+00:00:BLOCKED_INSUFFICIENT_BUSINESS_CONTENT: product_identified; language_confirmed; content_sufficient_for_full_site",
-      "preview_reclaimed:2026-07-19T08:37:40.559153+00:00:codex_studio_failed_retryable: Codex Studio concept_generation timed out after 900 seconds; preserved state is retryable."
+      "preview_reclaimed:2026-07-19T08:37:40.559153+00:00:codex_studio_failed_retryable: Codex Studio concept_generation timed out after 900 seconds; preserved state is retryable.",
+      "preview_reclaimed:2026-07-19T08:58:27.790683+00:00:codex_studio_failed_retryable: Codex Studio concept_generation timed out after 900 seconds; preserved state is retryable."
     ],
     "recovery_eligible": true,
     "recovery_failure_code": "PREVIEW_RECOVERABLE_FAILURE",
