@@ -1,7 +1,6 @@
 [
   {
     "id": "52fe9ecd726d41b8aafb13d23d729899",
-    "run_id": "52fe9ecd726d41b8aafb13d23d729899",
     "instagram_url": "https://www.instagram.com/eliz_de_fleur",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -10,19 +9,10 @@
     "updated_at": "2026-07-13T06:58:42.750608+00:00",
     "site_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur/site/index.html",
     "repo_url": "file:///C:/Users/Admin/siteagent/runs/20260713-065447-eliz_de_fleur",
-    "preview_url": "",
-    "requested_product_type": "full_commercial_site",
-    "error": "",
-    "run_dir": "",
-    "checkpoints": {},
-    "telegram_notification_status": "not_started",
-    "telegram_receipt": {},
-    "manual_resend_authorization": {},
-    "recovery_events": []
+    "error": ""
   },
   {
     "id": "d8176c55f451439cacf0e8a892ca97e7",
-    "run_id": "d8176c55f451439cacf0e8a892ca97e7",
     "instagram_url": "https://www.instagram.com/jet_yacht_rest_kyiv?igsh=OGw2cGpsZHZjeHh1",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -31,19 +21,10 @@
     "updated_at": "2026-07-14T07:14:24.062402+00:00",
     "site_url": "",
     "repo_url": "",
-    "preview_url": "",
-    "requested_product_type": "full_commercial_site",
-    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
-    "run_dir": "",
-    "checkpoints": {},
-    "telegram_notification_status": "not_started",
-    "telegram_receipt": {},
-    "manual_resend_authorization": {},
-    "recovery_events": []
+    "error": "Page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
   },
   {
     "id": "f684eed531f74dd8995b2a58ac77739e",
-    "run_id": "f684eed531f74dd8995b2a58ac77739e",
     "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
@@ -52,31 +33,18 @@
     "updated_at": "2026-07-18T19:19:22.643052+00:00",
     "site_url": "",
     "repo_url": "",
-    "preview_url": "https://748478b0.siteagent-preview-amidental-kiev-088e5323bc.pages.dev",
-    "requested_product_type": "full_commercial_site",
-    "error": "",
-    "run_dir": "runs\\f684eed531f74dd8995b2a58ac77739e",
-    "checkpoints": {
-      "ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW": "completed_and_valid",
-      "research_completed": "completed_and_valid",
-      "media_ingested": "11_business_social_images_preview_only",
-      "creative_acceptance_completed": "approved_94",
-      "technical_gate_completed": "passed_desktop_tablet_mobile",
-      "live_browser_qa_completed": "passed_desktop_mobile",
-      "preview_deployment_completed": "verified_noindex"
-    },
-    "telegram_notification_status": "not_started",
-    "telegram_receipt": {},
-    "manual_resend_authorization": {},
-    "recovery_events": [
-      "preview_reclaimed:2026-07-18T16:22:11.480771+00:00:media-input checkpoint blocked: provide runs\\f684eed531f74dd8995b2a58ac77739e\\media_input\\manifest.json with authorised media entries.",
-      "preview_reclaimed:2026-07-18T17:42:27.286211+00:00:codex_studio_failed_retryable: Codex Studio generation failed: 2026-07-18T17:41:15.751946Z ERROR codex_models_manager::cache: failed to load models cache: missing field `supports_reasoning_summaries` at line 88 column 5\nOpenAI Codex v0.144.5\n--------\nworkdir: C:\\Users\\Admin\\siteagent\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: workspace-write [workdir, /tmp, $TMPDIR]\nreasoning effort: high\nreasoning summaries: none\nsession id: 019f7651-6f06-7881-907a-92b688bc1306\n--------\nuser\nU",
-      "preview_reclaimed:2026-07-18T18:00:30.872961+00:00:codex_studio_fixer_failed_retryable: Art Director report lacks required screenshot evidence after fixer.",
-      "preview_reclaimed:2026-07-18T18:01:50.723262+00:00:codex_studio_failed_retryable: Codex Studio generation failed: OpenAI Codex v0.144.5\n--------\nworkdir: C:\\Users\\Admin\\siteagent\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: workspace-write [workdir, /tmp, $TMPDIR]\nreasoning effort: high\nreasoning summaries: none\nsession id: 019f7663-10e0-73d3-8dfa-1767141c3d55\n--------\nuser\nUse $siteagent-web-studio to expand the selected concept without changing its central creative idea. Read runs/f684eed531f74dd8995b2a58ac77739e/studio/concept",
-      "preview_reclaimed:2026-07-18T18:02:23.425525+00:00:codex_studio_failed_retryable: Full creative build failed initial technical validation; preserved staging is retryable.",
-      "preview_reclaimed:2026-07-18T18:22:15.656126+00:00:codex_studio_fixer_failed_retryable: Page scope compliance failed: full commercial coverage is missing: commercial_decision, objection_handling",
-      "preview_reclaimed:2026-07-18T18:33:32.244160+00:00:Acceptance audit blocked deployment: Art Director did not approve the screenshot-led Studio build.; Commercial usefulness did not pass the mandatory 85-point gate.",
-      "preview_ready:2026-07-18T19:19:22.643052+00:00"
-    ]
+    "error": ""
+  },
+  {
+    "id": "053656c35b5d4ef58221c5be7171b625",
+    "instagram_url": "https://www.instagram.com/amidental_kiev?igsh=MXExMDhtM3d2d3llcw==",
+    "chat_id": 5674963513,
+    "user_id": 5674963513,
+    "status": "pending",
+    "received_at": "2026-07-19T05:37:34.984210+00:00",
+    "updated_at": "2026-07-19T05:37:34.984223+00:00",
+    "site_url": "",
+    "repo_url": "",
+    "error": ""
   }
 ]
