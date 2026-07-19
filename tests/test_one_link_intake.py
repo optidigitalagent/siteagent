@@ -139,10 +139,49 @@ class OneLinkResearchTests(unittest.TestCase):
         self.assertEqual(result.video_urls, ["https://cdn.example/reel.mp4"])
         self.assertTrue(result.has_full_preview_media)
 
+    def test_meta_platform_footer_is_not_an_official_business_site_or_media_source(self) -> None:
+        html = b"""<html><head><title>Atelier | Instagram</title></head><body>
+        <a href='https://about.meta.com/'>Meta</a>
+        <a href='https://www.meta.com/quest/'>Quest</a>
+        <img src='https://cdninstagram.com/t51.82787-19/avatar.jpg'>
+        </body></html>"""
+
+        result = OneLinkResearcher(
+            scraper=InstagramScraper(get=lambda *args, **kwargs: _Response(html)),
+            web_fallback=lambda url: PublicSource(
+                url="https://search.example", source_kind="web_search",
+                outbound_urls=("https://about.meta.com/",),
+            ),
+            browser_fallback=lambda url: PublicSource(
+                url=url,
+                source_kind="browser",
+                image_urls=(
+                    "https://cdninstagram.com/t51.82787-15/post.jpg",
+                    "https://cdninstagram.com/t51.82787-15/other-account-post.jpg",
+                    "https://lookaside.fbsbx.com/elementpath/media/?media_id=1",
+                    "https://scontent.example/t39.8562-6/rayban.jpg",
+                ),
+                outbound_urls=("https://www.meta.com/ai-glasses/",),
+                media_ownership=((
+                    "https://cdninstagram.com/t51.82787-15/post.jpg",
+                    "submitted_profile_alt_attribution",
+                ),),
+            ),
+        ).collect("https://instagram.com/atelier")
+
+        self.assertEqual(result.official_site_urls, [])
+        candidates = result.media_candidates()
+        self.assertEqual([item["url"] for item in candidates], [
+            "https://cdninstagram.com/t51.82787-19/avatar.jpg",
+            "https://cdninstagram.com/t51.82787-15/post.jpg",
+        ])
+        self.assertTrue(all(item["source_record_id"] for item in candidates))
+        self.assertEqual(candidates[0]["source_role"], "profile_avatar")
+
 
 class PreviewMediaIntakeTests(unittest.TestCase):
     def test_auto_writes_manifest_preserves_originals_and_never_authorizes_production(self) -> None:
-        payloads = {f"https://cdn.example/{index}.jpg": _image_bytes((index * 20, 50, 100)) for index in range(6)}
+        payloads = {f"https://cdninstagram.com/t51.82787-15/{index}.jpg": _image_bytes((index * 20, 50, 100)) for index in range(6)}
 
         def get(url, **kwargs):
             return _Response(payloads[url], content_type="image/jpeg")
@@ -174,7 +213,7 @@ class PreviewMediaIntakeTests(unittest.TestCase):
                 MediaPreparer().prepare(loaded, Path(temp) / "production")
 
     def test_metadata_only_video_is_provenance_not_studio_ready_media(self) -> None:
-        urls = [f"https://cdn.example/{index}.jpg" for index in range(4)]
+        urls = [f"https://cdninstagram.com/t51.82787-15/{index}.jpg" for index in range(4)]
 
         def get(url, **kwargs):
             index = int(url.rsplit("/", 1)[-1].split(".", 1)[0])
@@ -182,7 +221,7 @@ class PreviewMediaIntakeTests(unittest.TestCase):
 
         candidates = [{"url": url, "kind": "image", "source_kind": "business_social"} for url in urls]
         candidates.append({
-            "url": "https://cdn.example/reel.mp4", "kind": "video", "metadata_only": True,
+            "url": "https://cdninstagram.com/o1/v/t16/reel.mp4", "kind": "video", "metadata_only": True,
             "source_kind": "business_social", "width": 1080, "height": 1920,
         })
         with tempfile.TemporaryDirectory() as temp:
@@ -196,7 +235,7 @@ class PreviewMediaIntakeTests(unittest.TestCase):
         self.assertFalse(manifest["full_preview_media_sufficient"])
         self.assertEqual(manifest["composition_mode"], "adapted_media")
         metadata = manifest["metadata_only_media"][0]
-        self.assertEqual(metadata["asset_url"], "https://cdn.example/reel.mp4")
+        self.assertEqual(metadata["asset_url"], "https://cdninstagram.com/o1/v/t16/reel.mp4")
         self.assertEqual(metadata["source_kind"], "business_social")
         self.assertTrue(metadata["user_authorized_for_preview"])
         self.assertFalse(metadata["allowed_for_customer_production"])
@@ -216,10 +255,30 @@ class PreviewMediaIntakeTests(unittest.TestCase):
             self.assertEqual(manifest["media_count"], 0)
             self.assertEqual(manifest["composition_mode"], "blocked")
 
+    def test_preview_ingestor_rejects_platform_owned_media(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "media_input"
+            with self.assertRaisesRegex(MediaInputBlocked, "no provable business media"):
+                PreviewMediaIngestor(get=lambda *args, **kwargs: _Response(_image_bytes((0, 0, 255)), content_type="image/jpeg")).ingest(
+                    [{
+                        "url": "https://lookaside.fbsbx.com/elementpath/media/?media_id=1",
+                        "kind": "image",
+                        "source_kind": "business_social",
+                        "source_role": "platform_chrome",
+                    }],
+                    output,
+                    submitted_source_url="https://instagram.com/atelier",
+                )
+            manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["media_count"], 0)
+            self.assertEqual(manifest["rejected"][0]["reason"], "platform_owned_media_is_not_business_evidence")
+
     def test_bootstrap_writes_source_ledger_and_media_manifest(self) -> None:
+        urls = tuple(f"https://cdninstagram.com/t51.82787-15/{index}.jpg" for index in range(6))
         source = PublicSource(
             url="https://instagram.com/atelier", source_kind="browser", title="Atelier",
-            image_urls=tuple(f"https://cdn.example/{index}.jpg" for index in range(6)),
+            image_urls=urls,
+            media_ownership=tuple((url, "submitted_profile_alt_attribution") for url in urls),
         )
         researcher = OneLinkResearcher(
             scraper=InstagramScraper(get=lambda *args, **kwargs: _Response(b"<html></html>")),

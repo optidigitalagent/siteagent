@@ -165,7 +165,16 @@ def write_markdown(path: Path, title: str, payload: dict) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def implementation_package(*, business_research: dict, media_manifest: dict, design_brief: dict, references: list[dict], target: str = "production") -> dict:
+def implementation_package(
+    *,
+    business_research: dict,
+    media_manifest: dict,
+    design_brief: dict,
+    references: list[dict],
+    brand_identity: dict | None = None,
+    brand_assets_manifest: dict | None = None,
+    target: str = "production",
+) -> dict:
     research = business_research.get("research", {})
     required_research = (
         "product_identity", "primary_language", "content_themes", "verified_facts",
@@ -177,12 +186,23 @@ def implementation_package(*, business_research: dict, media_manifest: dict, des
     )
     missing = [f"research.{key}" for key in required_research if key not in research]
     missing.extend(f"design.{key}" for key in required_design if key not in design_brief)
+    brand_identity = brand_identity or {}
+    brand_assets_manifest = brand_assets_manifest or {}
+    if not brand_identity.get("brand_identity_checksum"):
+        missing.append("brand_identity.brand_identity_checksum")
+    package_logo = brand_assets_manifest.get("logo", {})
+    if package_logo.get("available") is True and not package_logo.get("processed_checksum"):
+        missing.append("brand_assets_manifest.logo.processed_checksum")
+    if design_brief.get("brand_identity_checksum") != brand_identity.get("brand_identity_checksum"):
+        missing.append("design.brand_identity_checksum")
     package = {
         "schema_version": 3,
         "requested_product_type": research.get("requested_product_type", "full_commercial_site"),
         "delivery_target": target,
         "business_research": business_research,
         "authorised_media_manifest": media_manifest,
+        "brand_identity": brand_identity,
+        "brand_assets_manifest": brand_assets_manifest,
         "design_implementation_brief": design_brief,
         "selected_references": references,
         "commercial_completeness_contract": {
@@ -201,11 +221,17 @@ def implementation_package(*, business_research: dict, media_manifest: dict, des
             "media_manifest": checksum(media_manifest),
             "design_implementation_brief": checksum(design_brief),
             "selected_references": checksum(references),
+            "brand_identity": checksum(brand_identity),
+            "brand_assets_manifest": checksum(brand_assets_manifest),
         },
         "acceptance_contract": {
             "use_only_authorised_cloudinary_business_media": True,
             "isolated_preview_business_social_media_allowed": target == "isolated_preview",
             "preview_media_never_implies_production_rights": True,
+            "official_logo_must_be_checksum_matched_when_available": True,
+            "no_logo_fallback_must_not_invent_a_mark": True,
+            "high_confidence_brand_palette_overrides_reference_colours": True,
+            "brand_fidelity_audit_required": True,
             "no_reference_copying": True,
             "first_viewport_requires_offer_and_cta": True,
             "persistent_navigation_required_on_scrollable_pages": True,

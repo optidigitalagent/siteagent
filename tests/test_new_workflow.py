@@ -119,12 +119,19 @@ class NewWorkflowContractTests(unittest.TestCase):
             validate_role_providers(bad)
 
     def test_implementation_package_is_checksummed_and_contains_no_template_instruction(self) -> None:
+        brand = {"brand_identity_checksum": "brand-checksum", "palette": {"brand_primary": {"hex": "#22AA88"}}}
+        brand_assets = {"logo": {"processed_checksum": "logo-checksum", "processed_path": "brand_input/logo_processed.png"}}
         package = implementation_package(
             business_research={"research": {"business_name": "Orange"}}, media_manifest={"media": []},
-            design_brief={"central_idea": "a specific studio visit"}, references=[{"id": "one"}],
+            design_brief={"central_idea": "a specific studio visit", "brand_identity_checksum": "brand-checksum"}, references=[{"id": "one"}],
+            brand_identity=brand,
+            brand_assets_manifest=brand_assets,
         )
         self.assertEqual(len(package["sha256"]), 64)
         self.assertTrue(package["acceptance_contract"]["no_reference_copying"])
+        self.assertEqual(package["brand_identity"], brand)
+        self.assertEqual(package["brand_assets_manifest"], brand_assets)
+        self.assertTrue(package["acceptance_contract"]["brand_fidelity_audit_required"])
 
     def test_workflow_markdown_is_a_readable_handoff_not_json_fence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

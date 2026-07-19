@@ -60,6 +60,8 @@ class DesignDirector:
         research: BusinessResearch,
         media_manifest: dict,
         references: list[dict],
+        brand_identity: dict,
+        brand_assets_manifest: dict,
         *,
         scope: str,
     ) -> DesignImplementationBrief:
@@ -74,16 +76,32 @@ class DesignDirector:
             {key: item.get(key) for key in ("id", "title", "traits", "business_context", "audience", "conversion_goal", "reusable_cross_category_traits", "learn", "do_not_copy", "selection_rationale")}
             for item in references
         ]
-        return self.llm.structured(
+        result = self.llm.structured(
             system=prompts.DESIGN_DIRECTOR_SYSTEM,
             user=prompts.DESIGN_DIRECTOR_USER.format(
                 research_json=research.model_dump_json(indent=2),
                 media_json=__import__("json").dumps({"media": compact_media}, ensure_ascii=False, indent=2),
                 references_json=__import__("json").dumps(compact_references, ensure_ascii=False, indent=2),
+                brand_identity_json=__import__("json").dumps(brand_identity, ensure_ascii=False, indent=2),
+                brand_assets_json=__import__("json").dumps(brand_assets_manifest, ensure_ascii=False, indent=2),
                 scope=scope,
             ),
             schema=DesignImplementationBrief,
         )
+        result.brand_identity_checksum = str(brand_identity.get("brand_identity_checksum", ""))
+        if not result.brand_application.strip():
+            palette = brand_identity.get("palette", {})
+            logo_instruction = (
+                "Render the checksum-bound official logo unchanged and "
+                if brand_assets_manifest.get("logo", {}).get("available") is True
+                else "Use plain business-name text without inventing a logo and "
+            )
+            result.brand_application = (
+                logo_instruction + "build hierarchy from "
+                f"{palette.get('brand_primary', {}).get('hex', '')} and "
+                f"{palette.get('brand_secondary', {}).get('hex', '')}; references cannot override the verified identity."
+            )
+        return result
 
 
 class StrategyAgent:

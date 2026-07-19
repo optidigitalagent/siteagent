@@ -64,6 +64,12 @@ class PreviewMediaIngestor:
             if source_kind not in {"business_social", "business_web"}:
                 rejected.append({"url": url, "reason": "not_business_owned_media"})
                 continue
+            if candidate.get("source_role") == "platform_chrome" or self._platform_owned_url(url):
+                rejected.append({"url": url, "reason": "platform_owned_media_is_not_business_evidence"})
+                continue
+            if source_kind == "business_social" and not self._verified_instagram_media_url(url):
+                rejected.append({"url": url, "reason": "unverified_instagram_media_path"})
+                continue
             if kind == "video" and candidate.get("metadata_only", True):
                 digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
                 if digest in seen_raw:
@@ -173,6 +179,9 @@ class PreviewMediaIngestor:
         return {
             "asset_id": checksum[:24], "kind": kind, "asset_url": str(candidate.get("url", "")),
             "source_kind": source_kind, "source_url": source_url,
+            "source_record_id": str(candidate.get("source_record_id", "")),
+            "source_role": str(candidate.get("source_role", "unknown_business_media")),
+            "business_link_confidence": str(candidate.get("business_link_confidence", "medium")),
             "user_authorized_for_preview": True, "allowed_for_customer_production": False,
             # Legacy production flags are explicitly false so generic truthiness
             # cannot accidentally promote a preview manifest.
@@ -185,6 +194,30 @@ class PreviewMediaIngestor:
     def _public_url(value: str) -> bool:
         parsed = urlparse(value)
         return not value.lower().startswith(("data:", "blob:", "javascript:")) and parsed.scheme in {"http", "https"} and bool(parsed.hostname)
+
+    @staticmethod
+    def _platform_owned_url(value: str) -> bool:
+        parsed = urlparse(str(value or ""))
+        host = (parsed.hostname or "").lower()
+        lowered = str(value or "").lower()
+        return (
+            "lookaside.fbsbx.com/elementpath" in lowered
+            or "/t39.8562-6/" in lowered
+            or host.endswith("fbcdn.net")
+            or host.endswith("fbsbx.com")
+        )
+
+    @staticmethod
+    def _verified_instagram_media_url(value: str) -> bool:
+        parsed = urlparse(str(value or ""))
+        host = (parsed.hostname or "").lower()
+        path = parsed.path.lower()
+        return host.endswith("cdninstagram.com") and (
+            "/t51.82787-15/" in path
+            or "/t51.82787-19/" in path
+            or "/t16/" in path
+            or "/t50.2886-16/" in path
+        )
 
     @staticmethod
     def _suffix(url: str, content_type: str, kind: str) -> str:

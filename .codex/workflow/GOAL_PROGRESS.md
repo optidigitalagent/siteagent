@@ -1,5 +1,32 @@
 ﻿# Goal Progress
 
+## Explicit go: Amidental production input gate (2026-07-19)
+
+- Executed `python -m site_agent.cli go` from the user's explicit command. The
+  CLI claimed the newer pending job `053656c35b5d4ef58221c5be7171b625` and
+  persisted its Research Strategist artifacts and checkpoints.
+- The run stopped fail-closed at `media_input_blocked`: no production-authorised
+  media manifest exists, and research records the production scope as blocked
+  pending confirmed identity, offer, language/location, contacts and conversion
+  facts. The queue item is `failed` with the resumable run directory preserved.
+- No site output, Cloudflare production upload, custom-domain mutation or
+  Telegram success notification was created. The worktree remained clean after
+  the CLI invocation.
+- The prior Amidental run `f684eed531f74dd8995b2a58ac77739e` remains
+  `preview_ready`; its verified noindex preview and 11 preview-only media assets
+  were not changed or promoted to production rights.
+- Recovery must reuse the failed job/run after explicit confirmation of current
+  contact/business facts, production CTA/copy and production media rights. It
+  must not enqueue a third copy or infer production authorisation from the
+  existing preview.
+- Independent read-only verification found a pre-existing high durability
+  inconsistency: the older job remains `preview_ready`, and its exact run,
+  verified deployment artifact and live noindex URL are intact, but its
+  queue-level `preview_url`, `run_dir`, checkpoints and recovery events are
+  empty. This invocation did not redeploy or mutate those preview artifacts.
+  Queue metadata must be repaired only from the verified existing run and
+  covered by a recovery regression before production work resumes.
+
 ## Autonomous reference-discovery migration (2026-07-16)
 
 - Invalidated `references/site_designs/human_review/human_review_decisions.json` as accidental
@@ -524,3 +551,37 @@ Live end-to-end verification requires local runtime credentials:
 - Final recovery-branch regression passed: 177 tests, with only the explicit
   credential-gated Cloudflare production smoke skipped. `compileall`, `pip check`,
   the local smoke build, diff validation and the patch secret-pattern scan passed.
+
+## Preview-default and brand-fidelity implementation (2026-07-19)
+
+- Replaced the implicit production `go` path with an isolated preview lane:
+  `production=False, preview=True`. Preview completion writes only preview
+  metadata and cannot notify Telegram, set production URLs or mark a job done.
+- Added an explicit `production-promote --job-id ... --authorize-production`
+  command. It fails closed unless an exact job/run-bound authorization artifact
+  confirms production approval, media rights, contact/CTA copy, preflight and
+  live-QA readiness.
+- Added durable preview recovery metadata plus a no-upload reconciliation path
+  for legacy `preview_ready` jobs. The current insufficient-content failure is
+  classified as recoverable in the same job/run.
+- Added a mandatory deterministic Brand Identity Analyzer before Design
+  Director, exact official-avatar logo preservation, cross-media palette
+  analysis, target-bound brand provenance and a checksum-bound independent
+  Brand Fidelity Auditor before acceptance.
+- Added same-run intake migration that removes Meta platform decoration while
+  retaining the 11 already-isolated Amidental Cloudinary assets. This avoids a
+  second scrape/upload and gives the preserved profile avatar the explicit
+  `official_profile_avatar` role.
+- Regression evidence so far: all 196 discovered tests resolve across bounded
+  groups (195 passed, one credential-gated Cloudflare production smoke skipped).
+  Focused recovery/brand tests, `compileall`, `pip check`, smoke build and diff
+  validation pass. Live same-run recovery and the new isolated preview remain
+  the next incomplete checkpoint; production and Telegram delivery remain off.
+- Independent adversarial review initially found six high-severity bypasses.
+  All were corrected and reproduced again: ordinary portraits are not logos;
+  no-logo sites cannot invent a visual mark; inline/CSS-hidden logo tokens and
+  tiny colour specks fail; exact-logo screenshot presence is spatially checked;
+  Instagram media needs account-scoped DOM ownership or a checksum match to a
+  prior accepted preview; brand cache checksums bind ownership provenance; and
+  production rights materialize into a separate exact-ID manifest. Final
+  independent verdict: no critical/high defect remains.

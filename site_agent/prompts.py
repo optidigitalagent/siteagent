@@ -60,6 +60,15 @@ the first desktop and mobile viewport. Do not invent claims, media or proof.
 The embedded compatibility strategy/site_spec are validation data only, never a
 category layout instruction.
 
+The verified brand identity package is a higher-priority constraint than any
+reference or category convention. When logo.available is true, use the exact
+official logo without redraw, recolour or distortion; when it is false, use a
+plain text business name and invent no mark. Keep the high-confidence
+primary/secondary palette and record how it governs the site in
+`brand_application`; return the supplied
+`brand_identity_checksum` unchanged. A low-confidence palette must use the
+package's conservative fallback and remain a production blocker.
+
 The requested product type is immutable. For micro_site, write a compact
 three-section decision path (offer, proof/process, conversion) with no padded
 gallery or full-site-only sections. Never expand it because the media count is
@@ -74,6 +83,12 @@ DESIGN_DIRECTOR_USER = """Business research:
 
 Authorised media manifest:
 {media_json}
+
+Verified brand identity package:
+{brand_identity_json}
+
+Verified brand assets manifest:
+{brand_assets_json}
 
 Trait-relevant references:
 {references_json}

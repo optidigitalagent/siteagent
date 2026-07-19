@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from site_agent.acceptance import AcceptanceAuditor
+from site_agent.brand import BrandFidelityAuditor, BrandIdentityAnalyzer, brand_media_checksum
 from site_agent.agents import DesignDirector, FixerAgent, ResearchAgent, ResearchStrategist, SiteSpecAgent, StrategyAgent
 from site_agent.builder import SiteBuilder
 from site_agent.config import settings
@@ -31,7 +33,9 @@ from site_agent.llm import LLMClient
 from site_agent.media import MediaInputBlocked, MediaPreparer, PreviewMediaIngestor, authorised_media_assets
 from site_agent.models import (
     AcceptanceAuditResult,
+    CritiqueIssue,
     CritiqueReport,
+    IssueSeverity,
     PublishResult,
     ResearchBrief,
     SiteSpec,
@@ -51,7 +55,7 @@ class GenerationBlocked(RuntimeError):
     pass
 
 
-RESEARCH_PIPELINE_VERSION = "one-link-preview-v1"
+RESEARCH_PIPELINE_VERSION = "one-link-preview-v2-brand-provenance"
 
 
 @dataclass
@@ -137,6 +141,14 @@ class SiteAgentOrchestrator:
                 validate_role_providers()
                 normalized_url, _ = normalize_business_source(instagram_url)
                 intake = self._read_json(reports_dir / "00_one_link_intake.json") if preview else None
+                if preview and intake is not None:
+                    intake, upgraded = self._upgrade_cached_preview_intake(
+                        intake=intake,
+                        normalized_url=normalized_url,
+                        run_dir=run_dir,
+                    )
+                    if upgraded:
+                        write_json(reports_dir / "00_one_link_intake.json", intake)
                 if preview and (
                     intake is None
                     or intake.get("pipeline_version") != RESEARCH_PIPELINE_VERSION
@@ -153,13 +165,20 @@ class SiteAgentOrchestrator:
                     self._checkpoint(reports_dir, "one_link_intake_completed", "media_input_created")
                 business = self._read_json(reports_dir / "01_business_research.json")
                 research_provenance = self._read_json(reports_dir / "01_business_research.provenance.json")
+                delivery_target = "isolated_preview" if preview else "production"
                 cached_source = ""
                 if business is not None:
                     try:
                         cached_source, _ = normalize_business_source(business.get("research", {}).get("instagram_url", ""))
                     except ValueError:
                         cached_source = ""
-                if business is None or cached_source != normalized_url or research_provenance is None or (preview and research_provenance.get("pipeline_version") != RESEARCH_PIPELINE_VERSION):
+                if (
+                    business is None
+                    or cached_source != normalized_url
+                    or research_provenance is None
+                    or research_provenance.get("pipeline_version") != RESEARCH_PIPELINE_VERSION
+                    or research_provenance.get("delivery_target") != delivery_target
+                ):
                     if self.research_strategist is None:
                         self.research_strategist = ResearchStrategist(LLMClient(provider=settings.research_strategist_provider))
                     public_context = __import__("json").dumps((intake or {}).get("research", {}), ensure_ascii=False, indent=2)
@@ -171,12 +190,26 @@ class SiteAgentOrchestrator:
                     write_markdown(reports_dir / "business_research.md", "Business research", business)
                     provenance = role_provenance(role="Research Strategist", provider=self.research_strategist.llm.provider, model=self.research_strategist.llm.model, prompt_version="research-strategist-v2-one-link", prompt={"role": "research_strategist"}, inputs={"source_url": normalized_url, "source_ledger": (intake or {}).get("research", {}).get("source_ledger", [])}, output=business)
                     provenance["pipeline_version"] = RESEARCH_PIPELINE_VERSION
+                    provenance["delivery_target"] = delivery_target
                     write_json(reports_dir / "01_business_research.provenance.json", provenance)
+                elif preview:
+                    # Preview facts and content depth are a target-bound
+                    # contract. Never let a cached production blocker bypass
+                    # the deterministic one-link evidence bridge.
+                    business = self._apply_provisional_preview_contract(
+                        business, (intake or {}).get("research", {}), normalized_url
+                    )
+                    write_json(reports_dir / "01_business_research.json", business)
+                    write_markdown(reports_dir / "business_research.md", "Business research", business)
                 research = ResearchBrief.model_validate(business["research"])
                 write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "research_strategist_completed", "research_completed")
                 media_path = run_dir / settings.media_input_dir / "manifest.json"
-                media_manifest = self._read_json(reports_dir / "02_authorised_media_manifest.json")
+                media_manifest = (
+                    self._read_json(run_dir / "production_input" / "media_manifest.json")
+                    if production
+                    else self._read_json(reports_dir / "02_authorised_media_manifest.json")
+                )
                 if preview:
                     media_manifest = (intake or {}).get("media_manifest") or self._read_json(media_path)
                     if not media_manifest:
@@ -188,6 +221,8 @@ class SiteAgentOrchestrator:
                     candidates = self.media_preparer.load_candidates(media_path)
                     media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
+                elif production:
+                    write_json(reports_dir / "02_production_authorised_media_manifest.json", media_manifest)
                 if not preview:
                     self.media_preparer.validate_manifest(media_manifest)
                 # Readiness is based on the actual authorised Cloudinary assets,
@@ -195,6 +230,41 @@ class SiteAgentOrchestrator:
                 research.best_media = authorised_media_assets(media_manifest, preview=preview)
                 write_json(reports_dir / "01_research.json", research)
                 self._checkpoint(reports_dir, "media_prepared", "media_input_completed")
+                brand_identity = self._read_json(run_dir / "brand_input" / "brand_identity.json")
+                brand_assets_manifest = self._read_json(run_dir / "brand_input" / "brand_assets_manifest.json")
+                if not self._brand_package_valid(
+                    run_dir=run_dir,
+                    brand_identity=brand_identity,
+                    brand_assets_manifest=brand_assets_manifest,
+                    source_url=normalized_url,
+                    business_research=business,
+                    media_manifest=media_manifest,
+                    preview=preview,
+                ):
+                    brand_identity, brand_assets_manifest = BrandIdentityAnalyzer().analyze(
+                        run_dir=run_dir,
+                        business_research=business,
+                        media_manifest=media_manifest,
+                        source_url=normalized_url,
+                        preview=preview,
+                    )
+                write_json(reports_dir / "brand_identity.json", brand_identity)
+                write_json(reports_dir / "brand_assets_manifest.json", brand_assets_manifest)
+                (reports_dir / "brand_identity.md").write_text(
+                    (run_dir / "brand_input" / "brand_identity.md").read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+                write_json(
+                    reports_dir / "brand_identity.provenance.json",
+                    {
+                        "role": "BrandIdentityAnalyzer",
+                        "delivery_target": delivery_target,
+                        "brand_identity_checksum": brand_identity.get("brand_identity_checksum", ""),
+                        "brand_assets_checksum": brand_identity.get("brand_assets_checksum", ""),
+                        "logo_checksum": brand_assets_manifest.get("logo", {}).get("processed_checksum", ""),
+                    },
+                )
+                self._checkpoint(reports_dir, "brand_identity_completed")
                 evidence = self._effective_evidence(reports_dir, research, business, force=preview)
                 write_json(reports_dir / "01_evidence_assessment.json", evidence)
                 write_json(reports_dir / "01_studio_readiness.json", evidence)
@@ -206,17 +276,29 @@ class SiteAgentOrchestrator:
                 self._checkpoint(reports_dir, "references_selected")
                 design = self._read_json(reports_dir / "03_design_implementation_brief.json")
                 design_provenance = self._read_json(reports_dir / "03_design_implementation_brief.provenance.json")
-                if design is None or design_provenance is None or design_provenance.get("scope") != evidence.page_scope.value:
+                if (
+                    design is None
+                    or design_provenance is None
+                    or design_provenance.get("scope") != evidence.page_scope.value
+                    or design_provenance.get("brand_identity_checksum") != brand_identity.get("brand_identity_checksum")
+                    or design_provenance.get("delivery_target") != delivery_target
+                ):
                     if self.design_director is None:
                         self.design_director = DesignDirector(LLMClient(provider=settings.design_director_provider))
                     design = self.design_director.run(
                         __import__("site_agent.models", fromlist=["BusinessResearch"]).BusinessResearch.model_validate(business),
-                        media_manifest, references, scope=evidence.page_scope.value,
+                        media_manifest,
+                        references,
+                        brand_identity,
+                        brand_assets_manifest,
+                        scope=evidence.page_scope.value,
                     ).model_dump()
                     write_json(reports_dir / "03_design_implementation_brief.json", design)
                     write_markdown(reports_dir / "design_implementation_brief.md", "Design implementation brief", design)
                     provenance = role_provenance(role="Design Director", provider=self.design_director.llm.provider, model=self.design_director.llm.model, prompt_version="design-director-v1", prompt={"role": "design_director", "scope": evidence.page_scope.value}, inputs={"business": business, "media_manifest": media_manifest, "references": references}, output=design)
                     provenance["scope"] = evidence.page_scope.value
+                    provenance["brand_identity_checksum"] = brand_identity.get("brand_identity_checksum", "")
+                    provenance["delivery_target"] = delivery_target
                     write_json(reports_dir / "03_design_implementation_brief.provenance.json", provenance)
                 strategy = StrategyBrief.model_validate(design["strategy"])
                 spec = SiteSpec.model_validate(design["site_spec"])
@@ -225,6 +307,8 @@ class SiteAgentOrchestrator:
                     media_manifest=media_manifest,
                     design_brief=design,
                     references=references,
+                    brand_identity=brand_identity,
+                    brand_assets_manifest=brand_assets_manifest,
                     target="isolated_preview" if preview else "production",
                 )
                 write_json(reports_dir / "04_implementation_package.json", package)
@@ -384,6 +468,40 @@ class SiteAgentOrchestrator:
                     "site_path": str(site_dir),
                     "iteration": iteration,
                 })
+            if builder_mode == "codex_studio" and studio_dir is not None:
+                brand_report = BrandFidelityAuditor().audit(
+                    brand_identity=brand_identity,
+                    brand_assets_manifest=brand_assets_manifest,
+                    site_dir=site_dir,
+                    screenshots_dir=studio_dir / "final_reviews",
+                    preview=preview,
+                )
+                write_json(studio_dir / "brand_fidelity_report.json", brand_report)
+                if not brand_report.get("approved") and not any(
+                    issue.problem.startswith("Brand Fidelity audit blocked")
+                    for issue in critique.issues
+                ):
+                    details = "; ".join(
+                        str(item.get("problem", "brand mismatch"))
+                        for item in brand_report.get("issues", [])
+                    )
+                    critique.issues.append(CritiqueIssue(
+                        severity=IssueSeverity.high,
+                        area="business fit",
+                        problem="Brand Fidelity audit blocked the current final build: " + details,
+                        why_it_matters="A technically clean site is not acceptable when it omits or contradicts the submitted business identity.",
+                        fix="Materially revise the exact official logo usage, verified palette, controls, shell accents and responsive identity; a palette-only token swap is insufficient.",
+                    ))
+                    critique.business_approved = False
+                    write_json(critique_path, critique)
+                    write_json(critique_provenance_path, {
+                        "site_sha256": self._site_checksum(site_dir),
+                        "hash_scope": "html_css_js_tree",
+                        "critique_sha256": self._file_checksum(critique_path),
+                        "site_path": str(site_dir),
+                        "iteration": iteration,
+                        "brand_identity_checksum": brand_identity.get("brand_identity_checksum", ""),
+                    })
             final_critique = critique
             self._checkpoint(reports_dir, "technical_gate_completed", "critics_completed")
             if builder_mode == "codex_studio":
@@ -426,6 +544,7 @@ class SiteAgentOrchestrator:
                         acceptance_path=reports_dir / "acceptance_audit.json",
                         site_dir=site_dir,
                         studio_dir=studio_dir,
+                        delivery_target="isolated_preview" if preview else "production",
                     ),
                 )
                 if not acceptance.approved:
@@ -546,6 +665,7 @@ class SiteAgentOrchestrator:
                 acceptance_path=acceptance_path,
                 site_dir=site_dir,
                 studio_dir=studio_dir,
+                delivery_target="isolated_preview" if preview else "production",
             )
         ):
             return None
@@ -671,18 +791,30 @@ class SiteAgentOrchestrator:
         acceptance_path: Path,
         site_dir: Path,
         studio_dir: Path | None,
+        delivery_target: str = "",
     ) -> dict:
         screenshots: dict[str, str] = {}
+        brand_fidelity_sha256 = ""
+        brand_identity_sha256 = ""
         if studio_dir is not None:
             for name in ("desktop.png", "tablet.png", "mobile.png"):
                 path = studio_dir / "final_reviews" / name
                 if path.is_file():
                     screenshots[f"studio/final_reviews/{name}"] = cls._file_checksum(path)
+            brand_report = studio_dir / "brand_fidelity_report.json"
+            brand_identity = studio_dir / "input" / "brand_identity.json"
+            if brand_report.is_file():
+                brand_fidelity_sha256 = cls._file_checksum(brand_report)
+            if brand_identity.is_file():
+                brand_identity_sha256 = cls._file_checksum(brand_identity)
         return {
             "site_sha256": cls._site_checksum(site_dir),
             "hash_scope": "html_css_js_tree",
             "acceptance_sha256": cls._file_checksum(acceptance_path),
             "screenshots": screenshots,
+            "brand_fidelity_sha256": brand_fidelity_sha256,
+            "brand_identity_sha256": brand_identity_sha256,
+            "delivery_target": delivery_target,
         }
 
     @classmethod
@@ -693,6 +825,7 @@ class SiteAgentOrchestrator:
         acceptance_path: Path,
         site_dir: Path,
         studio_dir: Path | None,
+        delivery_target: str = "",
     ) -> bool:
         if not provenance_path.is_file() or not acceptance_path.is_file():
             return False
@@ -706,11 +839,25 @@ class SiteAgentOrchestrator:
                 return False
             if payload.get("acceptance_sha256") != cls._file_checksum(acceptance_path):
                 return False
+            if delivery_target and payload.get("delivery_target") != delivery_target:
+                return False
             screenshots = payload.get("screenshots")
             if not isinstance(screenshots, dict):
                 return False
             if studio_dir is None:
                 return True
+            if payload.get("brand_fidelity_sha256") or payload.get("brand_identity_sha256"):
+                brand_report = studio_dir / "brand_fidelity_report.json"
+                brand_identity = studio_dir / "input" / "brand_identity.json"
+                if (
+                    not brand_report.is_file()
+                    or not brand_identity.is_file()
+                    or payload.get("brand_fidelity_sha256") != cls._file_checksum(brand_report)
+                    or payload.get("brand_identity_sha256") != cls._file_checksum(brand_identity)
+                ):
+                    return False
+            elif delivery_target:
+                return False
             for name in ("desktop.png", "tablet.png", "mobile.png"):
                 key = f"studio/final_reviews/{name}"
                 path = studio_dir / "final_reviews" / name
@@ -760,6 +907,199 @@ class SiteAgentOrchestrator:
             return json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
+
+    @staticmethod
+    def _upgrade_cached_preview_intake(
+        *,
+        intake: dict,
+        normalized_url: str,
+        run_dir: Path,
+    ) -> tuple[dict, bool]:
+        """Upgrade a valid preview cache without another scrape or upload.
+
+        Earlier one-link runs could mix Meta platform decoration into the
+        business media manifest.  The original business-owned downloads and
+        their already-isolated Cloudinary URLs are still valid preview inputs,
+        so recovery removes only the platform records and adds provenance.
+        """
+        if intake.get("pipeline_version") == RESEARCH_PIPELINE_VERSION:
+            return intake, False
+        research = intake.get("research")
+        manifest = intake.get("media_manifest")
+        if not isinstance(research, dict) or not isinstance(manifest, dict):
+            return intake, False
+        if not SiteAgentOrchestrator._same_business_source(
+            str(research.get("normalized_url", "")), normalized_url
+        ):
+            return intake, False
+
+        trusted_prior_checksums: set[str] = set()
+        for prior_dir in run_dir.parent.iterdir() if run_dir.parent.is_dir() else []:
+            if prior_dir == run_dir or not prior_dir.is_dir() or not (prior_dir / "preview_deployment.json").is_file():
+                continue
+            try:
+                import json
+
+                prior_acceptance = json.loads(
+                    (prior_dir / "generation_reports" / "acceptance_audit.json").read_text(encoding="utf-8")
+                )
+                prior_intake = json.loads(
+                    (prior_dir / "generation_reports" / "00_one_link_intake.json").read_text(encoding="utf-8")
+                )
+                prior_manifest = json.loads(
+                    (prior_dir / "generation_reports" / "02_authorised_media_manifest.json").read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError):
+                continue
+            if prior_acceptance.get("approved") is not True or not SiteAgentOrchestrator._same_business_source(
+                str(prior_intake.get("research", {}).get("normalized_url", "")), normalized_url
+            ):
+                continue
+            trusted_prior_checksums.update(
+                str(item.get("original_checksum", ""))
+                for item in prior_manifest.get("media", [])
+                if isinstance(item, dict) and item.get("original_checksum")
+            )
+        if not trusted_prior_checksums:
+            return intake, False
+
+        def platform_url(value: object) -> bool:
+            lowered = str(value or "").lower()
+            return (
+                "lookaside.fbsbx.com/elementpath" in lowered
+                or "/t39.8562-6/" in lowered
+                or any(
+                    host in lowered
+                    for host in (
+                        "meta.com/",
+                        "about.meta.com/",
+                        "facebook.com/",
+                        "fbcdn.net/",
+                    )
+                )
+            )
+
+        def verified_instagram_asset(value: object) -> bool:
+            parsed = urlparse(str(value or ""))
+            host = (parsed.hostname or "").lower()
+            path = parsed.path.lower()
+            return host.endswith("cdninstagram.com") and (
+                "/t51.82787-15/" in path or "/t51.82787-19/" in path
+            )
+
+        kept_media: list[dict] = []
+        for raw in manifest.get("media", []):
+            if (
+                not isinstance(raw, dict)
+                or platform_url(raw.get("asset_url"))
+                or not verified_instagram_asset(raw.get("asset_url"))
+                or str(raw.get("original_checksum", "")) not in trusted_prior_checksums
+                or not SiteAgentOrchestrator._same_business_source(
+                    str(raw.get("source_url", "")), normalized_url
+                )
+            ):
+                continue
+            if not str(raw.get("url", "")).startswith("https://res.cloudinary.com/"):
+                return intake, False
+            original = run_dir / "media_input" / str(raw.get("original_file", ""))
+            if not original.is_file():
+                return intake, False
+            item = dict(raw)
+            asset_url = str(item.get("asset_url", "")).lower()
+            item["source_role"] = (
+                "official_profile_avatar" if "/t51.82787-19/" in asset_url else "business_social_post"
+            )
+            item["source_record_id"] = f"instagram:{normalized_url}"
+            item["ownership_evidence"] = "checksum_matched_prior_accepted_preview_for_same_business"
+            item["business_link_confidence"] = "high"
+            kept_media.append(item)
+        if len(kept_media) < 4 or not any(
+            item.get("source_role") == "official_profile_avatar" for item in kept_media
+        ):
+            return intake, False
+
+        upgraded = copy.deepcopy(intake)
+        upgraded["media_manifest"]["media"] = kept_media
+        upgraded["media_manifest"]["media_count"] = len(kept_media)
+        upgraded["media_manifest"]["image_count"] = sum(
+            item.get("kind", "image") == "image" for item in kept_media
+        )
+        upgraded["media_manifest"]["video_count"] = sum(
+            item.get("kind") == "video" for item in kept_media
+        )
+        upgraded_research = upgraded["research"]
+        upgraded_research["image_urls"] = [
+            value for value in upgraded_research.get("image_urls", []) if not platform_url(value)
+        ]
+        upgraded_research["media_candidates"] = [
+            value
+            for value in upgraded_research.get("media_candidates", [])
+            if isinstance(value, dict) and not platform_url(value.get("asset_url") or value.get("url"))
+        ]
+        upgraded_research["official_site_urls"] = [
+            value for value in upgraded_research.get("official_site_urls", []) if not platform_url(value)
+        ]
+        upgraded_research["sources"] = [
+            value
+            for value in upgraded_research.get("sources", [])
+            if isinstance(value, dict) and not platform_url(value.get("url"))
+        ]
+        upgraded_research["source_ledger"] = [
+            value
+            for value in upgraded_research.get("source_ledger", [])
+            if isinstance(value, dict) and not platform_url(value.get("url"))
+        ]
+        upgraded_research["has_full_preview_media"] = True
+        upgraded["pipeline_version"] = RESEARCH_PIPELINE_VERSION
+        return upgraded, True
+
+    @staticmethod
+    def _brand_package_valid(
+        *,
+        run_dir: Path,
+        brand_identity: dict | None,
+        brand_assets_manifest: dict | None,
+        source_url: str,
+        business_research: dict,
+        media_manifest: dict,
+        preview: bool,
+    ) -> bool:
+        if not isinstance(brand_identity, dict) or not isinstance(brand_assets_manifest, dict):
+            return False
+        try:
+            if not SiteAgentOrchestrator._same_business_source(
+                str(brand_identity.get("source_url", "")), source_url
+            ):
+                return False
+            identity_copy = dict(brand_identity)
+            supplied_identity = str(identity_copy.pop("brand_identity_checksum", ""))
+            if not supplied_identity or checksum(identity_copy) != supplied_identity:
+                return False
+            if brand_identity.get("brand_assets_checksum") != checksum(brand_assets_manifest):
+                return False
+            if brand_assets_manifest.get("delivery_target") != ("isolated_preview" if preview else "production"):
+                return False
+            if brand_assets_manifest.get("source_media_checksum") != brand_media_checksum(media_manifest):
+                return False
+            if brand_assets_manifest.get("source_research_checksum") != checksum(business_research):
+                return False
+            logo = brand_assets_manifest.get("logo", {})
+            if logo.get("available") is False:
+                return not any(
+                    str(logo.get(key, "")) for key in ("original_path", "processed_path", "original_checksum", "processed_checksum")
+                )
+            for path_key, checksum_key in (
+                ("original_path", "original_checksum"),
+                ("processed_path", "processed_checksum"),
+            ):
+                path = (run_dir / str(logo.get(path_key, ""))).resolve()
+                if not path.is_relative_to(run_dir.resolve()) or not path.is_file():
+                    return False
+                if SiteAgentOrchestrator._file_checksum(path) != logo.get(checksum_key):
+                    return False
+            return logo.get("generatively_redrawn") is False and logo.get("recoloured") is False
+        except (OSError, ValueError, TypeError):
+            return False
 
     @staticmethod
     def _same_business_source(left: str, right: str) -> bool:

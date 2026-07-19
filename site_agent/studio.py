@@ -431,6 +431,25 @@ class CodexStudioRunner:
         self._write_json(input_dir / "skill_guidance.json", {"source": ".agents/skills", "skills": self._skill_snapshot()})
         if implementation_package is not None:
             package = dict(implementation_package)
+            brand_identity = package.get("brand_identity", {})
+            brand_assets = package.get("brand_assets_manifest", {})
+            self._write_json(input_dir / "brand_identity.json", brand_identity)
+            self._write_json(input_dir / "brand_assets_manifest.json", brand_assets)
+            if (brand_identity or brand_assets) and brand_assets.get("logo", {}).get("available") is True:
+                logo = brand_assets.get("logo", {})
+                source_value = str(logo.get("processed_path", ""))
+                source_path = (studio.parent / source_value).resolve() if source_value else None
+                run_root = studio.parent.resolve()
+                if (
+                    source_path is None
+                    or not source_path.is_file()
+                    or not source_path.is_relative_to(run_root)
+                    or hashlib.sha256(source_path.read_bytes()).hexdigest() != logo.get("processed_checksum")
+                ):
+                    raise StudioError("Verified checksum-bound processed logo is missing from the brand package.")
+                brand_asset_dir = input_dir / "brand_assets"
+                brand_asset_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source_path, brand_asset_dir / "logo_processed.png")
             # Preserve the orchestrator's canonical package checksum. The
             # Studio-specific field covers the additional local contract text.
             serialized = json.dumps(package, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -488,6 +507,7 @@ class CodexStudioRunner:
             "Jinja, secrets, Telegram, Cloudflare or external publishing. Obey the selected scope exactly; a micro-site must never be expanded into a long page. Each concept must have a distinct "
             "central idea, composition, hero, density, media strategy, typography, CTA and signature element. "
             "Each runnable concept must also show a persistent navigation solution on scrollable pages, a purposeful footer with verified routes, and unclipped primary CTA text; these are functional requirements, not a shared visual shell. "
+            "When brand_assets_manifest.json says logo.available=true, the exact checksum-bound official logo is mandatory; otherwise use a plain text business name and invent no mark. The verified palette is mandatory in every concept; references must not override it. "
             "Write a concise concept.md beside each index.html."
         )
 
@@ -510,6 +530,11 @@ class CodexStudioRunner:
             if readiness.page_scope is PageScope.MICRO else
             "This is a full commercial site: implement at least seven meaningful sections with explicit data-decision-role values covering identity_value, offer_services, proof, brand_about, trust_process, commercial_decision, objection_handling and final_conversion. The final conversion must be a real form or verified direct contact path. Repeated CTAs, decorative panels, a footer, or a redirect do not count as coverage. Use approved themes and media deliberately without repeating one visual treatment. "
         )
+        logo_rule = (
+            "Copy the exact official logo from studio/input/brand_assets/logo_processed.png into the final site assets and render it without redraw, recolour, distortion or generative replacement. "
+            if (run_dir / "studio" / "input" / "brand_assets" / "logo_processed.png").is_file()
+            else "No official logo was proven: use a plain text business name and do not invent, redraw or generate a mark. "
+        )
         return (
             "Use $siteagent-web-studio to expand the selected concept without changing its central creative idea. "
             f"Read {self._relative(run_dir / 'studio' / 'concept_reviews' / 'selected_concept.json')} and the selected "
@@ -517,7 +542,7 @@ class CodexStudioRunner:
             f"HTML/CSS/JS site to the staging workspace {self._relative(run_dir / 'studio' / 'selected' / 'staging')}. Preserve its signature "
             "element and composition language. " + scope_rule +
             "Render business imagery only with the exact authorised Cloudinary URLs from studio/input/media_manifest.json; "
-            "do not copy, download, proxy, transform, or reference local media files. "
+            "do not copy, download, proxy, transform, or reference local business-photo files. " + logo_rule + "Use the verified primary/secondary palette exactly in authored CSS. "
             "Keep primary navigation available while scrollable pages move, offset sticky controls below it, and include a semantic footer with declared-IA navigation, a primary conversion action and verified social/contact routes only. Mark primary CTA anchors with data-site-cta='primary' and ensure translated text is not clipped in default, hover, focus or active states. Do not reuse one visual header/footer composition across businesses. "
             "Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )
@@ -527,6 +552,7 @@ class CodexStudioRunner:
             "Use $siteagent-web-studio and act as an independent Art Director. Inspect the desktop, tablet and "
             f"mobile screenshots in {self._relative(run_dir / 'studio' / 'final_reviews')} against the bounded "
             "business input, selected concept, and the mandatory studio/commercial_usefulness_report.json, "
+            "studio/input/brand_identity.json, studio/input/brand_assets_manifest.json, "
             "studio/language_fit_report.json, and studio/semantic_repetition_report.json. Write studio/art_director_report.json with approved (boolean), score, "
             "summary, unresolved_issues and findings. Every finding needs severity, screenshot, screenshot_region, selector, "
             "description, reason and desired_outcome. Read studio/input/scope_decision.json before judging completeness: a micro_site is a finished compact product, not a deficient full site. It needs a clear offer and CTA, real proof/process, and a conversion close; do not demand a gallery, FAQ, team, reviews, certificates, prices, or extra sections unless the evidence and approved scope require them. A full_site must demonstrate its longer commercial path. Scroll-test navigation, inspect the complete footer, and reject clipped or broken primary CTA states on every declared page without prescribing a common visual shell. Score and approval must cite screenshot evidence. You must not approve if the scope-aware commercial usefulness is below 85, business clarity is below 85, copy quality below 80, UX below 85, a high issue remains, or the result reads as an editorial exercise rather than a business site. Do not change the build."

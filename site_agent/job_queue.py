@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from site_agent.config import settings
 from site_agent.identifiers import normalize_instagram_url
@@ -25,10 +25,13 @@ RECOVERABLE_PREVIEW_FAILURE_PATTERNS = (
     "codex_studio_fixer_failed_retryable",
     "codex studio creative task failed with preserved retryable state",
     "acceptance audit blocked deployment",
+    "blocked_insufficient_business_content",
 )
 
 
 class TelegramJob(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     id: str = Field(default_factory=lambda: uuid4().hex)
     # ``run_id`` is explicit so recovery never has to derive a new run from a
     # failed queue item. Old queue entries are upgraded in memory to their id.
@@ -42,15 +45,23 @@ class TelegramJob(BaseModel):
     site_url: str = ""
     repo_url: str = ""
     preview_url: str = ""
+    preview_deployment_id: str = ""
+    preview_project_name: str = ""
+    preview_branch: str = ""
     requested_product_type: Literal["full_commercial_site"] = "full_commercial_site"
     error: str = ""
     # Stored checkpoints make recovery independent of volatile process memory.
     run_dir: str = ""
     checkpoints: dict[str, str] = Field(default_factory=dict)
     telegram_notification_status: Literal["not_started", "sending", "sent", "unknown"] = "not_started"
+    telegram_preview_notification_status: Literal["not_started", "sent", "unknown"] = "not_started"
     telegram_receipt: dict[str, str | int] = Field(default_factory=dict)
     manual_resend_authorization: dict[str, str] = Field(default_factory=dict)
     recovery_events: list[str] = Field(default_factory=list)
+    recovery_eligible: bool = True
+    recovery_failure_code: str = ""
+    workflow_lane: Literal["preview", "production"] = "preview"
+    production_authorization: dict[str, Any] = Field(default_factory=dict)
 
     def model_post_init(self, __context: Any) -> None:
         if not self.run_id:
@@ -121,6 +132,22 @@ class TelegramJobQueue:
                 return job
         return None
 
+    def next_recoverable_preview(self) -> TelegramJob | None:
+        """Select the newest pre-delivery preview failure without mutating it."""
+        self.pull()
+        candidates = []
+        for job in self._read():
+            normalized_error = job.error.casefold().replace("\\", "/")
+            if (
+                job.status == "failed"
+                and job.workflow_lane == "preview"
+                and job.recovery_eligible
+                and job.telegram_notification_status == "not_started"
+                and any(pattern in normalized_error for pattern in RECOVERABLE_PREVIEW_FAILURE_PATTERNS)
+            ):
+                candidates.append(job)
+        return max(candidates, key=lambda job: job.updated_at) if candidates else None
+
     def complete(self, job_id: str, *, site_url: str, repo_url: str) -> TelegramJob:
         return self._update(
             job_id,
@@ -153,6 +180,7 @@ class TelegramJobQueue:
             timestamp = self._now()
             prior_error = job.error[:500]
             job.status = "running"
+            job.workflow_lane = "preview"
             job.error = ""
             job.run_id = job.run_id or job.id
             job.recovery_events.append(
@@ -171,6 +199,9 @@ class TelegramJobQueue:
         *,
         preview_url: str,
         checkpoints: dict[str, str] | None = None,
+        deployment_id: str = "",
+        project_name: str = "",
+        branch: str = "",
     ) -> TelegramJob:
         """Record a review preview without completing or delivering the job."""
         if not preview_url.startswith("https://"):
@@ -184,6 +215,12 @@ class TelegramJobQueue:
             timestamp = self._now()
             job.status = "preview_ready"
             job.preview_url = preview_url
+            job.preview_deployment_id = deployment_id
+            job.preview_project_name = project_name
+            job.preview_branch = branch
+            job.workflow_lane = "preview"
+            job.recovery_eligible = True
+            job.recovery_failure_code = ""
             job.error = ""
             job.checkpoints.update(
                 {
@@ -198,6 +235,58 @@ class TelegramJobQueue:
             self.push(f"Record one-link preview {job_id}")
             return job
         raise KeyError(f"Telegram job not found: {job_id}")
+
+    def reconcile_preview_metadata(
+        self,
+        job_id: str,
+        *,
+        run_dir: str,
+        preview_url: str,
+        deployment_id: str,
+        project_name: str,
+        branch: str,
+        checkpoints: dict[str, str],
+    ) -> TelegramJob:
+        """Backfill one verified historical preview without publishing it."""
+        if not preview_url.startswith("https://"):
+            raise ValueError("Preview URL must use HTTPS.")
+        jobs = self._read_with_pull()
+        for index, job in enumerate(jobs):
+            if job.id != job_id:
+                continue
+            if job.status != "preview_ready" or job.telegram_notification_status != "not_started":
+                raise PreviewRecoveryNotAllowed(job_id, "historical preview is not side-effect safe")
+            timestamp = self._now()
+            job.run_id = job.run_id or job.id
+            job.run_dir = run_dir
+            job.preview_url = preview_url
+            job.preview_deployment_id = deployment_id
+            job.preview_project_name = project_name
+            job.preview_branch = branch
+            job.workflow_lane = "preview"
+            job.recovery_eligible = True
+            job.telegram_preview_notification_status = "not_started"
+            job.checkpoints.update(checkpoints)
+            job.recovery_events.append(f"preview_metadata_reconciled:{timestamp}")
+            job.updated_at = timestamp
+            jobs[index] = job
+            self._write(jobs)
+            self.push(f"Reconcile one-link preview metadata {job_id}")
+            return job
+        raise KeyError(f"Telegram job not found: {job_id}")
+
+    def record_production_authorization(
+        self,
+        job_id: str,
+        authorization: dict[str, Any],
+    ) -> TelegramJob:
+        """Record a separately approved production lane without completing it."""
+        return self._update(
+            job_id,
+            workflow_lane="production",
+            production_authorization=authorization,
+            commit_message=f"Authorize production promotion {job_id}",
+        )
 
     def get(self, job_id: str) -> TelegramJob:
         for job in self._read_with_pull():
@@ -278,11 +367,33 @@ class TelegramJobQueue:
             commit_message=f"Uncertain Telegram success notification {job_id}",
         )
 
-    def fail(self, job_id: str, error: str) -> TelegramJob:
+    def fail(
+        self,
+        job_id: str,
+        error: str,
+        *,
+        failure_code: str = "",
+        recovery_eligible: bool | None = None,
+    ) -> TelegramJob:
+        normalized = error.casefold().replace("\\", "/")
+        code = failure_code or (
+            "BLOCKED_INSUFFICIENT_BUSINESS_CONTENT"
+            if "blocked_insufficient_business_content" in normalized
+            else "PREVIEW_RECOVERABLE_FAILURE"
+            if any(pattern in normalized for pattern in RECOVERABLE_PREVIEW_FAILURE_PATTERNS)
+            else "UNCLASSIFIED_FAILURE"
+        )
+        eligible = (
+            any(pattern in normalized for pattern in RECOVERABLE_PREVIEW_FAILURE_PATTERNS)
+            if recovery_eligible is None
+            else recovery_eligible
+        )
         return self._update(
             job_id,
             status="failed",
             error=error[:2000],
+            recovery_failure_code=code,
+            recovery_eligible=eligible,
             commit_message=f"Fail Telegram site job {job_id}",
         )
 

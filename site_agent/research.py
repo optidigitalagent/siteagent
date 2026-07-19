@@ -32,6 +32,7 @@ class PublicSource:
     image_urls: tuple[str, ...] = ()
     video_urls: tuple[str, ...] = ()
     outbound_urls: tuple[str, ...] = ()
+    media_ownership: tuple[tuple[str, str], ...] = ()
     status_code: int | None = None
 
 
@@ -74,25 +75,42 @@ class OneLinkResearch:
         return len(self.image_urls) >= 6
 
     def media_candidates(self) -> list[dict]:
-        candidates = [
-            {
-                "url": url,
-                "kind": "image",
-                "source_url": self.normalized_url,
-                "source_kind": "business_social" if self.source_kind == "instagram" else "business_web",
-            }
-            for url in self.image_urls
-        ]
-        candidates.extend(
-            {
-                "url": url,
-                "kind": "video",
-                "source_url": self.normalized_url,
-                "source_kind": "business_social" if self.source_kind == "instagram" else "business_web",
-                "metadata_only": True,
-            }
-            for url in self.video_urls
-        )
+        candidates: list[dict] = []
+        seen: set[str] = set()
+        trusted = {"instagram", "business_social", "official_site", "business_web", "browser"}
+        for source_index, source in enumerate(self.sources):
+            if source.source_kind not in trusted:
+                continue
+            source_kind = (
+                "business_social"
+                if self.source_kind == "instagram" and source.url == self.normalized_url
+                else "business_web"
+            )
+            ownership = dict(source.media_ownership)
+            for kind, values in (("image", source.image_urls), ("video", source.video_urls)):
+                for value in values:
+                    url = str(value or "").strip()
+                    is_submitted_instagram = source.url == self.normalized_url and self.source_kind == "instagram"
+                    if (
+                        not url
+                        or url in seen
+                        or _platform_owned_media_url(url)
+                        or (is_submitted_instagram and not _verified_instagram_media_url(url))
+                        or (is_submitted_instagram and url not in ownership)
+                    ):
+                        continue
+                    seen.add(url)
+                    candidates.append({
+                        "url": url,
+                        "kind": kind,
+                        "source_url": source.url,
+                        "source_kind": source_kind,
+                        "source_record_id": f"{source.source_kind}:{source_index}",
+                        "source_role": _source_media_role(url),
+                        "ownership_evidence": ownership.get(url, "official_business_web_source"),
+                        "business_link_confidence": "high" if source.url == self.normalized_url else "medium",
+                        "metadata_only": kind == "video",
+                    })
         return candidates
 
     def to_dict(self) -> dict:
@@ -219,6 +237,11 @@ class OneLinkResearcher:
         )
 
     def _from_scrape(self, value: ScrapedInstagram, kind: str) -> PublicSource:
+        ownership = tuple(
+            (url, "submitted_profile_static_avatar")
+            for url in value.image_urls
+            if _source_media_role(url) == "profile_avatar"
+        )
         return PublicSource(
             url=value.canonical or value.url,
             source_kind=kind,
@@ -228,6 +251,7 @@ class OneLinkResearcher:
             image_urls=tuple(value.image_urls),
             video_urls=tuple(value.video_urls),
             outbound_urls=tuple(value.outbound_urls),
+            media_ownership=ownership,
             status_code=value.status_code,
         )
 
@@ -250,12 +274,19 @@ class OneLinkResearcher:
                     text=str(item.get("text", item.get("page_text", ""))),
                     image_urls=tuple(item.get("image_urls", ())), video_urls=tuple(item.get("video_urls", ())),
                     outbound_urls=tuple(item.get("outbound_urls", ())), status_code=item.get("status_code"),
+                    media_ownership=tuple(tuple(value) for value in item.get("media_ownership", ())),
                 ))
         return result
 
     def _enough(self, sources: list[PublicSource]) -> bool:
         media_sources = self._business_media_sources(sources)
-        images = self._unique_url((source.image_urls for source in media_sources), self.max_images)
+        images = self._unique_url(
+            (
+                tuple(url for url, _evidence in source.media_ownership)
+                for source in media_sources
+            ),
+            self.max_images,
+        )
         identity = any(source.title or source.description or source.text for source in sources)
         return identity and len(images) >= 6
 
@@ -304,7 +335,18 @@ class OneLinkResearcher:
     @staticmethod
     def _official_sites(sources: list[PublicSource], normalized_url: str) -> list[str]:
         primary_host = (urlsplit(normalized_url).hostname or "").removeprefix("www.")
-        excluded = {primary_host, "facebook.com", "youtube.com", "tiktok.com", "x.com", "twitter.com"}
+        excluded = {
+            primary_host,
+            "facebook.com",
+            "fbcdn.net",
+            "meta.com",
+            "meta.ai",
+            "threads.com",
+            "youtube.com",
+            "tiktok.com",
+            "x.com",
+            "twitter.com",
+        }
         values = []
         for source in sources:
             candidates = list(source.outbound_urls)
@@ -317,6 +359,38 @@ class OneLinkResearcher:
                 if host and not any(host == item or host.endswith("." + item) for item in excluded) and value not in values:
                     values.append(value)
         return values[:8]
+
+
+def _platform_owned_media_url(value: str) -> bool:
+    parsed = urlsplit(str(value or ""))
+    host = (parsed.hostname or "").lower()
+    lowered = str(value or "").lower()
+    return (
+        "lookaside.fbsbx.com/elementpath" in lowered
+        or "/t39.8562-6/" in lowered
+        or host.endswith("fbcdn.net")
+        or host.endswith("fbsbx.com")
+    )
+
+
+def _verified_instagram_media_url(value: str) -> bool:
+    parsed = urlsplit(str(value or ""))
+    host = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return host.endswith("cdninstagram.com") and (
+        "/t51.82787-15/" in path or "/t51.82787-19/" in path
+    )
+
+
+def _source_media_role(value: str) -> str:
+    lowered = str(value or "").lower()
+    if "/t51.82787-19/" in lowered:
+        return "profile_avatar"
+    if _platform_owned_media_url(lowered):
+        return "platform_chrome"
+    if "/t51.82787-15/" in lowered:
+        return "post_or_reel_cover"
+    return "unknown_business_media"
 
 
 def bootstrap_one_link_intake(
@@ -396,13 +470,23 @@ def browser_fallback(source_url: str) -> PublicSource:
             page = browser.new_page(viewport={"width": 1440, "height": 2200}, locale="uk-UA")
             response = page.goto(source_url, wait_until="domcontentloaded", timeout=45_000)
             page.wait_for_timeout(3500)
-            payload = page.evaluate("""() => ({
+            payload = page.evaluate(r"""() => {
+              const handle = location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() || '';
+              const media = [...document.querySelectorAll('main img')]
+                .filter(i => i.naturalWidth >= 320 && i.naturalHeight >= 320)
+                .map(i => ({url: i.currentSrc || i.src, alt: (i.alt || '').toLowerCase(), inHeader: !!i.closest('header')}))
+                .filter(item => /cdninstagram\.com\/.*\/t51\.82787-(15|19)\//i.test(item.url))
+                .filter(item => item.inHeader || (handle && item.alt.includes(handle)))
+                .map(item => ({url: item.url, evidence: item.inHeader ? 'submitted_profile_header_avatar' : 'submitted_profile_alt_attribution'}));
+              return {
                 title: document.title,
                 text: document.body?.innerText || '',
-                images: [...document.images].filter(i => i.naturalWidth >= 320 && i.naturalHeight >= 320).map(i => i.currentSrc || i.src),
-                videos: [...document.querySelectorAll('video')].map(v => v.currentSrc || v.src).filter(Boolean),
+                images: media.map(item => item.url),
+                mediaOwnership: media.map(item => [item.url, item.evidence]),
+                videos: [],
                 links: [...document.querySelectorAll('a[href]')].map(a => a.href)
-            })""")
+              };
+            }""")
             return PublicSource(
                 url=source_url,
                 source_kind="browser",
@@ -411,6 +495,7 @@ def browser_fallback(source_url: str) -> PublicSource:
                 image_urls=tuple(payload.get("images", ())),
                 video_urls=tuple(payload.get("videos", ())),
                 outbound_urls=tuple(payload.get("links", ())),
+                media_ownership=tuple(tuple(value) for value in payload.get("mediaOwnership", ())),
                 status_code=response.status if response else None,
             )
         finally:

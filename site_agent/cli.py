@@ -12,9 +12,11 @@ from site_agent.job_queue import (
     TelegramJobQueue,
 )
 from site_agent.identifiers import stable_business_id
+from site_agent.json_io import write_json
 from site_agent.models import PublishResult
 from site_agent.orchestrator import SiteAgentOrchestrator
 from site_agent.publisher import LiveSiteVerifier
+from site_agent.preview import PreviewDeploymentResult, PreviewLiveVerifier
 from site_agent.telegram_notify import TelegramNotifier
 
 
@@ -28,6 +30,7 @@ def run_instagram_url(instagram_url: str) -> None:
 
 
 def run_pending_job() -> None:
+    """Claim or resume the next Telegram job in the isolated preview lane."""
     queue = _pending_job_queue()
     try:
         interrupted = queue.next_interrupted()
@@ -49,18 +52,20 @@ def run_pending_job() -> None:
                     "Проверьте git remote/push-доступ или задайте TELEGRAM_INBOX_GIT_SYNC=true."
                 ) from exc
             raise
-        if pending_job is None:
-            print("Нет pending-задач из Telegram.")
-            return
-        try:
-            job = queue.claim_next()
-        except RuntimeError as exc:
-            if queue.git_sync and not settings.telegram_inbox_git_sync:
-                raise RuntimeError(
-                    "Не удалось автоматически синхронизировать Telegram inbox через git. "
-                    "Проверьте git remote/push-доступ или задайте TELEGRAM_INBOX_GIT_SYNC=true."
-                ) from exc
-            raise
+        if pending_job is not None:
+            try:
+                job = queue.claim_next()
+            except RuntimeError as exc:
+                if queue.git_sync and not settings.telegram_inbox_git_sync:
+                    raise RuntimeError(
+                        "Не удалось автоматически синхронизировать Telegram inbox через git. "
+                        "Проверьте git remote/push-доступ или задайте TELEGRAM_INBOX_GIT_SYNC=true."
+                    ) from exc
+                raise
+        else:
+            recoverable = queue.next_recoverable_preview()
+            if recoverable is not None:
+                job = queue.reclaim_failed_preview(recoverable.id)
         if job is None:
             print("Нет pending-задач из Telegram.")
             return
@@ -74,47 +79,7 @@ def run_pending_job() -> None:
     if not job.run_dir:
         job = queue.set_run_dir(job.id, run_dir)
 
-    orchestrator = SiteAgentOrchestrator()
-
-    notifier = TelegramNotifier()
-    try:
-        result = orchestrator.run(
-            job.instagram_url,
-            production=True,
-            run_id=job.id,
-            run_path=Path(run_dir),
-        )
-        if not result.publish.is_verified_production:
-            raise RuntimeError(
-                "Production publishing did not return a live-verified HTTPS deployment."
-            )
-    except Exception as exc:
-        queue.fail(job.id, str(exc))
-        notifier.send_failure(job.chat_id)
-        raise
-
-    queue.record_checkpoints(
-        job.id,
-        research_completed="completed_and_valid",
-        generation_completed="completed_and_valid",
-        technical_gate_completed="completed_and_valid",
-        critics_completed="completed_and_valid",
-        acceptance_completed="completed_and_valid",
-        deployment_completed="completed_and_valid",
-        live_verified="completed_and_valid",
-    )
-    queue.mark_notification_sending(job.id)
-    try:
-        receipt = notifier.send_done(job.chat_id, result.publish)
-    except Exception as exc:
-        # A transport failure may happen after Telegram accepted the request.
-        # Keep the job non-complete and require explicit delivery confirmation.
-        queue.mark_notification_unknown(job.id, str(exc))
-        raise InterruptedDeliveryUncertain(job.id) from exc
-    queue.record_notification_sent(job.id, receipt)
-    queue.complete(job.id, site_url=result.publish.production_url, repo_url=result.publish.repo_url)
-    print("Готово:")
-    print(result.publish.production_url)
+    _execute_preview_job(queue, job, Path(run_dir))
 
 
 def run_preview_job(job_id: str) -> None:
@@ -139,52 +104,72 @@ def run_preview_job(job_id: str) -> None:
     if not stored_run_dir:
         job = queue.set_run_dir(job.id, run_dir)
 
+    _execute_preview_job(queue, job, Path(run_dir), was_preview_ready=was_preview_ready)
+
+
+def _execute_preview_job(
+    queue: TelegramJobQueue,
+    job: object,
+    run_dir: Path,
+    *,
+    was_preview_ready: bool = False,
+) -> None:
     try:
         result = SiteAgentOrchestrator().run(
             job.instagram_url,
             production=False,
             preview=True,
-            run_id=job.run_id or job.id,
-            run_path=Path(run_dir),
+            run_id=getattr(job, "run_id", "") or job.id,
+            run_path=run_dir,
         )
-        preview_url = _preview_url_from_result(result)
+        publish = _preview_result_from_result(result)
+        preview_url = publish.preview_url
         if not (was_preview_ready and job.preview_url == preview_url):
             queue.mark_preview_ready(
                 job.id,
                 preview_url=preview_url,
+                deployment_id=publish.deployment_id,
+                project_name=publish.project_name,
+                branch=publish.branch,
                 checkpoints={
                     "research_completed": "completed_and_valid",
+                    "brand_identity_completed": "completed_and_valid",
                     "generation_completed": "completed_and_valid",
                     "technical_gate_completed": "completed_and_valid",
                     "critics_completed": "completed_and_valid",
+                    "brand_fidelity_completed": "completed_and_valid",
                     "acceptance_completed": "completed_and_valid",
                     "preview_deployment_completed": "completed_and_valid",
                     "preview_live_verified": "completed_and_valid",
                 },
             )
     except Exception as exc:
-        # A read-only consistency check of an already delivered preview must
-        # not erase its durable review checkpoint or make the job ineligible
-        # for its original recovery lane. The exception still fails this
-        # invocation and prevents an unverified URL from being reported.
         if not was_preview_ready:
             queue.fail(job.id, str(exc))
         raise
-
     print("Preview готово:")
     print(preview_url)
 
 
-def _preview_url_from_result(result: object) -> str:
-    direct = getattr(result, "preview_url", "")
-    if isinstance(direct, str) and direct.startswith("https://"):
-        return direct
+def _preview_result_from_result(result: object) -> PreviewDeploymentResult:
     publish = getattr(result, "publish", None)
-    for field in ("preview_url", "deployment_url", "production_url"):
-        value = getattr(publish, field, "")
-        if isinstance(value, str) and value.startswith("https://"):
-            return value
-    raise RuntimeError("Preview publishing did not return a live HTTPS preview URL.")
+    try:
+        validated = PreviewDeploymentResult.model_validate(
+            publish.model_dump() if hasattr(publish, "model_dump") else publish
+        )
+    except Exception as exc:
+        raise RuntimeError("Preview publishing returned a non-preview deployment result.") from exc
+    if (
+        validated.provider != "cloudflare_pages_preview"
+        or validated.environment != "preview"
+        or validated.verification_status != "verified"
+        or not validated.project_name.startswith("siteagent-preview-")
+        or not validated.branch.startswith("preview-")
+        or not validated.preview_url.startswith("https://")
+        or validated.preview_url == f"https://{validated.project_name}.pages.dev"
+    ):
+        raise RuntimeError("Preview publishing did not return a verified isolated preview deployment.")
+    return validated
 
 
 def _pending_job_queue(*, preview_local: bool = False) -> TelegramJobQueue:
@@ -273,6 +258,164 @@ def run_authorized_manual_resend(job_id: str) -> None:
     print(publish.production_url)
 
 
+def run_production_promotion(job_id: str, *, authorized: bool) -> None:
+    """Promote an approved preview only after a separately persisted preflight."""
+    if not authorized:
+        raise RuntimeError("Production promotion requires --authorize-production.")
+    queue = _pending_job_queue()
+    job = queue.get(job_id)
+    if job.status != "preview_ready":
+        raise RuntimeError("Production promotion requires a preview_ready job.")
+    run_dir = Path(job.run_dir or settings.runs_dir / (job.run_id or job.id))
+    authorization_path = run_dir / "production_authorization.json"
+    try:
+        authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            "Production promotion requires a valid production_authorization.json artifact."
+        ) from exc
+    required = (
+        "approved",
+        "production_media_rights_confirmed",
+        "contacts_confirmed",
+        "cta_copy_approved",
+        "production_preflight_passed",
+        "production_live_qa_required",
+    )
+    missing = [key for key in required if authorization.get(key) is not True]
+    if authorization.get("job_id") != job.id or authorization.get("run_id") != (job.run_id or job.id):
+        missing.append("exact_job_run_binding")
+    if missing:
+        raise RuntimeError(
+            "Production promotion authorization is incomplete: " + ", ".join(missing)
+        )
+    production_manifest = _materialize_production_manifest(run_dir, authorization)
+    queue.record_production_authorization(
+        job.id,
+        {
+            "authorization_artifact": "production_authorization.json",
+            "authorized_media_asset_ids": authorization["authorized_media_asset_ids"],
+            "production_manifest_media_count": len(production_manifest["media"]),
+        },
+    )
+
+    result = SiteAgentOrchestrator().run(
+        job.instagram_url,
+        production=True,
+        preview=False,
+        run_id=job.run_id or job.id,
+        run_path=run_dir,
+    )
+    if not result.publish.is_verified_production:
+        raise RuntimeError("Production publishing did not return a live-verified HTTPS deployment.")
+    queue.record_checkpoints(
+        job.id,
+        production_preflight_completed="completed_and_valid",
+        production_acceptance_completed="completed_and_valid",
+        production_deployment_completed="completed_and_valid",
+        production_live_qa_completed="completed_and_valid",
+    )
+    notifier = TelegramNotifier()
+    queue.mark_notification_sending(job.id)
+    try:
+        receipt = notifier.send_done(job.chat_id, result.publish)
+    except Exception as exc:
+        queue.mark_notification_unknown(job.id, str(exc))
+        raise InterruptedDeliveryUncertain(job.id) from exc
+    queue.record_notification_sent(job.id, receipt)
+    queue.complete(
+        job.id,
+        site_url=result.publish.production_url,
+        repo_url=result.publish.repo_url,
+    )
+    print("Production готово:")
+    print(result.publish.production_url)
+
+
+def _materialize_production_manifest(run_dir: Path, authorization: dict) -> dict:
+    authorised_ids = {
+        str(value) for value in authorization.get("authorized_media_asset_ids", []) if str(value).strip()
+    }
+    if not authorised_ids:
+        raise RuntimeError("Production authorization requires authorized_media_asset_ids.")
+    preview_path = run_dir / "generation_reports" / "02_authorised_media_manifest.json"
+    try:
+        preview_manifest = json.loads(preview_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("Production promotion requires the accepted preview media manifest.") from exc
+    source_media = [item for item in preview_manifest.get("media", []) if isinstance(item, dict)]
+    available_ids = {str(item.get("asset_id", "")) for item in source_media}
+    if authorised_ids != available_ids:
+        missing = sorted(available_ids - authorised_ids)
+        unknown = sorted(authorised_ids - available_ids)
+        raise RuntimeError(
+            "Production media authorization must exactly match the accepted preview manifest; "
+            f"missing={missing}, unknown={unknown}."
+        )
+    production_media = []
+    for source in source_media:
+        item = dict(source)
+        item.update({
+            "source_kind": "business",
+            "user_authorized": True,
+            "allowed_for_public_site": True,
+            "allowed_for_customer_production": True,
+        })
+        production_media.append(item)
+    manifest = {
+        **preview_manifest,
+        "purpose": "customer_production",
+        "media": production_media,
+        "production_authorization_job_id": authorization.get("job_id"),
+        "production_authorization_run_id": authorization.get("run_id"),
+    }
+    target = run_dir / "production_input" / "media_manifest.json"
+    write_json(target, manifest)
+    return manifest
+
+
+def reconcile_preview_metadata(job_id: str, *, deployment_id: str = "") -> None:
+    """Hydrate a verified historical preview record without uploading anything."""
+    queue = _pending_job_queue()
+    job = queue.get(job_id)
+    run_dir = Path(job.run_dir or settings.runs_dir / (job.run_id or job.id))
+    deployment_path = run_dir / "preview_deployment.json"
+    try:
+        deployment = PreviewDeploymentResult.model_validate_json(
+            deployment_path.read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("A verified preview_deployment.json is required for reconciliation.") from exc
+    resolved_id = deployment.deployment_id or deployment_id
+    if not resolved_id:
+        raise RuntimeError("Preview reconciliation requires the verified Cloudflare deployment id.")
+    PreviewLiveVerifier().verify(
+        deployment.preview_url,
+        site_dir=run_dir / "preview_publish",
+        expected_marker=stable_business_id(job.instagram_url),
+    )
+    queue.reconcile_preview_metadata(
+        job.id,
+        run_dir=str(run_dir),
+        preview_url=deployment.preview_url,
+        deployment_id=resolved_id,
+        project_name=deployment.project_name,
+        branch=deployment.branch,
+        checkpoints={
+            "research_completed": "completed_and_valid",
+            "generation_completed": "completed_and_valid",
+            "technical_gate_completed": "completed_and_valid",
+            "critics_completed": "completed_and_valid",
+            "acceptance_completed": "completed_and_valid",
+            "preview_deployment_completed": "completed_and_valid",
+            "preview_live_verified": "completed_and_valid",
+            "ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW": "completed_and_valid",
+        },
+    )
+    print("Preview metadata reconciled:")
+    print(deployment.preview_url)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate a commercial site from an Instagram URL or run the next Telegram job."
@@ -280,6 +423,8 @@ def main() -> None:
     parser.add_argument("command_or_url")
     parser.add_argument("--job-id")
     parser.add_argument("--authorize-manual-resend", action="store_true")
+    parser.add_argument("--authorize-production", action="store_true")
+    parser.add_argument("--deployment-id", default="")
     args = parser.parse_args()
 
     if args.command_or_url.lower() in GO_ALIASES:
@@ -292,6 +437,14 @@ def main() -> None:
         if not args.authorize_manual_resend or not args.job_id:
             parser.error("manual-resend requires --job-id and --authorize-manual-resend")
         run_authorized_manual_resend(args.job_id)
+    elif args.command_or_url == "production-promote":
+        if not args.job_id:
+            parser.error("production-promote requires --job-id")
+        run_production_promotion(args.job_id, authorized=args.authorize_production)
+    elif args.command_or_url == "reconcile-preview":
+        if not args.job_id:
+            parser.error("reconcile-preview requires --job-id")
+        reconcile_preview_metadata(args.job_id, deployment_id=args.deployment_id)
     else:
         run_instagram_url(args.command_or_url)
 

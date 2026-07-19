@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
 from site_agent.media import authorised_media_assets
@@ -13,6 +14,75 @@ SOURCE = "https://instagram.com/amidental_kiev"
 
 
 class OneLinkPreviewContractTests(unittest.TestCase):
+    def test_cached_preview_intake_is_sanitized_without_reupload(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            run_dir = workspace / "current"
+            originals = run_dir / "media_input" / "originals"
+            originals.mkdir(parents=True)
+            media = []
+            for index in range(4):
+                filename = f"asset-{index}.jpg"
+                (originals / filename).write_bytes(b"business-owned")
+                media.append({
+                    "asset_id": f"asset-{index}",
+                    "asset_url": (
+                        "https://scontent.cdninstagram.com/t51.82787-19/logo.jpg"
+                        if index == 0
+                        else f"https://scontent.cdninstagram.com/t51.82787-15/post-{index}.jpg"
+                    ),
+                    "url": f"https://res.cloudinary.com/example/image/upload/asset-{index}.jpg",
+                    "original_file": f"originals/{filename}",
+                    "original_checksum": f"checksum-{index}",
+                    "source_url": SOURCE,
+                })
+            media.append({
+                "asset_id": "meta-decoration",
+                "asset_url": "https://lookaside.fbsbx.com/elementpath/media/?media_id=1",
+                "url": "https://res.cloudinary.com/example/image/upload/meta.jpg",
+                "original_file": "originals/meta.jpg",
+            })
+            intake = {
+                "pipeline_version": "one-link-preview-v1",
+                "research": {
+                    "normalized_url": SOURCE,
+                    "image_urls": [media[1]["asset_url"], media[-1]["asset_url"]],
+                    "official_site_urls": ["https://www.meta.com/about/"],
+                    "media_candidates": [
+                        {"asset_url": media[1]["asset_url"]},
+                        {"asset_url": media[-1]["asset_url"]},
+                    ],
+                    "sources": [{"url": SOURCE}, {"url": "https://www.meta.com/about/"}],
+                    "source_ledger": [{"url": SOURCE}, {"url": "https://www.meta.com/about/"}],
+                },
+                "media_manifest": {"media": media},
+            }
+            prior = workspace / "prior"
+            prior_reports = prior / "generation_reports"
+            prior_reports.mkdir(parents=True)
+            (prior / "preview_deployment.json").write_text("{}", encoding="utf-8")
+            (prior_reports / "acceptance_audit.json").write_text(
+                json.dumps({"approved": True}), encoding="utf-8"
+            )
+            (prior_reports / "00_one_link_intake.json").write_text(
+                json.dumps({"research": {"normalized_url": SOURCE}}), encoding="utf-8"
+            )
+            (prior_reports / "02_authorised_media_manifest.json").write_text(
+                json.dumps({"media": media[:4]}), encoding="utf-8"
+            )
+
+            upgraded, changed = SiteAgentOrchestrator._upgrade_cached_preview_intake(
+                intake=intake,
+                normalized_url=SOURCE,
+                run_dir=run_dir,
+            )
+
+            self.assertTrue(changed)
+            self.assertEqual(len(upgraded["media_manifest"]["media"]), 4)
+            self.assertEqual(upgraded["media_manifest"]["media"][0]["source_role"], "official_profile_avatar")
+            self.assertEqual(upgraded["research"]["official_site_urls"], [])
+            self.assertEqual(intake["pipeline_version"], "one-link-preview-v1")
+
     def test_recovery_compares_normalized_business_source_not_tracking_query(self) -> None:
         self.assertTrue(SiteAgentOrchestrator._same_business_source(
             "https://www.instagram.com/amidental_kiev/?igsh=tracking",

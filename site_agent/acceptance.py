@@ -52,6 +52,7 @@ class AcceptanceAuditor:
                 studio_dir / "art_director_report.json",
                 studio_dir / "commercial_usefulness_report.json",
                 studio_dir / "product_director_report.json",
+                studio_dir / "brand_fidelity_report.json",
                 studio_dir / "language_fit_report.json",
                 studio_dir / "semantic_repetition_report.json",
                 studio_dir / "input" / "scope_decision.json",
@@ -73,6 +74,9 @@ class AcceptanceAuditor:
                     product = json.loads((studio_dir / "product_director_report.json").read_text(encoding="utf-8"))
                     if product.get("auditor") != "ProductDirectorAuditor" or product.get("product_accepted") is not True:
                         reasons.append("Independent Product Director did not accept the requested commercial product.")
+                    brand = json.loads((studio_dir / "brand_fidelity_report.json").read_text(encoding="utf-8"))
+                    if brand.get("auditor") != "BrandFidelityAuditor" or brand.get("approved") is not True:
+                        reasons.append("Independent Brand Fidelity auditor did not accept the final business identity.")
                     scope = json.loads((studio_dir / "scope_compliance_report.json").read_text(encoding="utf-8"))
                     decision = json.loads((studio_dir / "input" / "scope_decision.json").read_text(encoding="utf-8"))
                     if scope.get("approved") is not True or scope.get("scope") not in {"full_site", "micro_site"}:
@@ -95,6 +99,13 @@ class AcceptanceAuditor:
                         actual = hashlib.sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
                         if supplied != actual:
                             reasons.append("Studio implementation package checksum does not match its content.")
+                    if not package.get("brand_identity", {}).get("brand_identity_checksum"):
+                        reasons.append("Studio implementation package lacks the verified brand identity package.")
+                    package_logo = package.get("brand_assets_manifest", {}).get("logo", {})
+                    if package_logo.get("available") is True and not package_logo.get("processed_checksum"):
+                        reasons.append("Studio implementation package lacks the checksum-bound official logo asset.")
+                    if brand.get("brand_identity_checksum") != package.get("brand_identity", {}).get("brand_identity_checksum"):
+                        reasons.append("Brand Fidelity report is stale or bound to a different brand identity package.")
                     used = [item for item in manifest.get("media", []) if item.get("url")]
                     if preview:
                         invalid_media = any(
@@ -110,7 +121,7 @@ class AcceptanceAuditor:
                         reasons.append("Studio media manifest contains media without authorised Cloudinary business provenance.")
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")
-                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/product-director", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
+                artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/product-director", "studio/brand-fidelity", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])
 
         return AcceptanceAuditResult(
             approved=not reasons,

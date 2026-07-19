@@ -1,22 +1,35 @@
 # Next Action
 
-Checkpoint: `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW`.
+Checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_AND_BRAND_FIDELITY_REBUILD_REQUIRED`.
 
-The existing Amidental job/run `f684eed531f74dd8995b2a58ac77739e`
-is `preview_ready`. Its isolated noindex Cloudflare Preview URL is:
+The fresh Telegram job `053656c35b5d4ef58221c5be7171b625` was incorrectly
+routed through the production lane by `run_pending_job(... production=True)`.
+Its exact run directory is already durable and must be resumed in place. Do not
+create a new queue item, request the Instagram URL again, or derive a new run.
 
-`https://748478b0.siteagent-preview-amidental-kiev-088e5323bc.pages.dev`
+The existing Amidental preview is technically accepted but does not yet prove
+fidelity to the business's actual logo and recurring visual identity. Preserve
+it as historical evidence only. The source profile avatar contains the official
+Amidental tooth/wordmark, and preview media rights remain distinct from customer
+production rights.
 
-The requested one-link research, preview-only media ingestion, full commercial
-build, independent criticism, Product Director audit, acceptance, deployment
-and live browser QA are complete. The 2026-07-19 recovery audit additionally
-checksum-bound the full HTML/CSS/JS tree, acceptance and final screenshots,
-corrected the preview-only media count to 11 and revalidated the same live URL
-without another upload. The queue deliberately has no production
-`site_url`/`repo_url`; Telegram notification remains `not_started`.
+Exact next action:
 
-Exact next action: wait for explicit user review/approval. Do not publish to
-customer production, attach a custom domain, promote preview media rights or
-send Telegram delivery without a new explicit instruction and the recorded
-customer confirmations for contact freshness, production CTA/copy and media
-rights.
+1. make `go` claim/resume preview by default with `production=False, preview=True`;
+2. add a separately authorised `production-promote` lane;
+3. repair durable preview queue metadata and legacy recovery fields without a
+   duplicate upload;
+4. create and validate `brand_identity.md`, `brand_identity.json`,
+   `brand_assets_manifest.json` before Design Director;
+5. pass the brand package losslessly to Design Director and Studio;
+6. require an independent `BrandFidelityAuditor` before preview acceptance;
+7. resume the exact current run from its first invalid/incomplete checkpoint;
+8. materially align logo, palette, typography accents, controls and graphic
+   language with verified Amidental brand evidence while retaining useful site
+   structure;
+9. run desktop/tablet/mobile QA and publish only a new isolated noindex preview;
+10. commit and push only after focused/full tests, compileall, pip check, smoke,
+    browser QA, diff validation and secret scan pass.
+
+Production, custom domain changes and customer Telegram delivery are forbidden
+for this recovery.

@@ -121,6 +121,8 @@ class DesignImplementationBrief(BaseModel):
     selected_references: list[dict[str, str]] = Field(default_factory=list)
     reference_rationale: str = ""
     do_not_copy: list[str] = Field(default_factory=list)
+    brand_application: str = ""
+    brand_identity_checksum: str = ""
     # Compatibility data is validation-only; Studio is explicitly told not to
     # infer its composition from it.
     strategy: "StrategyBrief"

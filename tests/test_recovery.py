@@ -14,9 +14,22 @@ from site_agent.job_queue import (
     TelegramJobQueue,
 )
 from site_agent.models import DeploymentResult
+from site_agent.preview import PreviewDeploymentResult
 
 
 INSTAGRAM_URL = "https://www.instagram.com/example_business/"
+
+
+def _verified_preview(url: str = "https://hash.siteagent-preview-example.pages.dev") -> PreviewDeploymentResult:
+    return PreviewDeploymentResult(
+        project_name="siteagent-preview-example",
+        preview_url=url,
+        deployment_url=url,
+        deployment_id="preview-deployment-1",
+        branch="preview-job-preview",
+        deployed_at="2026-07-19T00:00:00+00:00",
+        staging_dir="runs/job-preview/preview_publish",
+    )
 
 
 class RecoveryQueueTests(unittest.TestCase):
@@ -89,6 +102,45 @@ class RecoveryQueueTests(unittest.TestCase):
 
             with self.assertRaises(PreviewRecoveryNotAllowed):
                 queue.reclaim_failed_preview(job.id)
+
+    def test_insufficient_content_failure_is_recoverable_by_same_preview_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
+            job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
+            queue.set_run_dir(job.id, r"runs\same-run")
+            queue.fail(job.id, "BLOCKED_INSUFFICIENT_BUSINESS_CONTENT: product_identified")
+
+            selected = queue.next_recoverable_preview()
+            self.assertIsNotNone(selected)
+            self.assertEqual(selected.id, job.id)
+            reclaimed = queue.reclaim_failed_preview(job.id)
+            self.assertEqual(reclaimed.run_dir, r"runs\same-run")
+            self.assertEqual(reclaimed.status, "running")
+
+    def test_legacy_preview_metadata_is_reconciled_without_production_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
+            job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
+            payload = json.loads(queue.path.read_text(encoding="utf-8"))
+            payload[0]["status"] = "preview_ready"
+            queue.path.write_text(json.dumps(payload), encoding="utf-8")
+
+            repaired = queue.reconcile_preview_metadata(
+                job.id,
+                run_dir=r"runs\same-run",
+                preview_url="https://hash.siteagent-preview-example.pages.dev",
+                deployment_id="deployment-id",
+                project_name="siteagent-preview-example",
+                branch="preview-same-run",
+                checkpoints={"preview_live_verified": "completed_and_valid"},
+            )
+
+            self.assertEqual(repaired.preview_deployment_id, "deployment-id")
+            self.assertEqual(repaired.run_dir, r"runs\same-run")
+            self.assertTrue(repaired.recovery_eligible)
+            self.assertEqual(repaired.site_url, "")
+            self.assertEqual(repaired.repo_url, "")
+            self.assertEqual(repaired.telegram_notification_status, "not_started")
 
     def test_preview_ready_is_not_completion_or_telegram_delivery(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -185,9 +237,10 @@ class RecoveryCliTests(unittest.TestCase):
             self.assertIsNone(result)
             orchestrator.acceptance_auditor.audit.assert_not_called()
 
-    def test_resumed_job_notifies_before_queue_completion(self) -> None:
+    def test_go_resumes_into_preview_without_notification_or_completion(self) -> None:
         job = SimpleNamespace(
             id="job-1",
+            run_id="job-1",
             instagram_url=INSTAGRAM_URL,
             chat_id=42,
             status="running",
@@ -195,42 +248,28 @@ class RecoveryCliTests(unittest.TestCase):
         )
         queue = Mock()
         queue.next_interrupted.return_value = job
-        publish = DeploymentResult(
-            provider="cloudflare_pages",
-            project_name="siteagent-example",
-            production_url="https://siteagent-example.pages.dev",
-            deployment_url="https://deploy.siteagent-example.pages.dev",
-            status="success",
-            deployed_at="2026-07-14T00:00:00+00:00",
-            verification_status="verified",
-        )
+        publish = _verified_preview()
         orchestrator = Mock()
         orchestrator.run.return_value = SimpleNamespace(publish=publish)
         notifier = Mock()
-        events: list[str] = []
-        queue.record_checkpoints.side_effect = lambda *args, **kwargs: events.append("checkpoints")
-        queue.mark_notification_sending.side_effect = lambda *args, **kwargs: events.append("sending")
-        notifier.send_done.side_effect = lambda *args, **kwargs: events.append("notified") or {}
-        queue.record_notification_sent.side_effect = lambda *args, **kwargs: events.append("receipt")
-        queue.complete.side_effect = lambda *args, **kwargs: events.append("completed")
-
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
             patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
-            patch.object(cli, "TelegramNotifier", return_value=notifier),
+            patch.object(cli, "TelegramNotifier") as notifier_class,
         ):
             cli.run_pending_job()
 
         orchestrator.run.assert_called_once_with(
             INSTAGRAM_URL,
-            production=True,
+            production=False,
+            preview=True,
             run_id="job-1",
             run_path=Path("runs/job-1"),
         )
-        self.assertEqual(events, ["checkpoints", "sending", "notified", "receipt", "completed"])
-        queue.complete.assert_called_once_with(
-            "job-1", site_url=publish.production_url, repo_url=publish.repo_url
-        )
+        queue.mark_preview_ready.assert_called_once()
+        queue.complete.assert_not_called()
+        queue.mark_notification_sending.assert_not_called()
+        notifier_class.assert_not_called()
 
     def test_preview_resume_uses_same_run_and_never_notifies_or_completes(self) -> None:
         failed = SimpleNamespace(
@@ -248,12 +287,7 @@ class RecoveryCliTests(unittest.TestCase):
         queue.get.return_value = failed
         queue.reclaim_failed_preview.return_value = running
         orchestrator = Mock()
-        orchestrator.run.return_value = SimpleNamespace(
-            publish=SimpleNamespace(
-                deployment_url="https://hash.siteagent-preview.pages.dev",
-                production_url="",
-            )
-        )
+        orchestrator.run.return_value = SimpleNamespace(publish=_verified_preview())
 
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
@@ -272,7 +306,7 @@ class RecoveryCliTests(unittest.TestCase):
         queue.mark_preview_ready.assert_called_once()
         self.assertEqual(
             queue.mark_preview_ready.call_args.kwargs["preview_url"],
-            "https://hash.siteagent-preview.pages.dev",
+            "https://hash.siteagent-preview-example.pages.dev",
         )
         queue.complete.assert_not_called()
         queue.mark_notification_sending.assert_not_called()
@@ -286,18 +320,13 @@ class RecoveryCliTests(unittest.TestCase):
             chat_id=42,
             status="preview_ready",
             run_dir=r"runs\job-preview",
-            preview_url="https://hash.siteagent-preview.pages.dev",
+            preview_url="https://hash.siteagent-preview-example.pages.dev",
             telegram_notification_status="not_started",
         )
         queue = Mock()
         queue.get.return_value = ready
         orchestrator = Mock()
-        orchestrator.run.return_value = SimpleNamespace(
-            publish=SimpleNamespace(
-                deployment_url=ready.preview_url,
-                production_url="",
-            )
-        )
+        orchestrator.run.return_value = SimpleNamespace(publish=_verified_preview(ready.preview_url))
 
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
@@ -340,6 +369,92 @@ class RecoveryCliTests(unittest.TestCase):
 
         queue.fail.assert_not_called()
         queue.mark_preview_ready.assert_not_called()
+
+    def test_preview_lane_rejects_a_verified_production_result(self) -> None:
+        production = DeploymentResult(
+            provider="cloudflare_pages",
+            project_name="customer-production",
+            production_url="https://customer-production.pages.dev",
+            deployment_url="https://hash.customer-production.pages.dev",
+            status="success",
+            deployed_at="2026-07-19T00:00:00+00:00",
+            verification_status="verified",
+        )
+        with self.assertRaisesRegex(RuntimeError, "non-preview deployment"):
+            cli._preview_result_from_result(SimpleNamespace(publish=production))
+
+    def test_production_promotion_requires_explicit_authorization_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp)
+            job = SimpleNamespace(
+                id="job-preview",
+                run_id="job-preview",
+                instagram_url=INSTAGRAM_URL,
+                chat_id=42,
+                status="preview_ready",
+                run_dir=str(run_dir),
+            )
+            queue = Mock()
+            queue.get.return_value = job
+            with (
+                patch.object(cli, "_pending_job_queue", return_value=queue),
+                patch.object(cli, "SiteAgentOrchestrator") as orchestrator,
+                self.assertRaisesRegex(RuntimeError, "production_authorization.json"),
+            ):
+                cli.run_production_promotion("job-preview", authorized=True)
+            orchestrator.assert_not_called()
+
+    def test_production_promotion_requires_authorize_flag_before_queue_access(self) -> None:
+        with (
+            patch.object(cli, "_pending_job_queue") as queue_factory,
+            self.assertRaisesRegex(RuntimeError, "--authorize-production"),
+        ):
+            cli.run_production_promotion("job-preview", authorized=False)
+        queue_factory.assert_not_called()
+
+    def test_production_authorization_materializes_exact_rights_bound_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp)
+            reports = run_dir / "generation_reports"
+            reports.mkdir()
+            source = {
+                "purpose": "isolated_preview",
+                "media": [
+                    {
+                        "asset_id": asset_id,
+                        "url": f"https://res.cloudinary.com/example/image/upload/{asset_id}.jpg",
+                        "source_kind": "business_social",
+                        "user_authorized_for_preview": True,
+                        "allowed_for_customer_production": False,
+                        "user_authorized": False,
+                        "allowed_for_public_site": False,
+                    }
+                    for asset_id in ("one", "two")
+                ],
+            }
+            (reports / "02_authorised_media_manifest.json").write_text(
+                json.dumps(source), encoding="utf-8"
+            )
+            authorization = {
+                "job_id": "job-preview",
+                "run_id": "job-preview",
+                "authorized_media_asset_ids": ["one", "two"],
+            }
+
+            manifest = cli._materialize_production_manifest(run_dir, authorization)
+
+            self.assertEqual(manifest["purpose"], "customer_production")
+            self.assertTrue(all(item["source_kind"] == "business" for item in manifest["media"]))
+            self.assertTrue(all(item["user_authorized"] for item in manifest["media"]))
+            self.assertTrue(all(item["allowed_for_public_site"] for item in manifest["media"]))
+            self.assertTrue(all(item["allowed_for_customer_production"] for item in manifest["media"]))
+            self.assertTrue((run_dir / "production_input" / "media_manifest.json").is_file())
+
+            with self.assertRaisesRegex(RuntimeError, "exactly match"):
+                cli._materialize_production_manifest(
+                    run_dir,
+                    {**authorization, "authorized_media_asset_ids": ["one"]},
+                )
 
 
 if __name__ == "__main__":

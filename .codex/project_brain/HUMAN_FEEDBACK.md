@@ -246,3 +246,23 @@ repeat the same brief in every chat.
 - Isolated review publishing fails closed when dedicated Cloudflare Pages
   credentials are unavailable. Do not silently substitute an unauthenticated
   temporary Workers deployment for the approved Pages preview contract.
+
+## Preview-first go and brand fidelity correction (2026-07-19)
+
+- A normal Telegram `go` is a preview command. It must autonomously research,
+  build, review and return an isolated noindex preview URL. Customer production,
+  production media/contact/copy confirmation, custom domains and Telegram
+  production delivery belong to a later separately authorised promotion lane.
+- Brand fidelity is a blocking product requirement, not optional art direction.
+  Before Design Director, preserve and analyse the official logo plus repeated
+  business-owned template/highlight/signage signals; do not infer brand colours
+  from random objects or generic platform pages.
+- Store original and deterministic processed logo assets with source, checksum,
+  dimensions, method, confidence and separate preview/production rights. Never
+  redraw, recolour or replace an evidenced official logo generatively.
+- A high-confidence business palette outranks reference colours and category
+  conventions. Low-confidence analysis uses a conservative neutral fallback and
+  remains a production blocker without blocking an honest preview.
+- Independent Brand Fidelity review must compare the brand package, final
+  desktop/tablet/mobile screenshots and source evidence. Technical cleanliness
+  or visual polish cannot compensate for an unrelated business identity.
