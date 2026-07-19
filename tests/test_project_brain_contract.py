@@ -53,6 +53,19 @@ class ProjectBrainContractTests(unittest.TestCase):
         self.assertIn("semantic footer", skill)
         self.assertIn("not a visual template", skill)
 
+    def test_preview_notification_is_separate_from_production_delivery(self) -> None:
+        feedback = (ROOT / ".codex/project_brain/HUMAN_FEEDBACK.md").read_text(
+            encoding="utf-8-sig"
+        )
+        director = (ROOT / ".agents/skills/siteagent-project-director/SKILL.md").read_text(
+            encoding="utf-8-sig"
+        )
+        normalized_director = " ".join(director.split())
+        self.assertIn("Telegram preview delivery contract", feedback)
+        self.assertIn("at-most-once", feedback)
+        self.assertIn("keep the job `preview_ready`", normalized_director)
+        self.assertIn("never reuse production notifier", normalized_director)
+
 
 if __name__ == "__main__":
     unittest.main()

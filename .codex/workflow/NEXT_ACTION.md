@@ -2,6 +2,13 @@
 
 Checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_READY`.
 
+Active next action: implement and verify the separate at-most-once Telegram
+preview notification state machine, then live-revalidate and send exactly one
+preview-ready message for job `053656c35b5d4ef58221c5be7171b625`
+using its existing deployment. The job must remain `preview_ready`; no new
+job/run/upload, production promotion, production URL, repository URL or custom
+domain is allowed.
+
 The preview-default and brand-fidelity recovery is complete for the exact job
 and run `053656c35b5d4ef58221c5be7171b625`. No automatic next action remains in
 the preview lane.

@@ -52,6 +52,9 @@ are prevented from recurring.
 
 For a one-link preview recovery, reuse the exact queue item and run. Treat
 public research, preview-only media rights, creative acceptance, noindex
-Cloudflare publication and Telegram non-delivery as separate gates. Require an
-exact `<meta name="siteagent-business-id">` check plus live response/browser
-evidence; never accept an incidental ID match inside an asset URL.
+Cloudflare publication, preview notification and production delivery as
+separate gates. Require an exact `<meta name="siteagent-business-id">` check
+plus live response/browser evidence; never accept an incidental ID match inside
+an asset URL. After a verified preview, send only the direct review URL through
+the preview-specific at-most-once state; keep the job `preview_ready` and never
+reuse production notifier, receipt or URL fields.

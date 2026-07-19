@@ -56,6 +56,14 @@
   meta plus response-level `X-Robots-Tag: noindex, nofollow`. Preview must not
   call the customer-production publisher, change a custom domain, send a
   Telegram production result or write normal production deployment state.
+- A verified preview is automatically returned to the originating Telegram
+  chat through `send_preview_ready`, not the production `send_done` path. Its
+  queue item remains `preview_ready`; preview receipt/idempotency fields are
+  isolated from production status, URLs and receipts.
+- Preview notification uses at-most-once semantics bound to job ID, deployment
+  ID and preview URL checksum. `sending`, `unknown` and `sent` block automatic
+  resend; `preview-notify` handles only an existing `not_started` deployment,
+  while `preview-resend` requires explicit recorded authorization.
 - A future `SiteRevisionAgent` will modify an existing accepted project from its
   saved context and publish a fresh preview after QA. It remains separate from
   the new-site generation pipeline and may update production only after human

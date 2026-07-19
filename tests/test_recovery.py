@@ -142,7 +142,7 @@ class RecoveryQueueTests(unittest.TestCase):
             self.assertEqual(repaired.repo_url, "")
             self.assertEqual(repaired.telegram_notification_status, "not_started")
 
-    def test_preview_ready_is_not_completion_or_telegram_delivery(self) -> None:
+    def test_preview_ready_is_not_production_completion(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
             job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
@@ -152,6 +152,9 @@ class RecoveryQueueTests(unittest.TestCase):
             ready = queue.mark_preview_ready(
                 job.id,
                 preview_url="https://preview.example.pages.dev",
+                deployment_id="preview-deployment",
+                project_name="siteagent-preview-example",
+                branch="preview-job",
                 checkpoints={"critics_completed": "completed_and_valid"},
             )
 
@@ -237,7 +240,7 @@ class RecoveryCliTests(unittest.TestCase):
             self.assertIsNone(result)
             orchestrator.acceptance_auditor.audit.assert_not_called()
 
-    def test_go_resumes_into_preview_without_notification_or_completion(self) -> None:
+    def test_go_resumes_into_preview_with_preview_notification_only(self) -> None:
         job = SimpleNamespace(
             id="job-1",
             run_id="job-1",
@@ -249,13 +252,31 @@ class RecoveryCliTests(unittest.TestCase):
         queue = Mock()
         queue.next_interrupted.return_value = job
         publish = _verified_preview()
+        ready = SimpleNamespace(
+            **{
+                **job.__dict__,
+                "status": "preview_ready",
+                "workflow_lane": "preview",
+                "preview_url": publish.preview_url,
+                "preview_deployment_id": publish.deployment_id,
+                "preview_project_name": publish.project_name,
+                "preview_branch": publish.branch,
+                "site_url": "",
+                "repo_url": "",
+                "production_authorization": {},
+                "telegram_preview_notification_status": "not_started",
+            }
+        )
+        queue.mark_preview_ready.return_value = ready
+        queue.get.return_value = SimpleNamespace(
+            telegram_preview_notification_status="sent"
+        )
         orchestrator = Mock()
         orchestrator.run.return_value = SimpleNamespace(publish=publish)
-        notifier = Mock()
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
             patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
-            patch.object(cli, "TelegramNotifier") as notifier_class,
+            patch.object(cli, "_deliver_preview_notification") as deliver,
         ):
             cli.run_pending_job()
 
@@ -269,9 +290,9 @@ class RecoveryCliTests(unittest.TestCase):
         queue.mark_preview_ready.assert_called_once()
         queue.complete.assert_not_called()
         queue.mark_notification_sending.assert_not_called()
-        notifier_class.assert_not_called()
+        deliver.assert_called_once()
 
-    def test_preview_resume_uses_same_run_and_never_notifies_or_completes(self) -> None:
+    def test_preview_resume_uses_same_run_and_preview_notification_only(self) -> None:
         failed = SimpleNamespace(
             id="job-preview",
             run_id="job-preview",
@@ -286,13 +307,34 @@ class RecoveryCliTests(unittest.TestCase):
         queue = Mock()
         queue.get.return_value = failed
         queue.reclaim_failed_preview.return_value = running
+        publish = _verified_preview()
+        ready = SimpleNamespace(
+            **{
+                **running.__dict__,
+                "status": "preview_ready",
+                "workflow_lane": "preview",
+                "preview_url": publish.preview_url,
+                "preview_deployment_id": publish.deployment_id,
+                "preview_project_name": publish.project_name,
+                "preview_branch": publish.branch,
+                "site_url": "",
+                "repo_url": "",
+                "production_authorization": {},
+                "telegram_preview_notification_status": "not_started",
+            }
+        )
+        queue.mark_preview_ready.return_value = ready
+        queue.get.return_value = SimpleNamespace(
+            **failed.__dict__,
+            telegram_preview_notification_status="sent",
+        )
         orchestrator = Mock()
-        orchestrator.run.return_value = SimpleNamespace(publish=_verified_preview())
+        orchestrator.run.return_value = SimpleNamespace(publish=publish)
 
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
             patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
-            patch.object(cli, "TelegramNotifier") as notifier_class,
+            patch.object(cli, "_deliver_preview_notification") as deliver,
         ):
             cli.run_preview_job("job-preview")
 
@@ -310,7 +352,7 @@ class RecoveryCliTests(unittest.TestCase):
         )
         queue.complete.assert_not_called()
         queue.mark_notification_sending.assert_not_called()
-        notifier_class.assert_not_called()
+        deliver.assert_called_once()
 
     def test_preview_ready_revalidates_same_run_without_duplicate_queue_event(self) -> None:
         ready = SimpleNamespace(
@@ -322,6 +364,14 @@ class RecoveryCliTests(unittest.TestCase):
             run_dir=r"runs\job-preview",
             preview_url="https://hash.siteagent-preview-example.pages.dev",
             telegram_notification_status="not_started",
+            telegram_preview_notification_status="sent",
+            workflow_lane="preview",
+            preview_deployment_id="preview-deployment-1",
+            preview_project_name="siteagent-preview-example",
+            preview_branch="preview-job-preview",
+            site_url="",
+            repo_url="",
+            production_authorization={},
         )
         queue = Mock()
         queue.get.return_value = ready
@@ -331,6 +381,7 @@ class RecoveryCliTests(unittest.TestCase):
         with (
             patch.object(cli, "_pending_job_queue", return_value=queue),
             patch.object(cli, "SiteAgentOrchestrator", return_value=orchestrator),
+            patch.object(cli, "_deliver_preview_notification") as deliver,
         ):
             cli.run_preview_job("job-preview")
 
@@ -343,6 +394,7 @@ class RecoveryCliTests(unittest.TestCase):
         )
         queue.mark_preview_ready.assert_not_called()
         queue.reclaim_failed_preview.assert_not_called()
+        deliver.assert_not_called()
 
     def test_preview_ready_validation_failure_does_not_destroy_checkpoint(self) -> None:
         ready = SimpleNamespace(

@@ -343,6 +343,12 @@ class PreviewLiveVerifier:
                 timeout=self.timeout_seconds,
                 allow_redirects=True,
             )
+            _assert_response_origin(
+                url,
+                response,
+                requested_url=page_url,
+                label=f"Preview page {route!r}",
+            )
             if response.status_code != 200:
                 raise LiveVerificationError(
                     f"Preview page {route!r} returned HTTP {response.status_code}."
@@ -370,6 +376,12 @@ class PreviewLiveVerifier:
             urljoin(url.rstrip("/") + "/", "robots.txt"),
             timeout=self.timeout_seconds,
             allow_redirects=True,
+        )
+        _assert_response_origin(
+            url,
+            robots_response,
+            requested_url=urljoin(url.rstrip("/") + "/", "robots.txt"),
+            label="Preview robots.txt",
         )
         if robots_response.status_code != 200 or "Disallow: /" not in (robots_response.text or ""):
             raise LiveVerificationError("Preview robots.txt does not block all crawlers.")
@@ -531,6 +543,40 @@ def _header_value(headers: Any, name: str) -> str:
         if value is not None:
             return str(value)
     return ""
+
+
+def _same_origin(expected: str, actual: str) -> bool:
+    expected_url = urlsplit(expected)
+    actual_url = urlsplit(actual)
+    expected_port = expected_url.port or (443 if expected_url.scheme.lower() == "https" else 80)
+    actual_port = actual_url.port or (443 if actual_url.scheme.lower() == "https" else 80)
+    return (
+        expected_url.scheme.lower() == actual_url.scheme.lower()
+        and (expected_url.hostname or "").lower() == (actual_url.hostname or "").lower()
+        and expected_port == actual_port
+    )
+
+
+def _assert_response_origin(
+    expected_origin: str,
+    response: Any,
+    *,
+    requested_url: str,
+    label: str,
+) -> None:
+    candidates = [requested_url]
+    for hop in list(getattr(response, "history", None) or []):
+        hop_url = str(getattr(hop, "url", "") or requested_url)
+        candidates.append(hop_url)
+        headers = getattr(hop, "headers", {})
+        location = _header_value(headers, "location")
+        if location:
+            candidates.append(urljoin(hop_url, location))
+    candidates.append(str(getattr(response, "url", "") or requested_url))
+    if any(not _same_origin(expected_origin, candidate) for candidate in candidates):
+        raise LiveVerificationError(
+            f"{label} redirected outside the exact deployment origin."
+        )
 
 
 def _slug(value: str, *, fallback: str) -> str:

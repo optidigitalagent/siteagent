@@ -70,5 +70,7 @@ When a user asks to recover one submitted URL as a review preview:
 5. Require checksum-bound screenshots, independent criticism, Product Director
    acceptance and live browser QA before publishing.
 6. Publish only to a dedicated noindex Cloudflare preview project/branch, then
-   record `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW`; never complete the
-   Telegram production job or send its success message from this lane.
+   record `ONE_LINK_SITE_PREVIEW_READY_FOR_USER_REVIEW` and send the direct
+   preview URL through the separate at-most-once Telegram preview-notification
+   state. Never complete the production job, populate production URLs or call
+   the production success notifier from this lane.

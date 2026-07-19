@@ -266,3 +266,21 @@ repeat the same brief in every chat.
 - Independent Brand Fidelity review must compare the brand package, final
   desktop/tablet/mobile screenshots and source evidence. Technical cleanliness
   or visual polish cannot compensate for an unrelated business identity.
+
+## Telegram preview delivery contract (2026-07-19)
+
+- A successful normal `go` is not complete for the user when the verified
+  preview URL only appears in the local terminal. The same originating Telegram
+  chat must receive one explicit review-preview message after live verification.
+- Preview notification is not production delivery. It keeps the queue item at
+  `preview_ready`, uses preview-only state and receipt fields, and never calls
+  `send_done`, fills production URLs, changes a custom domain or promotes media
+  rights.
+- Delivery is at-most-once per job, deployment ID and preview URL checksum.
+  Persist `sending` before the API request; `sending`, `unknown` and `sent` block
+  automatic resend. A lost response becomes `unknown`; only a separately
+  authorised resend may retry it.
+- Git-safe preview receipts contain only acceptance status, timestamp,
+  deployment/URL binding and attempt ID. Telegram chat/message identifiers,
+  bot tokens, request payloads and raw unredacted transport errors must never be
+  persisted.

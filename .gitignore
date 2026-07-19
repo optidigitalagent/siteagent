@@ -10,3 +10,5 @@ node_modules/
 .chrome-*/
 .edge-*/
 bella-dent-*.png
+.codex/inbox/*.lock
+.codex/inbox/*.tmp

@@ -8,6 +8,7 @@ from pathlib import Path
 from site_agent.config import settings
 from site_agent.job_queue import (
     InterruptedDeliveryUncertain,
+    PreviewNotificationNotAllowed,
     PreviewRecoveryNotAllowed,
     TelegramJobQueue,
 )
@@ -125,7 +126,7 @@ def _execute_preview_job(
         publish = _preview_result_from_result(result)
         preview_url = publish.preview_url
         if not (was_preview_ready and job.preview_url == preview_url):
-            queue.mark_preview_ready(
+            job = queue.mark_preview_ready(
                 job.id,
                 preview_url=preview_url,
                 deployment_id=publish.deployment_id,
@@ -143,12 +144,39 @@ def _execute_preview_job(
                     "preview_live_verified": "completed_and_valid",
                 },
             )
+        else:
+            job = queue.get(job.id)
     except Exception as exc:
         if not was_preview_ready:
             queue.fail(job.id, str(exc))
         raise
     print("Preview готово:")
     print(preview_url)
+    if getattr(job, "telegram_preview_notification_status", "not_started") == "not_started":
+        try:
+            _deliver_preview_notification(
+                queue,
+                job,
+                publish,
+                run_dir=run_dir,
+                live_verify=False,
+            )
+        except Exception:
+            print(
+                "Telegram preview: "
+                + str(
+                    getattr(
+                        queue.get(job.id),
+                        "telegram_preview_notification_status",
+                        "unknown",
+                    )
+                )
+            )
+            raise
+    print(
+        "Telegram preview: "
+        + str(getattr(queue.get(job.id), "telegram_preview_notification_status", "unknown"))
+    )
 
 
 def _preview_result_from_result(result: object) -> PreviewDeploymentResult:
@@ -170,6 +198,160 @@ def _preview_result_from_result(result: object) -> PreviewDeploymentResult:
     ):
         raise RuntimeError("Preview publishing did not return a verified isolated preview deployment.")
     return validated
+
+
+def _deliver_preview_notification(
+    queue: TelegramJobQueue,
+    job: object,
+    preview: PreviewDeploymentResult,
+    *,
+    run_dir: Path,
+    live_verify: bool,
+    authorized_resend: bool = False,
+) -> dict[str, str | int]:
+    """Deliver one preview URL without changing the preview or production lane."""
+    if (
+        getattr(job, "status", "") != "preview_ready"
+        or getattr(job, "workflow_lane", "") != "preview"
+        or getattr(job, "preview_url", "") != preview.preview_url
+        or getattr(job, "preview_deployment_id", "") != preview.deployment_id
+        or getattr(job, "preview_project_name", "") != preview.project_name
+        or getattr(job, "preview_branch", "") != preview.branch
+        or getattr(job, "site_url", "")
+        or getattr(job, "repo_url", "")
+        or bool(getattr(job, "production_authorization", {}))
+    ):
+        raise PreviewNotificationNotAllowed(
+            getattr(job, "id", "unknown"),
+            "queue metadata does not exactly match the isolated preview deployment",
+        )
+    if live_verify:
+        PreviewLiveVerifier().verify(
+            preview.preview_url,
+            site_dir=run_dir / "preview_publish",
+            expected_marker=stable_business_id(job.instagram_url),
+        )
+    business_name = _preview_business_name(run_dir)
+    notifier = TelegramNotifier()
+    # Token, message identity and all deployment invariants are checked before
+    # the durable sending state, so guaranteed pre-request failures remain
+    # safely retryable through preview-notify without a generation/deploy rerun.
+    notifier.validate_preview_ready(business_name, preview)
+    sending = queue.mark_preview_notification_sending(
+        job.id,
+        preview_url=preview.preview_url,
+        deployment_id=preview.deployment_id,
+        authorized_resend=authorized_resend,
+    )
+    try:
+        receipt = notifier.send_preview_ready(
+            job.chat_id,
+            business_name=business_name,
+            preview=preview,
+            attempt_id=sending.telegram_preview_notification_attempt_id,
+        )
+    except Exception as exc:
+        safe_error = _safe_telegram_error(exc)
+        queue.mark_preview_notification_unknown(job.id, "telegram_transport_uncertain")
+        raise RuntimeError(
+            "Telegram preview notification outcome is uncertain; automatic resend is blocked. "
+            f"Safe error: {safe_error}"
+        ) from None
+    try:
+        if authorized_resend:
+            queue.record_preview_resend_sent(job.id, receipt)
+        else:
+            queue.record_preview_notification_sent(job.id, receipt)
+    except Exception as exc:
+        raise RuntimeError(
+            "Telegram accepted the preview notification, but receipt persistence failed; "
+            "automatic resend remains blocked."
+        ) from exc
+    return receipt
+
+
+def _preview_business_name(run_dir: Path) -> str:
+    candidates = (
+        run_dir / "generation_reports" / "01_research.json",
+        run_dir / "generation_reports" / "00_one_link_intake.json",
+    )
+    for path in candidates:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        value = payload.get("business_name")
+        if isinstance(value, str) and value.strip():
+            return " ".join(value.split())
+    raise RuntimeError("Verified preview business name is missing from the run artifacts.")
+
+
+def _safe_telegram_error(exc: Exception) -> str:
+    normalized = str(exc).casefold()
+    if "timeout" in normalized or "timed out" in normalized:
+        return "telegram_transport_timeout"
+    return "telegram_transport_uncertain"
+
+
+def _load_existing_preview(job: object, run_dir: Path) -> PreviewDeploymentResult:
+    deployment_path = run_dir / "preview_deployment.json"
+    try:
+        preview = PreviewDeploymentResult.model_validate_json(
+            deployment_path.read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("A verified preview_deployment.json is required.") from exc
+    if (
+        preview.preview_url != getattr(job, "preview_url", "")
+        or preview.deployment_id != getattr(job, "preview_deployment_id", "")
+        or preview.project_name != getattr(job, "preview_project_name", "")
+        or preview.branch != getattr(job, "preview_branch", "")
+    ):
+        raise RuntimeError("Queue preview metadata does not match preview_deployment.json.")
+    return preview
+
+
+def run_preview_notification(
+    job_id: str,
+    *,
+    authorized_resend: bool = False,
+) -> None:
+    """Notify an existing verified preview without generation or Cloudflare upload."""
+    queue = _pending_job_queue()
+    job = queue.get(job_id)
+    if job.status != "preview_ready" or job.workflow_lane != "preview":
+        raise PreviewNotificationNotAllowed(job_id, "job is not preview_ready")
+    if authorized_resend:
+        job = queue.authorize_preview_resend(
+            job_id,
+            reason="User explicitly invoked preview-resend with authorization.",
+        )
+    elif job.telegram_preview_notification_status != "not_started":
+        raise PreviewNotificationNotAllowed(
+            job_id,
+            f"notification state is {job.telegram_preview_notification_status}",
+        )
+    run_dir = Path(job.run_dir or settings.runs_dir / (job.run_id or job.id))
+    preview = _load_existing_preview(job, run_dir)
+    print("Preview готово:")
+    print(preview.preview_url)
+    try:
+        receipt = _deliver_preview_notification(
+            queue,
+            job,
+            preview,
+            run_dir=run_dir,
+            live_verify=True,
+            authorized_resend=authorized_resend,
+        )
+    except Exception:
+        print(
+            "Telegram preview: "
+            + str(queue.get(job.id).telegram_preview_notification_status)
+        )
+        raise
+    print("Telegram preview: sent")
+    print(f"Telegram receipt: {receipt['status']}")
 
 
 def _pending_job_queue(*, preview_local: bool = False) -> TelegramJobQueue:
@@ -423,6 +605,7 @@ def main() -> None:
     parser.add_argument("command_or_url")
     parser.add_argument("--job-id")
     parser.add_argument("--authorize-manual-resend", action="store_true")
+    parser.add_argument("--authorize-preview-resend", action="store_true")
     parser.add_argument("--authorize-production", action="store_true")
     parser.add_argument("--deployment-id", default="")
     args = parser.parse_args()
@@ -437,6 +620,16 @@ def main() -> None:
         if not args.authorize_manual_resend or not args.job_id:
             parser.error("manual-resend requires --job-id and --authorize-manual-resend")
         run_authorized_manual_resend(args.job_id)
+    elif args.command_or_url == "preview-notify":
+        if not args.job_id:
+            parser.error("preview-notify requires --job-id")
+        run_preview_notification(args.job_id)
+    elif args.command_or_url == "preview-resend":
+        if not args.job_id or not args.authorize_preview_resend:
+            parser.error(
+                "preview-resend requires --job-id and --authorize-preview-resend"
+            )
+        run_preview_notification(args.job_id, authorized_resend=True)
     elif args.command_or_url == "production-promote":
         if not args.job_id:
             parser.error("production-promote requires --job-id")

@@ -1,8 +1,16 @@
 # Current Goal
 
-Status: achieved at checkpoint `TELEGRAM_GO_PREVIEW_DEFAULT_READY` on
+Status: active from checkpoint `TELEGRAM_GO_PREVIEW_DEFAULT_READY` on
 2026-07-19 for the exact existing job/run
 `053656c35b5d4ef58221c5be7171b625`.
+
+Complete the missing preview-delivery boundary: after a verified isolated
+preview reaches `preview_ready`, send its direct preview URL exactly once to
+the originating Telegram chat while the job remains `preview_ready`. Preview
+delivery must have its own at-most-once state, safe receipt and recovery
+commands; it must never reuse production notification fields or start another
+generation, run, Cloudflare upload, production promotion or custom-domain
+action.
 
 Restore the one-link Telegram contract for job
 `053656c35b5d4ef58221c5be7171b625` without creating another queue item or run:
@@ -27,7 +35,9 @@ queue recovery metadata, focused and full regression evidence, screenshot-led
 desktop/tablet/mobile review, an independent brand-fidelity decision, a live
 noindex preview URL, and no production/custom-domain/customer-delivery action.
 
-The accepted isolated preview is
+The existing accepted isolated preview is
 `https://227fe3c8.siteagent-preview-amidental-kiev-3a8654d4fd.pages.dev`.
 Production promotion remains a separate blocked action until its explicit
 authorization contract is satisfied.
+
+Target checkpoint: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
