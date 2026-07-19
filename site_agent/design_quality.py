@@ -83,6 +83,7 @@ class BusinessBrief(BaseModel):
     pipeline_schema_version: int = PIPELINE_SCHEMA_VERSION
     business_name: str
     business_category: str
+    exact_product: str = ""
     location: str = ""
     verified_offerings: list[str] = Field(default_factory=list)
     audience: str
@@ -405,7 +406,7 @@ def build_context(research: ResearchBrief, strategy: StrategyBrief, spec: SiteSp
     evidence = assess_evidence(research)
     offerings = research.sells or research.services_or_products
     name, category = clean_identity(research.business_name) or "Instagram business", clean_identity(research.niche) or "independent business"
-    brief = BusinessBrief(business_name=name, business_category=category, location=research.city if meaningful_identity(research.city) else "", verified_offerings=offerings, audience=strategy.target_customer, main_user_intent="Understand the offer and choose the next contact step", business_goal=strategy.business_logic, page_goal="Turn informed interest into the approved primary action", primary_cta=strategy.primary_cta or spec.primary_cta, secondary_cta=strategy.secondary_cta or spec.secondary_cta, objections=strategy.customer_questions_or_fears, trust_opportunities=strategy.reason_to_choose, differentiators=strategy.reason_to_choose, unavailable_information=research.unknowns, prohibited_claims=research.forbidden_claims, evidence_references=[item.source for item in research.verified_facts])
+    brief = BusinessBrief(business_name=name, business_category=category, exact_product=_specific_product(research), location=research.city if meaningful_identity(research.city) else "", verified_offerings=offerings, audience=strategy.target_customer, main_user_intent="Understand the offer and choose the next contact step", business_goal=strategy.business_logic, page_goal="Turn informed interest into the approved primary action", primary_cta=strategy.primary_cta or spec.primary_cta, secondary_cta=strategy.secondary_cta or spec.secondary_cta, objections=strategy.customer_questions_or_fears, trust_opportunities=strategy.reason_to_choose, differentiators=strategy.reason_to_choose, unavailable_information=research.unknowns, prohibited_claims=research.forbidden_claims, evidence_references=[item.source for item in research.verified_facts])
     pattern = choose_pattern(category, offerings, evidence.level)
     directions = visual_directions(category, research, strategy, skill_executions or [])
     selected = directions[int(hashlib.sha256((category + strategy.primary_cta).encode()).hexdigest()[:2], 16) % len(directions)]

@@ -596,8 +596,12 @@ class BrandFidelityAuditor:
         try:
             with Image.open(screenshot_path) as opened:
                 screenshot = opened.convert("RGB")
+                # Crop the identity-bearing top region before scaling. Full-page
+                # mobile captures can otherwise shrink a visible hero logo
+                # below every matcher template size.
+                top_height = max(1, min(2400, round(screenshot.height * 0.35)))
+                screenshot = screenshot.crop((0, 0, screenshot.width, top_height))
                 screenshot.thumbnail((900, 2400))
-                screenshot = screenshot.crop((0, 0, screenshot.width, max(1, min(screenshot.height, round(screenshot.height * 0.35)))))
             with Image.open(logo_path) as opened_logo:
                 logo = opened_logo.convert("RGB")
         except (OSError, ValueError):

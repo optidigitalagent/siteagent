@@ -931,9 +931,41 @@ class CodexStudioRunner:
         except (OSError, ValueError) as exc:
             raise StudioError("Authorised media validation could not read media manifest.") from exc
         allowed = {str(item.get("url", "")) for item in manifest.get("media", [])}
+        logo_checksum = ""
+        brand_manifest_path = studio / "input" / "brand_assets_manifest.json"
+        if brand_manifest_path.is_file():
+            try:
+                brand_manifest = json.loads(brand_manifest_path.read_text(encoding="utf-8"))
+                logo = brand_manifest.get("logo", {})
+                if logo.get("available") is True:
+                    candidate = str(logo.get("processed_checksum", "")).lower()
+                    if re.fullmatch(r"[0-9a-f]{64}", candidate):
+                        logo_checksum = candidate
+            except (OSError, ValueError, TypeError):
+                logo_checksum = ""
         html = source.read_text(encoding="utf-8")
         rendered = re.findall(r"<(?:img|source|video)\b[^>]*\bsrc=[\"']([^\"']+)", html, flags=re.I)
-        forbidden = [url for url in rendered if not url.startswith("data:") and url not in allowed]
+        forbidden: list[str] = []
+        for url in rendered:
+            if url.startswith("data:") or url in allowed:
+                continue
+            # The Studio contract deliberately copies the exact official logo
+            # into the publishable bundle.  Permit only that checksum-bound
+            # local image; business photography must still use an authorised
+            # Cloudinary URL from media_manifest.json.
+            local = (folder / url.split("?", 1)[0].split("#", 1)[0]).resolve()
+            try:
+                local.relative_to(folder.resolve())
+            except ValueError:
+                forbidden.append(url)
+                continue
+            if (
+                logo_checksum
+                and local.is_file()
+                and hashlib.sha256(local.read_bytes()).hexdigest() == logo_checksum
+            ):
+                continue
+            forbidden.append(url)
         if forbidden:
             raise StudioError("Static studio output renders media outside the authorised Cloudinary manifest: " + ", ".join(forbidden[:5]))
 

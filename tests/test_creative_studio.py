@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -141,6 +142,31 @@ class CreativeStudioTests(unittest.TestCase):
             studio, site = self._write_provenance_workspace(
                 root, source_kind="business", body='<img src="media/local-photo.jpg">'
             )
+            with self.assertRaisesRegex(StudioError, "outside the authorised Cloudinary manifest"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
+    def test_static_build_allows_only_checksum_bound_local_official_logo(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio, site = self._write_provenance_workspace(
+                root, source_kind="business", body='<img src="assets/logo.png">'
+            )
+            assets = site / "assets"
+            assets.mkdir()
+            logo = assets / "logo.png"
+            logo.write_bytes(b"exact official logo bytes")
+            (studio / "input" / "brand_assets_manifest.json").write_text(
+                json.dumps({
+                    "logo": {
+                        "available": True,
+                        "processed_checksum": hashlib.sha256(logo.read_bytes()).hexdigest(),
+                    }
+                }),
+                encoding="utf-8",
+            )
+
+            CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+            logo.write_bytes(b"mutated logo bytes")
             with self.assertRaisesRegex(StudioError, "outside the authorised Cloudinary manifest"):
                 CodexStudioRunner._validate_authorised_media_rendering(studio, site)
 

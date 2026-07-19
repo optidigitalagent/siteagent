@@ -169,8 +169,14 @@ def semantic_repetition_report(
 def language_fit_report(spec: Any, research: Any) -> LanguageFitReport:
     selected = (spec.language or "").strip().lower()
     evidence_language = (research.primary_language or "").strip().lower()
-    selected_primary = (re.match(r"[a-z]{2,3}", selected) or [""])[0]
-    evidence_primary = (re.match(r"[a-z]{2,3}", evidence_language) or [""])[0]
+    language_codes = {
+        "ukrainian": "uk", "українська": "uk", "український": "uk",
+        "english": "en", "англійська": "en",
+        "polish": "pl", "polski": "pl", "польська": "pl",
+        "russian": "ru", "русский": "ru", "російська": "ru",
+    }
+    selected_primary = language_codes.get(selected) or (re.match(r"[a-z]{2,3}", selected) or [""])[0]
+    evidence_primary = language_codes.get(evidence_language) or (re.match(r"[a-z]{2,3}", evidence_language) or [""])[0]
     if evidence_language:
         approved = bool(selected_primary) and selected_primary == evidence_primary
         return LanguageFitReport(
@@ -199,22 +205,35 @@ def commercial_usefulness_report(
 ) -> CommercialUsefulnessReport:
     scope = (page_scope or "unspecified").strip().lower()
     semantic = semantic or semantic_repetition_report(spec, context, html_text=html_text, page_scope=scope)
-    hero = " ".join([spec.h1, spec.hero_subtitle]).lower()
+    rendered_sections = _sections_from_html(html_text)
+    # When runnable HTML exists, judge the copy the visitor actually sees.
+    # Falling back to the planning spec would let a stale or untranslated spec
+    # approve a vague rendered first viewport.
+    hero = (rendered_sections[0][1] if rendered_sections else " ".join([spec.h1, spec.hero_subtitle])).lower()
     all_text = _plain_text(html_text) or " ".join([
         spec.h1, spec.hero_subtitle, *spec.trust_points,
         *[" ".join([section.title, *section.content]) for section in spec.sections],
     ])
     offer_terms = [item.lower() for item in context.business_brief.verified_offerings if item.strip()]
+    if context.business_brief.exact_product.strip():
+        offer_terms.append(context.business_brief.exact_product.strip().lower())
     category_terms = [term for term in re.findall(r"[a-z]{4,}", context.business_brief.business_category.lower()) if term not in {"private", "independent"}]
+    localized_category_terms: tuple[str, ...] = ()
+    category = context.business_brief.business_category.lower()
+    if any(token in category for token in ("dent", "стомат", "стомато")):
+        localized_category_terms = (
+            "стоматолог", "коронк", "імплант", "имплант", "вінір", "винир", "брекет",
+            "dentysta", "stomatolog", "implant", "liców", "licow", "aparat ortodont",
+        )
     offer_visible = any(
         term in hero or term.rstrip("s") in hero
         for term in [*offer_terms, *category_terms]
-    )
+    ) or sum(term in hero for term in localized_category_terms) >= 2
     primary_action = bool(spec.primary_cta.strip())
     hero_action = primary_action if hero_cta_present is None else hero_cta_present
     audience = (context.business_brief.audience or "").strip().lower()
     audience_clear = audience not in {"", "a prospective customer", "prospective customer", "visitor"} or any(term in hero for term in category_terms)
-    value_clear = offer_visible and bool(spec.hero_subtitle.strip())
+    value_clear = offer_visible and (len(hero.split()) >= 8 if rendered_sections else bool(spec.hero_subtitle.strip()))
     conversion_path = primary_action and ("instagram" in all_text.lower() or "direct" in all_text.lower() or bool(context.business_brief.primary_cta))
     business_information = bool(offer_terms)
     # This is a commercial gate, so it must work for the verified site language
@@ -222,15 +241,26 @@ def commercial_usefulness_report(
     # deliberately broad sensory/product stems, not unsupported superlatives.
     desire_terms = (
         "private", "evening", "experience", "time on the water", "occasion",
+        "посміш", "турбот", "довір", "досвід", "естетик", "відновлен", "професійн",
         "квіт", "простір", "світл", "жив", "момент", "атмосфер", "церемон",
         "kwiat", "przestrze", "światł", "swiatl", "kolor", "materia wydarzenia",
         "scenograf", "instalacj", "atmosfer", "ceremoni",
     )
     evidence_backed_value = any(
         phrase.strip().lower() in all_text.lower()
+        or phrase.strip().lower().rstrip("s") in all_text.lower()
         for phrase in context.business_brief.differentiators
         if len(phrase.strip()) >= 4
     )
+    evidence_numbers = {
+        value
+        for phrase in context.business_brief.differentiators
+        for value in re.findall(r"\b\d+(?:[.,]\d+)?\b", phrase)
+    }
+    evidence_backed_value = evidence_backed_value or any(
+        re.search(rf"\b{re.escape(value)}\b", all_text) for value in evidence_numbers
+    )
+    value_clear = value_clear or (offer_visible and evidence_backed_value)
     desire = any(word in all_text.lower() for word in desire_terms) or evidence_backed_value
     recitable = offer_visible and primary_action
     editorial_only = any(token in all_text.lower() for token in ("field notes", "dossier", "copy this question", "editorial exercise"))

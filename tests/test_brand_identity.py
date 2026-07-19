@@ -337,6 +337,19 @@ class BrandIdentityTests(unittest.TestCase):
             )
             self.assertFalse(blocked["approved"])
 
+    def test_logo_matcher_preserves_visible_header_scale_on_long_full_page_screenshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            logo = self._logo(root, chromatic=False)
+            screenshot_path = root / "long-mobile.png"
+            screenshot = Image.new("RGB", (390, 6000), "white")
+            with Image.open(logo) as opened:
+                rendered = opened.convert("RGB")
+                rendered.thumbnail((120, 110))
+            screenshot.paste(rendered, (16, 16))
+            screenshot.save(screenshot_path)
+            self.assertTrue(BrandFidelityAuditor._logo_visible_in_screenshot(screenshot_path, logo))
+
 
 if __name__ == "__main__":
     unittest.main()

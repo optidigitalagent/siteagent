@@ -147,6 +147,32 @@ class CommercialUsefulnessTests(unittest.TestCase):
         )
         self.assertTrue(report.approved, report.model_dump())
 
+    def test_named_ukrainian_language_and_localised_dental_offer_pass_rendered_gate(self) -> None:
+        dental = research(
+            business_name="Amidental Kiev",
+            niche="Dentistry",
+            primary_language="Ukrainian",
+            sells=["Dental crowns", "Dental implants", "Veneers", "Braces"],
+        )
+        current = spec(language="uk")
+        context = build_context(dental, strategy(), current)
+        html = """
+        <section data-decision-role='identity_value'>Стоматологічна клініка у Києві. Коронки, імпланти, вініри та брекети. <a href='https://instagram.com'>Написати в Direct</a></section>
+        <section data-decision-role='offer_services'>Напрями стоматології</section>
+        <section data-decision-role='proof'>20 років досвіду за твердженням бренду</section>
+        <section data-decision-role='brand_about'>Професійність і турбота</section>
+        <section data-decision-role='trust_process'>Як почати розмову</section>
+        <section data-decision-role='commercial_decision'>Оберіть напрям</section>
+        <section data-decision-role='objection_handling'>Короткі відповіді</section>
+        <section data-decision-role='final_conversion'>Написати в Instagram Direct</section>
+        """
+        report = commercial_usefulness_report(
+            current, context, html_text=html, hero_cta_present=True, page_scope="full_site"
+        )
+        self.assertTrue(language_fit_report(current, dental).approved)
+        self.assertTrue(report.checks["offer_clear_within_five_seconds"], report.model_dump())
+        self.assertTrue(report.approved, report.model_dump())
+
     def test_polish_spatial_floristry_copy_can_create_evidence_backed_desire(self) -> None:
         current = spec()
         context = build_context(research(), strategy(), current)
