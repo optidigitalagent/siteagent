@@ -197,3 +197,21 @@ The final recovery-branch regression ran 177 tests successfully; the single
 skip is the deliberately opt-in, credential-gated Cloudflare production smoke.
 Compileall, dependency validation, the local smoke build and diff validation also
 passed. No critical/high issue remains in the audited preview scope.
+
+## Site refinement final independent review (2026-07-22)
+
+The first independent passes rejected command execution, form-outcome evidence,
+browser lifecycle interception, baseline image validation and process cleanup.
+Those findings were reproduced and fixed rather than waived. Subsequent probes
+also caught a non-invoked init script, missing real unload coverage, HTTP-error
+cleanup false positives, off-project file links, non-HTTP listeners, IPv4
+wildcard ownership and IPv6 dual-stack ownership.
+
+The final implementation now uses native network-restricted command sandboxing,
+pre-navigation browser interception through real unload, project-root resource
+and link containment, changed-visible form outcome checks, dimension-bound
+baseline/candidate screenshots, and shared fail-closed endpoint ownership checks
+for pre-start and cleanup. Contract and browser/process reviewers both returned
+GO with no critical/high finding. The complete suite passed 258 tests with one
+credential-gated skip; focused refinement/browser coverage passed 43 tests.
+No deployment, Telegram action or production mutation occurred.

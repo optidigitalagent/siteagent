@@ -65,6 +65,7 @@ class SiteBuilder:
             journey_pattern=(design_context.ux_architecture.pattern if design_context else ""),
             composition=composition,
             planned_sections=planned_sections,
+            details_target=(planned_sections[-1]["plan"].id if planned_sections else "content"),
         )
         index_path = site_dir / "index.html"
         index_path.write_text(html, encoding="utf-8")

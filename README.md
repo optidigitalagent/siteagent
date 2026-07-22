@@ -172,6 +172,94 @@ Run one job directly from a URL:
 python -m site_agent.cli "https://www.instagram.com/example/"
 ```
 
+## Existing-site refinement mode
+
+`site_refinement` is a separate workflow for an existing local site/project. It
+does not call the new-site orchestrator, Cloudflare, Telegram, a custom domain,
+or production publishing.
+
+Start a session and run the first complete implementation/QA cycle:
+
+```powershell
+python -m site_agent.cli refinement-start `
+  --project "C:\work\existing-site" `
+  --request "Keep the current identity, rebuild the hero and tighten the service cards" `
+  --entry-path index.html
+```
+
+For a source project, provide local-only commands and a managed localhost URL:
+
+```powershell
+python -m site_agent.cli refinement-start `
+  --project "C:\work\existing-app" `
+  --request "Improve the booking flow" `
+  --build-command "npm run build" `
+  --test-command "npm test" `
+  --start-command "npm run preview" `
+  --preview-url "http://127.0.0.1:4173/"
+```
+
+Add feedback without losing the earlier brief:
+
+```powershell
+python -m site_agent.cli refinement-continue `
+  --session-id existing-site-a1b2c3d4e5 `
+  --request "Also reduce the card radius and keep the footer unchanged"
+```
+
+Earlier requirements remain active by default. To replace one explicitly, use
+its stable ID from `session.json`:
+
+```powershell
+python -m site_agent.cli refinement-continue `
+  --session-id existing-site-a1b2c3d4e5 `
+  --request "Replace the light hero with a dark hero" `
+  --supersede req-0123456789
+```
+
+Attach a visual reference with bounded scope and an explicit interpretation:
+
+```powershell
+python -m site_agent.cli refinement-continue `
+  --session-id existing-site-a1b2c3d4e5 `
+  --request "Use this composition for the home hero" `
+  --reference "C:\brief\hero-reference.png" `
+  --reference-page home `
+  --reference-section hero `
+  --reference-interpretation "Transfer only the split composition and spacing" `
+  --reference-transfer composition `
+  --reference-transfer spacing
+```
+
+If the scope/interpretation is omitted, the refinement controller runs a
+persisted visual-reference analysis before implementation and blocks only when
+the mapping is genuinely ambiguous. Rich contacts, services, prices, texts,
+immutable elements and several independently scoped attachments can be supplied
+through `--input-json`; its schema is `RefinementRequest` in
+`site_agent/refinement.py`.
+
+State and evidence live under
+`runs/refinement/<session-id>/`: `session.json`, copied/checksummed inputs,
+baseline evidence, per-iteration pre-change recovery snapshot, change plan,
+computed source diff, implementation result, browser screenshots, independent
+review and candidate report. The browser gate covers every discovered static
+HTML page (or declared localhost routes) at 1440, 1024, 768, 390 and 360 px,
+plus reduced-motion and generic interaction checks.
+
+Inspect or explicitly accept a candidate:
+
+```powershell
+python -m site_agent.cli refinement-status --session-id existing-site-a1b2c3d4e5
+python -m site_agent.cli refinement-accept --session-id existing-site-a1b2c3d4e5
+```
+
+`CANDIDATE_READY` means the active brief, project tree, screenshots, commands,
+functional/content/animation checks and independent review are checksum-bound
+and have no P0/P1 issue. `USER_ACCEPTED` is set only by the explicit accept
+command after those checksums are revalidated. Acceptance records approval; it
+still does not deploy. New feedback after `CANDIDATE_READY` returns the same
+session to `IMPLEMENTING` and preserves its history.
+
 Run the next production Telegram job:
 
 ```powershell

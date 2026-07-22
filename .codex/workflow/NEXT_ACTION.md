@@ -1,6 +1,25 @@
 # Next Action
 
-Checkpoint: `TELEGRAM_PREVIEW_NOTIFICATION_READY`.
+Active checkpoint: `SITE_REFINEMENT_VERIFIED_NO_PUBLISH`.
+
+The separate persistent existing-site refinement workflow is implemented and
+verified. Focused/full regressions, compileall, dependency validation, smoke
+build, diff validation, real strict Chromium lifecycle checks and two independent
+final audits pass with no critical/high issue. No automatic next action remains.
+Do not publish, touch Telegram state, or change any existing deployment without
+a separate explicit user request.
+
+Previous checkpoint: `AMIDENTAL_EXTERNAL_AUDIT_VERIFIED_AWAITING_AUTHORIZATION`.
+
+The current 18-issue external audit has been verified and converted into a
+system-level change plan in
+`.codex/handoffs/AMIDENTAL_PRODUCTION_AUDIT_VERIFICATION_18_ISSUES.md`. The
+older `AMIDENTAL_EXTERNAL_AUDIT_VERIFICATION.md` covers an earlier partial
+input and is retained only as historical evidence. Do not edit
+the Amidental site or implement the proposed generator gates until the user
+explicitly authorizes implementation. The recommended first implementation
+slice is evidence/cache regression plus computed business-data completeness,
+real first-viewport validation and conversion-outcome tests.
 
 The preview-ready Telegram delivery boundary is complete for exact job/run
 `053656c35b5d4ef58221c5be7171b625`. No automatic next action remains in the

@@ -1,0 +1,60 @@
+{
+  "checked_at": "2026-07-19",
+  "mode": "read_only_local_file_playwright",
+  "target_run": "053656c35b5d4ef58221c5be7171b625",
+  "target": "runs/053656c35b5d4ef58221c5be7171b625/site/index.html",
+  "target_sha256": "bc61fb7d87a95c1afdb398e923ff724d0f79756b42f5bb51df8b704815960539",
+  "browser": {
+    "engine": "chromium",
+    "version": "148.0.7778.96",
+    "driver": "playwright.sync_api"
+  },
+  "command": "PowerShell here-string piped to python -; Playwright sync API opened the checksum-bound local file URI at 1024x900 and 360x800, collected DOM geometry/tap-target/CTA/image/console/request metrics, scrolled to document end, and clicked .menu-toggle at 360x800.",
+  "stale_if": "The current target SHA-256 differs from target_sha256 or the browser probe implementation changes.",
+  "viewports": [
+    {
+      "width": 1024,
+      "height": 900,
+      "horizontal_scroll": false,
+      "small_tap_target_count": 0,
+      "clipped_cta_count": 0,
+      "console_error_count": 0,
+      "failed_request_count": 0
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "document_client_width": 360,
+      "document_scroll_width": 369,
+      "body_overflow_x": "hidden",
+      "hidden_horizontal_overflow_px": 9,
+      "small_tap_target_count": 0,
+      "clipped_cta_count": 0,
+      "console_error_count": 0,
+      "failed_request_count": 0,
+      "mobile_menu": {
+        "toggle_visible": true,
+        "expanded_before": false,
+        "expanded_after": true,
+        "nav_visible_before": false,
+        "nav_visible_after": true,
+        "visible_nav_link_count_after": 3
+      }
+    }
+  ],
+  "conversion_observation": {
+    "cta_count": 10,
+    "unique_cta_target_count": 1,
+    "all_ctas_target_instagram": true,
+    "outcome_after_instagram_authentication_tested": false
+  },
+  "lazy_image_observation": {
+    "missing_after_full_scroll": 0,
+    "note": "Initial naturalWidth zero values cleared after a full scroll and wait; they are not classified as broken images."
+  },
+  "limitations": [
+    "The check used the local final HTML rather than a fresh production deployment.",
+    "Hover, keyboard focus, reduced motion, CLS and long-session behavior were not exhaustively tested.",
+    "The Instagram Direct outcome was not executed."
+  ]
+}

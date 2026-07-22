@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tempfile
+import re
 import unittest
 from pathlib import Path
 
@@ -42,6 +43,9 @@ class StructuralCompositionTests(unittest.TestCase):
             html = index.read_text(encoding="utf-8")
             self.assertIn('data-section-type="authority_hero"', html)
             self.assertIn('data-section-type="consultation_closure"', html)
+            rendered_ids = set(re.findall(r'\sid="([^"]+)"', html))
+            for fragment in re.findall(r'href="#([^"]+)"', html):
+                self.assertIn(fragment, rendered_ids)
             self.assertTrue((root / "generation_reports" / "build_manifest.json").is_file())
 
     def test_score_breakdown_is_evidence_backed_and_not_default_92(self) -> None:

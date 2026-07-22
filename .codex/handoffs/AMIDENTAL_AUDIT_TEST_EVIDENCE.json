@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-07-19",
+  "working_directory": "repository_root",
+  "command": "python -m unittest tests.test_design_quality tests.test_commercial_usefulness tests.test_full_site_product_contract tests.test_technical_inspector tests.test_one_link_preview_contract tests.test_acceptance",
+  "result": "OK",
+  "tests_run": 48,
+  "duration_seconds": 56.226,
+  "exit_code": 0,
+  "scope_note": "Focused regression evidence for readiness, commercial usefulness, full-site product contract, technical inspector, one-link preview contract and acceptance. It is not a full-suite claim."
+}

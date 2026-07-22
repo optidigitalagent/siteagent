@@ -1,5 +1,24 @@
 # Current Goal
 
+## Active goal — site refinement mode (2026-07-22)
+
+Implement a real `site_refinement` workflow for existing site projects. The
+mode must preserve an accumulating user brief and referenced files, edit the
+selected project rather than enter new-site generation, capture a baseline,
+run implementation plus browser/visual/responsive/functional/technical QA,
+and persist a candidate report. `CANDIDATE_READY` is permitted only from
+checksum-bound QA evidence; `USER_ACCEPTED` requires an explicit command.
+
+Non-regression boundaries: the Telegram `go` build lane, queue state,
+Cloudflare deployment and existing-site production remain unchanged. The
+refinement lane never publishes automatically.
+
+Acceptance evidence is focused and full tests, compile/build checks, a real
+local static-site refinement integration run with five target widths, and an
+independent contract review with no critical/high issue.
+
+## Previous completed goal
+
 Status: achieved at checkpoint `TELEGRAM_PREVIEW_NOTIFICATION_READY` on
 2026-07-19 for the exact existing job/run
 `053656c35b5d4ef58221c5be7171b625`.

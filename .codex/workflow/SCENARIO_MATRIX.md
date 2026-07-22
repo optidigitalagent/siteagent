@@ -50,3 +50,14 @@
 | Telegram may have accepted a preview message but its response is lost | Preview notification becomes `unknown`, the verified URL remains, and no automatic run/upload/resend occurs | queue state + transport-failure regression |
 | Existing `preview_ready/not_started` needs recovery delivery | `preview-notify` freshly verifies the existing live preview and sends without invoking generation or Cloudflare upload | CLI mocks + live verifier + unchanged deployment ID |
 | Preview notification is `sent`, `sending` or `unknown` for the same key | Repeated `go`, live audit and `preview-notify` do not send; explicit `preview-resend` is the only authorised retry path | idempotency and concurrency regressions |
+| A refinement session receives hero feedback and later card feedback | Both requirements remain active in the live brief | refinement state/history regression |
+| A refinement user explicitly replaces the light hero requirement with a dark hero requirement | The old item remains auditable as `superseded`; only the dark requirement is active | explicit supersession regression |
+| A refinement build passes without browser QA | `CANDIDATE_READY` is rejected | refinement readiness regression |
+| New feedback arrives after `CANDIDATE_READY` | The session returns to `IMPLEMENTING` and keeps prior history | refinement transition regression |
+| Contacts are missing but the requested card-design task is actionable | The design task runs and the contact blocker remains explicit | partial-progress regression |
+| A reference is scoped only to the hero | Its mapping cannot be widened to unrelated pages/components | reference-scope regression |
+| Existing BUILD MODE is invoked after refinement support is installed | The original `go`/URL orchestration contract remains unchanged | CLI/build-mode regression |
+| A refinement page attempts POST, beacon, popup or WebSocket work during load/unload | Every side effect is neutralized before external connection and appears in browser evidence | lifecycle Chromium regressions + interaction screenshots |
+| A file-based project links to or loads an existing file outside its root | The resource/link is rejected even when the destination exists or resolves through a link | project-root resource and relative/absolute href regressions |
+| A localhost port is owned by explicit IPv4, `0.0.0.0`, non-HTTP or IPv6 dual-stack listener | Start refuses the owner and cleanup cannot certify the port free | endpoint ownership regressions + lifecycle JSON |
+| A handled form leaves only hidden or stale feedback, or points at an unverified endpoint | Functional QA fails; only a changed visible outcome or safe contact fallback passes | form interaction regressions |

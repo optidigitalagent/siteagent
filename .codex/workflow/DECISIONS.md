@@ -64,10 +64,12 @@
   ID and preview URL checksum. `sending`, `unknown` and `sent` block automatic
   resend; `preview-notify` handles only an existing `not_started` deployment,
   while `preview-resend` requires explicit recorded authorization.
-- A future `SiteRevisionAgent` will modify an existing accepted project from its
-  saved context and publish a fresh preview after QA. It remains separate from
-  the new-site generation pipeline and may update production only after human
-  approval.
+- Existing-site changes use the separate `site_refinement` orchestrator. It
+  persists a versioned live brief and scoped reference inputs under
+  `runs/refinement/<session-id>`, records baseline/recovery/diff/QA artifacts,
+  and never calls the new-site orchestrator, publisher, Telegram queue or
+  notifier. `USER_ACCEPTED` records explicit approval only; preview and
+  production remain separately authorised actions.
 - The functional site shell is a blocking cross-project contract: scrollable
   pages keep primary navigation available, every page has a semantic footer
   with IA navigation plus a verified conversion/contact route, and primary CTA
@@ -90,3 +92,12 @@
 - Metadata-only videos remain research provenance and do not count as renderable
   media or Studio sufficiency. Immutable exact-duration claims are checked again
   in final customer-facing HTML before acceptance or cached recovery.
+- Refinement project commands execute only through the native Codex workspace
+  sandbox with restricted network. Lexical command checks remain defense in
+  depth; they are not the isolation boundary.
+- Refinement browser QA guards load, interaction and real unload. File-mode reads
+  and links are restricted to the selected project root; localhost mode is
+  restricted to the exact managed origin.
+- A managed preview port is free only when bounded connection and exclusive bind
+  ownership probes clear explicit, IPv4 wildcard and IPv6 dual-stack cases.
+  Process exit or an HTTP error alone is not cleanup evidence.

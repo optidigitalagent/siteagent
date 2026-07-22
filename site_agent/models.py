@@ -205,6 +205,8 @@ class TechnicalGate(BaseModel):
     persistent_header_issues: list[str] = Field(default_factory=list)
     footer_issues: list[str] = Field(default_factory=list)
     clipped_primary_ctas: list[str] = Field(default_factory=list)
+    functional_issues: list[str] = Field(default_factory=list)
+    reduced_motion_issues: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
 
 

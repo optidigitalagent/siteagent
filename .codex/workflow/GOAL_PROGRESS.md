@@ -655,3 +655,102 @@ Live end-to-end verification requires local runtime credentials:
 - Final checkpoint: `TELEGRAM_GO_PREVIEW_DEFAULT_READY`. Production promotion,
   custom domain and Telegram delivery were not performed and remain separately
   blocked.
+
+## External Amidental audit verification (2026-07-19)
+
+- Performed a read-only verification of the external audit against the exact
+  run `053656c35b5d4ef58221c5be7171b625`, current runtime, prior same-business
+  evidence, final HTML/screenshots/reports and public official sources.
+- Verified 10 unique issue IDs. The commercial incompleteness is real, while
+  the claim that the service preview was an erroneous production launch is out
+  of the current scope: preview remains isolated, noindex and unpromoted.
+- Confirmed the central system false positive: a run with missing phone,
+  address, hours, full services, team, reviews, prices and booking still received
+  Level A/full-site/commercial/product acceptance because current checks accept
+  Instagram, role labels and section counts as sufficient evidence.
+- Independent gate review found no runtime statuses named `DESIGN_READY`,
+  `CONTENT_READY`, `BUSINESS_DATA_COMPLETE`, `FUNCTIONALLY_READY`, `SEO_READY`
+  or `PRODUCTION_READY`. Forty-eight relevant unit tests passed, proving the gap
+  is in the current contract rather than a failing test.
+- Additional boundary QA found no explicit overflow at 1024 px and a working
+  360 px mobile menu, but confirmed a hidden 9 px document overflow at 360 px.
+  All ten CTAs resolve to one Instagram target.
+- Durable report: `.codex/handoffs/AMIDENTAL_EXTERNAL_AUDIT_VERIFICATION.md`.
+  No site/runtime code, deployment or Telegram production state was changed.
+- Independent final re-review approved the corrected report with no remaining
+  critical/high/medium issue. The review specifically verified the ten-section
+  structure, ISSUE statuses/classes, eight RULE contracts, full-site scope
+  preservation, checksum-bound boundary QA and focused test evidence.
+
+## Full Amidental 18-issue production-audit verification (2026-07-19)
+
+- Re-read the newly supplied 1,921-line audit and confirmed that this input
+  contains `ISSUE-01` through `ISSUE-18`; the previous ten-ID statement belongs
+  to an earlier partial input and is not authoritative for the current task.
+- Independently verified the exact run, authored HTML, research/provenance,
+  media originals/manifest, final desktop/mobile screenshots, critic/product/
+  acceptance reports, preview metadata, queue state, prior same-business run
+  and current official public business pages.
+- Final issue count: 14 confirmed, 3 partly confirmed (`05`, `12`, `16`), and
+  `01` classified outside the current isolated preview scope while
+  remaining a future production-domain/canonical blocker.
+- Re-ran the focused quality suite: 48 tests passed. This proves a contract
+  false positive rather than a broken test: Instagram, synthetic themes,
+  section counts and role labels can still yield Level A/commercial/product
+  acceptance despite unresolved required business facts.
+- Full 13-section durable report:
+  `.codex/handoffs/AMIDENTAL_PRODUCTION_AUDIT_VERIFICATION_18_ISSUES.md`.
+  No site/runtime code, deployment, custom domain or Telegram production state
+  was changed.
+
+## Site refinement mode implementation (2026-07-22)
+
+- Added a real `site_refinement` control plane with start/continue/status/accept
+  CLI entry points separate from `go` and direct-URL new-site generation.
+- Added atomic persistent sessions, append-only requirements with explicit
+  supersession, business-data history, checksummed task-scoped attachments,
+  automatic visual-reference mapping, recovery snapshots, project locking,
+  change plans and computed source diffs.
+- Added a bounded Codex implementation/fixer loop plus an independent read-only
+  screenshot critic. Refinement child environments strip deployment/Telegram
+  credentials and build/test commands reject publish/deploy operations.
+- Added a refinement-only browser profile at 1440/1024/768/390/360,
+  reduced-motion inspection, generic interaction checks and all discovered
+  static HTML pages or declared local routes. Existing BUILD observations and
+  three canonical screenshot names remain backward compatible.
+- `CANDIDATE_READY` is bound to the full live brief, attachments, authored
+  project tree, screenshots, implementation result, browser gate, independent
+  review and candidate report. `USER_ACCEPTED` revalidates those checksums and
+  never deploys.
+- Focused state/CLI/gating/reference/build-mode tests and strict browser-profile
+  coverage were added. Final verification evidence follows in this file after
+  the full check run.
+
+## Site refinement final verification and safety closure (2026-07-22)
+
+- Hardened project/session/attachment containment, link and resource boundaries,
+  symlink/junction rejection, checksum-bound baseline/recovery/candidate evidence,
+  interrupted-iteration recovery and exclusive project locking.
+- Build/test/start commands now use shell-free native `codex sandbox -P
+  :workspace` execution. Independent behavioral probing confirmed project writes
+  and localhost serving remain available while sibling writes and outbound HTTPS
+  are denied; managed server trees and listeners are verified closed.
+- Refinement browser QA installs its guard before navigation and keeps it active
+  through real unload. Initial reads are limited to the selected project or the
+  same managed localhost origin; interaction traffic, beacons, popups and
+  WebSockets are neutralized and recorded. Forms require a safe contact fallback
+  or a newly visible changed outcome state.
+- Baseline and candidate readiness require every discovered route at
+  1440/1024/768/390/360, reduced motion, decodable dimension-bound screenshots
+  and five interaction-state screenshots. Off-project file resources and links,
+  including resolved symlinks, fail closed.
+- Endpoint ownership uses bounded loopback connect plus exclusive bind probes for
+  explicit, IPv4 wildcard and IPv6 dual-stack listeners. Pre-start refuses any
+  existing owner; cleanup requires both process exit and a demonstrably free port.
+- Final verification: 43 focused refinement/browser tests passed; the complete
+  suite passed 258 tests in 129.919 seconds with one explicit credential-gated
+  skip. `compileall`, `python -m pip check`, smoke build, `git diff --check` and
+  secret-pattern scan passed.
+- Two independent read-only reviewers returned GO with no critical/high finding.
+  No deployment, publication, Telegram state, queue state or production site was
+  changed.

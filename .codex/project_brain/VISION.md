@@ -31,9 +31,11 @@ language, narrative, and copy are not.
 
 ## Project revision lifecycle
 
-SiteAgent must eventually support a separate `SiteRevisionAgent` for an existing
-accepted project. It receives a normal-language change request, loads the saved
-business and design context, edits the current site instead of regenerating it,
-runs tests and visual QA, and publishes a new isolated preview. Customer
-production changes remain a later, explicit human-approved action. This
-revision workflow must stay separate from new-site generation.
+SiteAgent provides a separate `site_refinement` workflow for an existing site
+project. It receives normal-language changes and task-scoped files/references,
+keeps an accumulating versioned brief, records a recovery baseline, edits the
+current project instead of entering new-site generation, and requires rendered
+browser/visual/responsive/functional/content/animation QA before
+`CANDIDATE_READY`. `USER_ACCEPTED` requires explicit checksum-revalidated human
+approval. Preview and customer-production changes remain separate explicit
+actions; refinement never publishes automatically.

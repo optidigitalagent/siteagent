@@ -676,7 +676,11 @@ class CodexStudioRunner:
             raise StudioError(f"Codex Studio generation failed: {output[:2000]}")
 
     @staticmethod
-    def _run_subprocess_tree(command: list[str], prompt: str, *, timeout: int) -> subprocess.CompletedProcess[str]:
+    def _run_subprocess_tree(
+        command: list[str], prompt: str, *, timeout: int,
+        env: dict[str, str] | None = None,
+        cwd: str | Path | None = None,
+    ) -> subprocess.CompletedProcess[str]:
         """Bound Codex and all descendants, including Windows wrapper processes."""
         # Temporary files preserve diagnostic output without inheritable PIPE
         # readers that can keep communicate() alive after the direct child exits.
@@ -690,6 +694,8 @@ class CodexStudioRunner:
                 encoding="utf-8",
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
                 start_new_session=os.name != "nt",
+                env=env,
+                cwd=cwd,
             )
             try:
                 process.communicate(input=prompt, timeout=timeout)

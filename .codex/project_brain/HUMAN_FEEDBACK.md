@@ -284,3 +284,29 @@ repeat the same brief in every chat.
   deployment/URL binding and attempt ID. Telegram chat/message identifiers,
   bot tokens, request payloads and raw unredacted transport errors must never be
   persisted.
+
+## Evidence and readiness semantics (2026-07-19)
+
+- A lifecycle state such as `preview_ready` proves only the preview delivery
+  checkpoint. It must never imply design, content, business-data, functional,
+  SEO or production readiness.
+- Cached intake migration must revalidate official-site business linkage and
+  fail closed when a previously verified official source disappears. Platform,
+  platform-about and cross-product URLs are not business official sites.
+- Full-site acceptance cannot be inferred from Instagram as a generic contact
+  path, section counts or declared DOM roles. Required business data, rendered
+  first-viewport meaning, source-bound trust, final claims and actual conversion
+  outcomes need separate machine-readable evidence.
+
+## Existing-site refinement contract (2026-07-22)
+
+- Existing-site work is a persistent product mode, not a prompt or an internal
+  Studio fixer. User feedback accumulates by default; replacement requires an
+  explicit supersession and the prior requirement remains auditable.
+- A refinement candidate requires a pre-change recovery snapshot, computed
+  source diff, real multi-page browser evidence at 1440/1024/768/390/360,
+  scoped reference comparison, functional/content/animation review and an
+  independent critic. A passing build alone is never candidate readiness.
+- `CANDIDATE_READY` and `USER_ACCEPTED` are distinct. New feedback resumes
+  implementation; acceptance is explicit and checksum-bound. Neither state is
+  permission to publish, modify Telegram, or update customer production.

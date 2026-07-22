@@ -247,12 +247,12 @@ site generated
 ELIZ_PREVIEW_READY_FOR_USER_REVIEW
 ```
 
-## Future phase — Site Revision Agent
+## Implemented phase — site refinement mode
 
-Сейчас не реализовывать полностью, но зафиксировать в Project Brain и roadmap будущий отдельный агент:
+Реализован отдельный runtime-контур:
 
 ```text
-SiteRevisionAgent
+site_refinement
 ```
 
 Назначение:
@@ -267,7 +267,7 @@ SiteRevisionAgent
 - создаёт новую preview-ссылку;
 - после одобрения обновляет production.
 
-Каждый site project должен позже хранить:
+Refinement-сессия хранит:
 
 ```text
 project_id
@@ -287,17 +287,18 @@ human_decisions
 Будущий workflow:
 
 ```text
-open project
+refinement-start / refinement-continue
 → user gives change request
 → impact analysis
 → implementation
 → tests
-→ preview URL
-→ user approval
-→ production update
+→ checksum-bound CANDIDATE_READY
+→ explicit USER_ACCEPTED
+→ optional separately authorised preview/production action
 ```
 
-Не смешивать SiteRevisionAgent с текущим new-site generation pipeline.
+`site_refinement` не смешивается с текущим new-site generation pipeline и не
+публикует автоматически.
 
 ## External actions
 

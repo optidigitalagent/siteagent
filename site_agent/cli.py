@@ -18,10 +18,87 @@ from site_agent.models import PublishResult
 from site_agent.orchestrator import SiteAgentOrchestrator
 from site_agent.publisher import LiveSiteVerifier
 from site_agent.preview import PreviewDeploymentResult, PreviewLiveVerifier
+from site_agent.refinement import (
+    RefinementAttachmentInput,
+    RefinementRequest,
+    SiteRefinementOrchestrator,
+    load_refinement_request,
+)
 from site_agent.telegram_notify import TelegramNotifier
 
 
 GO_ALIASES = {"go", "го"}
+
+
+def _refinement_request_from_args(args: argparse.Namespace) -> RefinementRequest:
+    request = load_refinement_request(Path(args.input_json)) if args.input_json else RefinementRequest()
+    request.project = args.project or request.project
+    if args.request:
+        request.feedback.append(args.request)
+        request.goal = request.goal or args.request
+    request.supersedes.extend(args.supersede or [])
+    request.scope.extend(args.scope or [])
+    request.constraints.extend(args.constraint or [])
+    request.resolve_blockers.extend(args.resolve_blocker or [])
+    request.preview_url = args.preview_url or request.preview_url
+    request.entry_path = args.entry_path or request.entry_path
+    request.build_command = args.build_command or request.build_command
+    request.start_command = args.start_command or request.start_command
+    request.test_commands.extend(args.test_command or [])
+    request.attachments.extend(
+        RefinementAttachmentInput(path=path, kind="other") for path in (args.attachment or [])
+    )
+    request.attachments.extend(
+        RefinementAttachmentInput(
+            path=path,
+            kind="reference",
+            target_page=args.reference_page or "",
+            target_section=args.reference_section or "",
+            match_kind=args.reference_match,
+            interpretation=args.reference_interpretation or "",
+            transfer=args.reference_transfer or [],
+        )
+        for path in (args.reference or [])
+    )
+    return request
+
+
+def _print_refinement(session: object) -> None:
+    print(json.dumps({
+        "session_id": getattr(session, "session_id"),
+        "mode": getattr(session, "active_mode"),
+        "status": getattr(getattr(session, "status"), "value", getattr(session, "status")),
+        "open_tasks": getattr(session, "open_tasks"),
+        "blockers": getattr(session, "blockers"),
+    }, ensure_ascii=False, indent=2))
+
+
+def run_refinement_start(args: argparse.Namespace) -> None:
+    session = SiteRefinementOrchestrator().start(
+        _refinement_request_from_args(args),
+        session_id=args.session_id or "",
+        execute=not args.no_execute,
+    )
+    _print_refinement(session)
+
+
+def run_refinement_continue(args: argparse.Namespace) -> None:
+    if not args.session_id:
+        raise ValueError("refinement-continue requires --session-id")
+    session = SiteRefinementOrchestrator().continue_session(
+        args.session_id,
+        _refinement_request_from_args(args),
+        execute=not args.no_execute,
+    )
+    _print_refinement(session)
+
+
+def run_refinement_status(session_id: str) -> None:
+    _print_refinement(SiteRefinementOrchestrator().load(session_id))
+
+
+def run_refinement_accept(session_id: str) -> None:
+    _print_refinement(SiteRefinementOrchestrator().accept(session_id))
 
 
 def run_instagram_url(instagram_url: str) -> None:
@@ -608,6 +685,31 @@ def main() -> None:
     parser.add_argument("--authorize-preview-resend", action="store_true")
     parser.add_argument("--authorize-production", action="store_true")
     parser.add_argument("--deployment-id", default="")
+    parser.add_argument("--project", default="")
+    parser.add_argument("--request", default="")
+    parser.add_argument("--input-json", default="")
+    parser.add_argument("--session-id", default="")
+    parser.add_argument("--supersede", action="append")
+    parser.add_argument("--scope", action="append")
+    parser.add_argument("--constraint", action="append")
+    parser.add_argument("--resolve-blocker", action="append")
+    parser.add_argument("--attachment", action="append")
+    parser.add_argument("--reference", action="append")
+    parser.add_argument("--reference-page", default="")
+    parser.add_argument("--reference-section", default="")
+    parser.add_argument("--reference-interpretation", default="")
+    parser.add_argument("--reference-transfer", action="append")
+    parser.add_argument(
+        "--reference-match",
+        choices=("exact", "visual_direction"),
+        default="visual_direction",
+    )
+    parser.add_argument("--preview-url", default="")
+    parser.add_argument("--entry-path", default="")
+    parser.add_argument("--build-command", default="")
+    parser.add_argument("--start-command", default="")
+    parser.add_argument("--test-command", action="append")
+    parser.add_argument("--no-execute", action="store_true")
     args = parser.parse_args()
 
     if args.command_or_url.lower() in GO_ALIASES:
@@ -638,6 +740,20 @@ def main() -> None:
         if not args.job_id:
             parser.error("reconcile-preview requires --job-id")
         reconcile_preview_metadata(args.job_id, deployment_id=args.deployment_id)
+    elif args.command_or_url == "refinement-start":
+        run_refinement_start(args)
+    elif args.command_or_url == "refinement-continue":
+        if not args.session_id:
+            parser.error("refinement-continue requires --session-id")
+        run_refinement_continue(args)
+    elif args.command_or_url == "refinement-status":
+        if not args.session_id:
+            parser.error("refinement-status requires --session-id")
+        run_refinement_status(args.session_id)
+    elif args.command_or_url == "refinement-accept":
+        if not args.session_id:
+            parser.error("refinement-accept requires --session-id")
+        run_refinement_accept(args.session_id)
     else:
         run_instagram_url(args.command_or_url)
 
