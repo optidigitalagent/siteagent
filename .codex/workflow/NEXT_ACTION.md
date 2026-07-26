@@ -1,6 +1,6 @@
 # Next Action
 
-Operational checkpoint: `GENERATED_MEDIA_POLICY_VERIFIED_READY_TO_COMMIT`.
+Operational checkpoint: `GENERATED_MEDIA_PROVIDER_FIX_VERIFIED_READY_TO_RECOVER`.
 
 The exact job/run `fdbc8d77bc244eccb8590347640bb51d` remains recoverable at
 its saved media-input checkpoint. Do not enqueue a duplicate and do not repeat
@@ -8,16 +8,18 @@ bounded public research unless a checksum or source-contract change makes that
 necessary.
 
 The canonical provenance, media plan, generated-media truthfulness, crash
-recovery and revised preview/candidate gates are implemented. Focused and full
-tests (395 passed, three skipped), compileall, dependency, diff and plugin
-integrity checks are green. All findings returned by independent reviews were
-fixed and regression-covered; the final clean repeat remains unavailable only
-because the external Codex reviewer reached its usage limit. Create the
-requested separate local commit without push. Then resume the exact same run
-from its recoverable checkpoint, create only an isolated noindex preview,
-complete browser and independent acceptance evidence, and report the preview
-URL plus generated-asset provenance. Customer production, custom-domain changes
-and the production Telegram notifier remain forbidden.
+recovery and revised preview/candidate gates are implemented. The policy commit
+is local and unpushed. The first recovery exposed and now regression-covers a
+GPT Image request-shape incompatibility plus its queue-classification edge; the
+complete suite passes 397 tests with three skips. All findings returned by
+independent reviews were fixed and regression-covered; the final clean repeat
+remains unavailable only because the external Codex reviewer reached its usage
+limit. Commit the corrective provider/recovery change without push, reclassify
+only the exact failed job through the queue API, then resume the same run from
+its recoverable checkpoint. Create only an isolated noindex preview, complete
+browser and independent acceptance evidence, and report the preview URL plus
+generated-asset provenance. Customer production, custom-domain changes and the
+production Telegram notifier remain forbidden.
 
 Previous operational checkpoint:
 `TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.

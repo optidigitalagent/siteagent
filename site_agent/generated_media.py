@@ -178,7 +178,6 @@ class OpenAIImageGenerator:
                 size=size,
                 quality=settings.image_generation_quality,
                 output_format="png",
-                response_format="b64_json",
                 n=1,
             )
         except Exception as exc:

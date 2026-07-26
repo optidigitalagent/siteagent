@@ -23,6 +23,7 @@ RECOVERABLE_PREVIEW_FAILURE_PATTERNS = (
     "media-input checkpoint blocked",
     "media_input/manifest.json",
     "media input manifest",
+    "media generation is unavailable",
     "research failed",
     "research returned no",
     "scope blocked",

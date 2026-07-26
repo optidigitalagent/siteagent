@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
+import io
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from PIL import Image
 
@@ -11,6 +14,7 @@ from site_agent.generated_media import (
     GeneratedMediaManager,
     MediaPlan,
     MediaPlanItem,
+    OpenAIImageGenerator,
     merge_user_provided_business_assets,
 )
 from site_agent.media import MediaInputBlocked, MediaPreparer, authorised_media_assets
@@ -139,6 +143,32 @@ def _business_research() -> dict:
 
 
 class GeneratedMediaPolicyTests(unittest.TestCase):
+    def test_image_generation_omits_model_incompatible_response_format(self) -> None:
+        class FakeImages:
+            def __init__(self) -> None:
+                self.kwargs = {}
+
+            def generate(self, **kwargs):
+                self.kwargs = kwargs
+                buffer = io.BytesIO()
+                Image.new("RGB", (8, 8), (20, 40, 60)).save(buffer, format="PNG")
+                encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+                return SimpleNamespace(data=[SimpleNamespace(b64_json=encoded, url=None)])
+
+        images = FakeImages()
+        client = SimpleNamespace(images=images)
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "generated.png"
+            result = OpenAIImageGenerator(client=client, model="gpt-image-1").generate(
+                _safe_items()[0], output
+            )
+
+            self.assertNotIn("response_format", images.kwargs)
+            self.assertEqual(images.kwargs["output_format"], "png")
+            with Image.open(output) as image:
+                self.assertEqual(image.size, (8, 8))
+            self.assertEqual(result["generation_model"], "gpt-image-1")
+
     def test_1_logo_only_project_generates_media_and_becomes_design_ready(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             run_dir = Path(temp)

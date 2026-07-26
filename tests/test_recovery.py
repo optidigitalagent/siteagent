@@ -102,6 +102,24 @@ class RecoveryQueueTests(unittest.TestCase):
             self.assertEqual(reclaimed.run_dir, r"runs\same-run")
             self.assertEqual(reclaimed.status, "running")
 
+    def test_image_provider_failure_remains_recoverable_in_same_preview_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
+            job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
+            queue.set_run_dir(job.id, r"runs\same-run")
+
+            failed = queue.fail(
+                job.id,
+                "media generation is unavailable: image service request failed",
+            )
+
+            self.assertEqual(failed.recovery_failure_code, "PREVIEW_RECOVERABLE_FAILURE")
+            self.assertTrue(failed.recovery_eligible)
+            reclaimed = queue.reclaim_failed_preview(job.id)
+            self.assertEqual(reclaimed.id, job.id)
+            self.assertEqual(reclaimed.run_dir, r"runs\same-run")
+            self.assertEqual(reclaimed.status, "running")
+
     def test_acceptance_failure_reclaims_same_preview_after_artifact_revision(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)

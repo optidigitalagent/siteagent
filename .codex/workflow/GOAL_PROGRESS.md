@@ -836,3 +836,11 @@ Live end-to-end verification requires local runtime credentials:
   reviewer had reached its usage limit, so that repeat remains explicitly
   unverified. No deployment, production promotion, custom-domain action, push
   or Telegram mutation has occurred yet.
+- The first exact-run recovery exposed a provider compatibility failure before
+  any image upload: GPT Image rejected the generic SDK `response_format`
+  parameter. Removed that optional parameter while retaining base64/HTTPS
+  response handling, and classified provider-unavailable media failures as
+  same-run preview-recoverable. Two regressions cover the request shape and
+  queue recovery. Focused verification passed 36 tests; the complete suite then
+  passed 397 tests in 202.995 seconds with three expected skips. The exact run
+  remains unpublished and recoverable.
