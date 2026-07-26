@@ -1,5 +1,37 @@
 ﻿# Goal Progress
 
+## SITE_REFINEMENT Final Validation Checkpoint C (2026-07-26)
+
+- Added the standalone operator guide `docs/SITE_REFINEMENT.md` covering
+  session start/continue/status/accept, additive and superseded feedback,
+  scoped references, structured input, evidence, recovery and safety.
+- Added `docs/SITE_REFINEMENT_TECHNICAL.md` covering the separate control plane,
+  state/data model, isolation, five-width browser evidence, command/server
+  lifecycle, candidate bindings, acceptance and crash recovery. README links to
+  both documents.
+- Independent documentation review initially rejected overbroad wording around
+  runtime-CWD containment, Markdown authority, stale evidence, unmanaged local
+  previews, package-manager shells and atomic writes. The documentation was
+  corrected to match the implementation rather than changing production code
+  or tests.
+- Independent merge audit found 40 pre-existing trailing-whitespace findings in
+  two committed documentation handoffs. A documentation-only normalization
+  removed them; strict range diff validation now passes.
+- Fresh full regression: 370 tests passed in 411.387 seconds with three expected
+  skips. The first attempt was discarded as inconclusive after the command
+  runner's 240-second limit; the complete rerun is the recorded evidence.
+- `compileall`, `pip check`, local smoke build, CLI help, Markdown link checks,
+  JSON parsing and strict diff checks pass with `.env` loading disabled for
+  Python validation commands.
+- Local merge topology is linear: checkpoint base `3a74367`, local
+  `origin/main` `59d5410`, zero behind and eight ahead before the final docs
+  commit. The final docs commit adds one linear commit and leaves the tree
+  clean. A fresh remote fetch remains intentionally unverified because network
+  access was forbidden.
+- No deployment, Telegram mutation, real Codex invocation, network request,
+  production-site change, push or merge occurred.
+- Final checkpoint: `SITE_REFINEMENT_FINAL_VALIDATION_COMPLETE`.
+
 ## Telegram preview notification completion (2026-07-19)
 
 - Added `TelegramNotifier.send_preview_ready()` with strict verified-preview,

@@ -1,7 +1,7 @@
 # Проверка production-аудита Ami Dental: 18 ISSUE
 
-Дата проверки: 2026-07-19  
-Целевой run: `053656c35b5d4ef58221c5be7171b625`  
+Дата проверки: 2026-07-19
+Целевой run: `053656c35b5d4ef58221c5be7171b625`
 Режим: read-only product/system audit. Сайт, генератор, deployment, custom domain и Telegram production state не изменялись.
 
 ## 1. Executive summary
@@ -164,57 +164,57 @@
 
 ### RULE-BDC-01. Вычисляемая полнота бизнес-данных
 
-**Проблема:** full commercial site проходит при unresolved required facts.  
-**Область:** все commercial sites, с risk/scope profile.  
-**Этап:** после research и перед production promotion.  
-**Ответственный:** Research Strategist формирует данные; control plane вычисляет.  
-**Действие:** `BusinessDataCompletenessReport` хранит requirement, required/optional/not-applicable, value, source IDs, confidence, freshness и blocker.  
-**Запрещено:** `BUSINESS_DATA_COMPLETE=true` без source у required fact.  
-**Проверка:** schema/source/checksum validation; manual confirmation только там, где public evidence недостаточен.  
-**Pass:** каждый required item verified или допустимо not-applicable.  
-**Блокирует:** Business Data, Content по зависимым фактам, Production Ready.  
+**Проблема:** full commercial site проходит при unresolved required facts.
+**Область:** все commercial sites, с risk/scope profile.
+**Этап:** после research и перед production promotion.
+**Ответственный:** Research Strategist формирует данные; control plane вычисляет.
+**Действие:** `BusinessDataCompletenessReport` хранит requirement, required/optional/not-applicable, value, source IDs, confidence, freshness и blocker.
+**Запрещено:** `BUSINESS_DATA_COMPLETE=true` без source у required fact.
+**Проверка:** schema/source/checksum validation; manual confirmation только там, где public evidence недостаточен.
+**Pass:** каждый required item verified или допустимо not-applicable.
+**Блокирует:** Business Data, Content по зависимым фактам, Production Ready.
 **Regression:** missing core facts + synthetic themes не дают Business Data/dependent Content/Functional/SEO/Production readiness, но не блокируют честную incomplete preview/design build.
 **Связанные ISSUE:** 03, 05, 07, 08, 11, 13, 16.
 
 ### RULE-CONVERSION-01. Проверяемое завершение конверсии
 
-**Проблема:** ссылка или пустая форма считаются customer outcome.  
-**Область:** каждый primary CTA.  
-**Этап:** local final QA и live production QA.  
-**Ответственный:** frontend/browser QA.  
-**Действие:** хранить selector, intent, mode, target/source, click/submit, invalid/success/error result.  
-**Запрещено:** ложное confirmation, wrong business target, social-only path без явного scope/альтернативы, form без backend или честного demo state.  
-**Проверка:** Playwright interaction report.  
-**Pass:** каждый CTA даёт заявленный outcome.  
-**Блокирует:** Functional/Production Ready; ложная copy также Content Ready.  
+**Проблема:** ссылка или пустая форма считаются customer outcome.
+**Область:** каждый primary CTA.
+**Этап:** local final QA и live production QA.
+**Ответственный:** frontend/browser QA.
+**Действие:** хранить selector, intent, mode, target/source, click/submit, invalid/success/error result.
+**Запрещено:** ложное confirmation, wrong business target, social-only path без явного scope/альтернативы, form без backend или честного demo state.
+**Проверка:** Playwright interaction report.
+**Pass:** каждый CTA даёт заявленный outcome.
+**Блокирует:** Functional/Production Ready; ложная copy также Content Ready.
 **Regression:** Instagram-only Amidental fixture не проходит full commercial conversion.
 **Связанные ISSUE:** 02, 06, 10.
 
 ### RULE-CLAIMS-01. Финальный claim ledger
 
-**Проблема:** factual/numeric claim попадает в final DOM без субъекта/source.  
-**Область:** HTML, meta, OG, JSON-LD.  
-**Этап:** после build, перед reuse/acceptance/promotion.  
-**Ответственный:** Content QA + control plane.  
-**Действие:** извлечь page/selector/text/class/source IDs/provenance/checksum; для чисел хранить subject, unit, period и method.  
-**Запрещено:** unsupported claim, numeric drift, demo fact как production fact, stale ledger.  
-**Проверка:** DOM extraction + provenance/numeric rules + bounded manual ambiguity review.  
-**Pass:** каждый factual claim имеет допустимый provenance.  
-**Блокирует:** Content/Production Ready.  
+**Проблема:** factual/numeric claim попадает в final DOM без субъекта/source.
+**Область:** HTML, meta, OG, JSON-LD.
+**Этап:** после build, перед reuse/acceptance/promotion.
+**Ответственный:** Content QA + control plane.
+**Действие:** извлечь page/selector/text/class/source IDs/provenance/checksum; для чисел хранить subject, unit, period и method.
+**Запрещено:** unsupported claim, numeric drift, demo fact как production fact, stale ledger.
+**Проверка:** DOM extraction + provenance/numeric rules + bounded manual ambiguity review.
+**Pass:** каждый factual claim имеет допустимый provenance.
+**Блокирует:** Content/Production Ready.
 **Regression:** bare `20 years` без субъекта не проходит.
 **Связанные ISSUE:** 09; factual aspects 03, 05, 07, 08, 11, 13.
 
 ### RULE-READINESS-01. Независимая readiness matrix
 
-**Проблема:** lifecycle/authorization/HTTP 200 интерпретируются как product readiness.  
-**Область:** все preview и production runs.  
-**Этап:** после каждого соответствующего gate и перед production completion.  
-**Ответственный:** release controller.  
-**Действие:** checksum-bound `ReadinessReport` вычисляет `RESEARCH_COMPLETE`, `BUSINESS_DATA_COMPLETE`, `STRUCTURE_READY`, `DESIGN_READY`, `CONTENT_READY`, `FUNCTIONALLY_READY`, `BROWSER_QA_PASSED`, scoped `SEO_READY` и aggregate `PRODUCTION_READY`.  
-**Запрещено:** вручную выставлять readiness boolean без evidence.  
-**Проверка:** artifact validation + live browser suite + human gate где требуется.  
-**Pass:** все applicable statuses true/not-required, rights/authorization/human gates пройдены.  
-**Блокирует:** production completion и Telegram production delivery.  
+**Проблема:** lifecycle/authorization/HTTP 200 интерпретируются как product readiness.
+**Область:** все preview и production runs.
+**Этап:** после каждого соответствующего gate и перед production completion.
+**Ответственный:** release controller.
+**Действие:** checksum-bound `ReadinessReport` вычисляет `RESEARCH_COMPLETE`, `BUSINESS_DATA_COMPLETE`, `STRUCTURE_READY`, `DESIGN_READY`, `CONTENT_READY`, `FUNCTIONALLY_READY`, `BROWSER_QA_PASSED`, scoped `SEO_READY` и aggregate `PRODUCTION_READY`.
+**Запрещено:** вручную выставлять readiness boolean без evidence.
+**Проверка:** artifact validation + live browser suite + human gate где требуется.
+**Pass:** все applicable statuses true/not-required, rights/authorization/human gates пройдены.
+**Блокирует:** production completion и Telegram production delivery.
 **Regression:** `preview_ready` не подразумевает ни один production readiness status.
 **Связанные ISSUE:** 01–18; особенно 01, 02, 03, 12.
 

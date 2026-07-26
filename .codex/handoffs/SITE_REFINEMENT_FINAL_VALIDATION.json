@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "checkpoint": "SITE_REFINEMENT_FINAL_VALIDATION_COMPLETE",
+  "date": "2026-07-26",
+  "verdict": "GO_LOCAL_REMOTE_FETCH_REQUIRED_BEFORE_MERGE",
+  "branch": "rescue/site-refinement-2026-07-22",
+  "validated_implementation_head": "3a74367d177afcc9418f662f3ff1832f4f887f4f",
+  "local_origin_main": "59d5410132b3b735854b06ce5ede5ef325e17a79",
+  "topology_before_checkpoint_commit": {
+    "behind": 0,
+    "ahead": 8,
+    "linear_single_parent": true,
+    "origin_main_is_ancestor": true,
+    "in_progress_git_operation": false,
+    "unmerged_entries": 0,
+    "upstream_configured": false
+  },
+  "topology_after_checkpoint_commit_expected": {
+    "behind": 0,
+    "ahead": 9,
+    "merge_candidate_head": "commit_containing_this_report"
+  },
+  "documentation": [
+    "docs/SITE_REFINEMENT.md",
+    "docs/SITE_REFINEMENT_TECHNICAL.md",
+    "README.md"
+  ],
+  "validation": {
+    "unittest": {
+      "status": "pass",
+      "tests_run": 370,
+      "expected_skips": 3,
+      "test_runtime_seconds": 411.387
+    },
+    "compileall": "pass",
+    "pip_check": "pass",
+    "local_smoke_build": "pass",
+    "cli_help": "pass",
+    "markdown_local_links": "pass",
+    "json_parse": "pass",
+    "working_diff_check": "pass",
+    "branch_range_diff_check": "pass_after_documentation_whitespace_cleanup",
+    "independent_documentation_review": "go_after_corrections",
+    "independent_merge_review": "go_after_checkpoint_commit_and_clean_tree"
+  },
+  "changes_in_checkpoint_c": {
+    "production_code_changed": false,
+    "tests_changed": false,
+    "features_added": false,
+    "documentation_only": true,
+    "preexisting_trailing_whitespace_lines_cleaned": 40
+  },
+  "external_actions": {
+    "network_used": false,
+    "deployment_run": false,
+    "telegram_state_changed": false,
+    "real_codex_run": false,
+    "production_site_changed": false,
+    "push_run": false,
+    "merge_run": false
+  },
+  "remaining_unverified": [
+    "Remote origin/main freshness; fetch and repeat ancestry/status/diff checks immediately before an authorised merge."
+  ],
+  "recommended_merge_strategy": "fetch_then_fast_forward_only",
+  "final_head_resolution": "Run git rev-parse HEAD after committing this report; the Project Director delivery records that exact SHA."
+}

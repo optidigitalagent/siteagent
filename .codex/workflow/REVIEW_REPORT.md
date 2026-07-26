@@ -1,5 +1,29 @@
 ﻿# Review Report
 
+## SITE_REFINEMENT Final Validation Checkpoint C (2026-07-26)
+
+Final local verdict: `GO / PASS`; critical/high issues: 0 after correction.
+
+- An independent documentation reviewer compared both new guides with the CLI,
+  state machine, runtime, configuration and tests. Its initial NO-GO identified
+  factual overstatements rather than implementation changes required by this
+  documentation-only checkpoint. All findings were corrected and re-reviewed.
+- An independent merge reviewer confirmed a linear single-parent branch, local
+  `origin/main` ancestry, zero behind/eight ahead at base HEAD `3a74367`, no
+  in-progress Git operation, no unmerged entry and no binary/symlink/mode
+  change. Its initial NO-GO was limited to the uncommitted final documentation
+  and 40 pre-existing whitespace findings; both are resolved by the final
+  documentation checkpoint.
+- Full regression passes 370 tests with three expected skips. Compileall,
+  dependency validation, local smoke build, CLI help, JSON parsing, local-link
+  validation and strict range/working diff checks pass.
+- Merge readiness is `GO` relative to the locally available `origin/main`, using
+  fast-forward-only integration. Remote freshness is deliberately unverified;
+  fetch and repeat ancestry/status/diff checks before a separately authorised
+  merge.
+- Production code and tests were not changed in Checkpoint C. No network,
+  deployment, Telegram, real Codex, push, merge or production-site action ran.
+
 ## Telegram preview notification final audit (2026-07-19)
 
 APPROVE; critical/high issues: 0.

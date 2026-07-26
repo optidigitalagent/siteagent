@@ -310,3 +310,17 @@ repeat the same brief in every chat.
 - `CANDIDATE_READY` and `USER_ACCEPTED` are distinct. New feedback resumes
   implementation; acceptance is explicit and checksum-bound. Neither state is
   permission to publish, modify Telegram, or update customer production.
+
+## Final validation documentation contract (2026-07-26)
+
+- Existing-site refinement documentation must distinguish the authoritative
+  checksum-bound JSON candidate report from its readable Markdown companion,
+  and must describe fail-closed evidence errors exactly rather than implying
+  that every mismatch takes the same state transition.
+- Merge readiness must validate the entire branch range, not only the current
+  working diff. Report local ancestry separately from remote freshness when the
+  checkpoint forbids network access.
+- A documentation checkpoint may clarify implemented safety boundaries but
+  must not overstate lexical command guards, package-manager shell behavior,
+  runtime-CWD containment, unmanaged localhost ownership or atomicity of
+  browser-owned artifacts.

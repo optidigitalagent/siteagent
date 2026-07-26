@@ -1,6 +1,21 @@
 # Next Action
 
-Active checkpoint: `SITE_REFINEMENT_VERIFIED_NO_PUBLISH`.
+Active checkpoint: `SITE_REFINEMENT_FINAL_VALIDATION_COMPLETE`.
+
+Final Validation Checkpoint C is complete locally. User and maintainer
+documentation, the checksum-aware validation handoff, independent review, and
+the merge-readiness report are recorded. The branch is eligible for a
+fast-forward-only merge relative to the locally available `origin/main` after
+the final documentation checkpoint commit. Because this checkpoint explicitly
+forbids network access, the remote ref has not been fetched; refresh it and
+repeat ancestry/status/diff checks immediately before any separately authorised
+merge.
+
+No automatic next action remains. Do not push, merge, publish, run a real Codex
+refinement, touch Telegram state, or change production without a separate
+explicit user request.
+
+Previous checkpoint: `SITE_REFINEMENT_VERIFIED_NO_PUBLISH`.
 
 The separate persistent existing-site refinement workflow is implemented and
 verified. Focused/full regressions, compileall, dependency validation, smoke

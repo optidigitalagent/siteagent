@@ -178,6 +178,12 @@ python -m site_agent.cli "https://www.instagram.com/example/"
 does not call the new-site orchestrator, Cloudflare, Telegram, a custom domain,
 or production publishing.
 
+For the complete operator workflow, recovery steps, input JSON example and
+troubleshooting, see [SITE_REFINEMENT.md](docs/SITE_REFINEMENT.md). Maintainers
+should also read
+[SITE_REFINEMENT_TECHNICAL.md](docs/SITE_REFINEMENT_TECHNICAL.md) before
+changing the state machine, runtime isolation, evidence, or acceptance gates.
+
 Start a session and run the first complete implementation/QA cycle:
 
 ```powershell
