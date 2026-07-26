@@ -1,6 +1,6 @@
 # Next Action
 
-Operational checkpoint: `ART_DIRECTOR_REJECTED_FIX_IN_PROGRESS`.
+Operational checkpoint: `SPARSE_ONE_LINK_MICRO_SCOPE_VERIFIED_READY_TO_REBUILD`.
 
 The exact job/run `fdbc8d77bc244eccb8590347640bb51d` remains recoverable at
 its saved media-input checkpoint. Do not enqueue a duplicate and do not repeat
@@ -33,6 +33,15 @@ and the full suite passes 402 tests with three skips. After fixer validation,
 render fresh desktop/tablet/mobile evidence, require a new independent Art
 Director report with no high issue and calibrated commercial usefulness >=85,
 then continue critics/acceptance and isolated preview only.
+
+The material full-build fix reached deterministic 95/100 but a fresh independent
+review still rejected it at 72/100 because sparse evidence was padded across a
+long full-site path. One-link preview scope now correctly resolves this evidence
+to Level B `micro_site`; the full suite passes 403 tests with three skips.
+Re-enter the exact run through the scope archive boundary, preserve the rejected
+full workspace as evidence, create one concise concept/build with at most three
+semantic sections and two abstract media treatments, then run fresh browser,
+Art Director, critics and acceptance gates before isolated preview publication.
 
 Previous operational checkpoint:
 `TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.

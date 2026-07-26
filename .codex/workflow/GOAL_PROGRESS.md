@@ -879,3 +879,17 @@ Live end-to-end verification requires local runtime credentials:
   and recognizes a valid localized dental category stem. A Unicode regression
   covers the Hereta-style contract. Focused verification passed 20 tests; the
   complete suite passed 402 tests in 238.590 seconds with three expected skips.
+- A material fixer removed documentary-looking media and raised the
+  deterministic commercial score to 95/100 with clean technical, semantic and
+  media gates. A fresh independent re-review still rejected the eight-section
+  full build at 72/100: sparse evidence was being padded into nominal roles and
+  repeated Direct guidance. The evidence artifact had incorrectly reached
+  Level A because three narrative themes were derived from one broad verified
+  fact and five AI visuals satisfied media quantity. The one-link preview bridge
+  now selects `micro_site` unless at least two separate detailed verified
+  content fields exist beyond identity, location, contact and exact product;
+  rich one-link evidence retains full scope and the global explicit full-product
+  blocker contract is unchanged. Focused scope verification passed 26 tests;
+  the complete suite passed 403 tests in 228.652 seconds with three expected
+  skips. The rejected full build remains archived evidence and is not eligible
+  for preview publication.

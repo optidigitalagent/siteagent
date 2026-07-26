@@ -155,8 +155,8 @@ class OneLinkPreviewContractTests(unittest.TestCase):
         result = SiteAgentOrchestrator._apply_provisional_preview_contract(business, intake, SOURCE)
         research = result["research"]
 
-        self.assertEqual(research["requested_product_type"], "full_commercial_site")
-        self.assertEqual(result["recommended_scope"], "full_site")
+        self.assertEqual(research["requested_product_type"], "micro_site")
+        self.assertEqual(result["recommended_scope"], "micro_site")
         self.assertGreaterEqual(len(research["content_themes"]), 3)
         self.assertEqual(research["contacts"], [f"Instagram: {SOURCE}"])
         blockers = " ".join(result["missing_content_manifest"])
@@ -165,6 +165,39 @@ class OneLinkPreviewContractTests(unittest.TestCase):
         self.assertIn("public_price_numbers", blockers)
         statuses = {item["status"] for item in research["content_provenance"]}
         self.assertTrue({"verified_fact", "inferred_brand_copy", "generated_demo_content", "missing_required_fact"} <= statuses)
+
+    def test_detailed_verified_preview_content_retains_full_site_scope(self) -> None:
+        business = {
+            "research": {
+                "content_provenance": [
+                    {
+                        "field": "service_categories",
+                        "value": "Verified category A and category B",
+                        "status": "verified_fact",
+                        "sources": [SOURCE],
+                    },
+                    {
+                        "field": "consultation_process",
+                        "value": "Verified first-step process",
+                        "status": "verified_fact",
+                        "sources": [SOURCE],
+                    },
+                ]
+            }
+        }
+        intake = {
+            "title": "Ami Dental",
+            "description": "Verified dental service",
+            "public_text": "dental care",
+            "business_name": "Ami Dental",
+        }
+
+        result = SiteAgentOrchestrator._apply_provisional_preview_contract(
+            business, intake, SOURCE
+        )
+
+        self.assertEqual(result["research"]["requested_product_type"], "full_commercial_site")
+        self.assertEqual(result["recommended_scope"], "full_site")
 
     def test_provisional_preview_contract_is_idempotent_across_recovery(self) -> None:
         business = {"research": {}}

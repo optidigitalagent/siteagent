@@ -1390,7 +1390,6 @@ class SiteAgentOrchestrator:
 
         research = preserve_exact_duration(research)
         research["instagram_url"] = source_url
-        research["requested_product_type"] = "full_commercial_site"
         research["business_name"] = research.get("business_name") or intake.get("business_name") or "Business"
         if not research.get("primary_language"):
             research["primary_language"] = "uk" if re.search(r"[іїєґІЇЄҐ]", public_text) else "en"
@@ -1492,8 +1491,23 @@ class SiteAgentOrchestrator:
                 provenance.append(record)
                 seen_provenance.add(key)
         research["content_provenance"] = provenance
+        generic_preview_fields = {
+            "business_name", "business_identity", "city", "country",
+            "primary_language", "contacts", "exact_product",
+        }
+        detailed_verified_fields = {
+            str(record.get("field", "")).strip().casefold()
+            for record in provenance
+            if record.get("status") == "verified_fact"
+            and str(record.get("field", "")).strip().casefold() not in generic_preview_fields
+            and str(record.get("value", "")).strip()
+        }
+        preview_has_full_content = len(detailed_verified_fields) >= 2
+        research["requested_product_type"] = (
+            "full_commercial_site" if preview_has_full_content else "micro_site"
+        )
         payload["research"] = research
-        payload["recommended_scope"] = "full_site"
+        payload["recommended_scope"] = "full_site" if preview_has_full_content else "micro_site"
         payload["target_audience"] = payload.get("target_audience") or "People comparing the confirmed services and deciding how to start a conversation."
         payload["buying_context"] = payload.get("buying_context") or "Visitors need service clarity, a credible sense of the business, and a low-friction route to ask about their situation."
         payload["positioning"] = payload.get("positioning") or ["A decision-oriented presentation of the business's confirmed services."]
