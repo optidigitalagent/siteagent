@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Callable, Literal, Protocol
 
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from site_agent.config import settings
 from site_agent.critic import TechnicalInspector
@@ -44,6 +44,56 @@ ReferenceProperty = Literal[
     "color", "density", "photography", "interaction", "animation",
     "responsive_behavior",
 ]
+_REFERENCE_PROPERTIES = {
+    "composition", "grid", "typography", "scale", "spacing", "shape",
+    "color", "density", "photography", "interaction", "animation",
+    "responsive_behavior",
+}
+_REFERENCE_PROPERTY_ALIASES = {
+    "component_shape": "shape",
+    "responsive": "responsive_behavior",
+    "responsive_behaviour": "responsive_behavior",
+    "colour": "color",
+}
+
+
+def _normalize_reference_property(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    normalized = re.sub(r"[\s-]+", "_", value.strip().casefold())
+    return _REFERENCE_PROPERTY_ALIASES.get(normalized, normalized)
+
+
+def _normalize_reference_properties(values: Any) -> Any:
+    if values is None:
+        return []
+    if isinstance(values, str):
+        values = [values]
+    if not isinstance(values, (list, tuple, set)):
+        return values
+    normalized: list[Any] = []
+    for value in values:
+        item = _normalize_reference_property(value)
+        if item == "" or item in normalized:
+            continue
+        normalized.append(item)
+    return normalized
+
+
+def _migrate_reference_property_payload(value: Any) -> Any:
+    """Load pre-component/property reference records without widening them."""
+    if not isinstance(value, dict):
+        return value
+    payload = dict(value)
+    if "target_properties_explicit" not in payload:
+        payload["target_properties_explicit"] = "target_properties" in payload
+    if "target_properties" in payload:
+        explicit = _normalize_reference_properties(payload.get("target_properties"))
+    else:
+        legacy = _normalize_reference_properties(payload.get("transfer"))
+        explicit = [item for item in legacy if item in _REFERENCE_PROPERTIES]
+    payload["target_properties"] = explicit
+    return payload
 
 
 def _now() -> str:
@@ -101,10 +151,22 @@ class RefinementAttachmentInput(BaseModel):
     target_page: str = ""
     target_section: str = ""
     target_component: str = ""
+    target_locator: str = ""
     target_properties: list[ReferenceProperty] = Field(default_factory=list)
+    target_properties_explicit: bool = False
     match_kind: Literal["exact", "visual_direction"] = "visual_direction"
     interpretation: str = ""
     transfer: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_properties(cls, value: Any) -> Any:
+        return _migrate_reference_property_payload(value)
+
+    @field_validator("target_properties", mode="before")
+    @classmethod
+    def normalize_properties(cls, value: Any) -> Any:
+        return _normalize_reference_properties(value)
 
 
 class RefinementAttachment(BaseModel):
@@ -116,12 +178,24 @@ class RefinementAttachment(BaseModel):
     target_page: str = ""
     target_section: str = ""
     target_component: str = ""
+    target_locator: str = ""
     target_properties: list[ReferenceProperty] = Field(default_factory=list)
+    target_properties_explicit: bool = False
     match_kind: str = "visual_direction"
     interpretation: str = ""
     transfer: list[str] = Field(default_factory=list)
     extracted_text: str = ""
     added_at: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_properties(cls, value: Any) -> Any:
+        return _migrate_reference_property_payload(value)
+
+    @field_validator("target_properties", mode="before")
+    @classmethod
+    def normalize_properties(cls, value: Any) -> Any:
+        return _normalize_reference_properties(value)
 
 
 class RefinementBusinessData(BaseModel):
@@ -176,6 +250,7 @@ class RefinementSession(BaseModel):
     candidate_baseline_sha256: str = ""
     candidate_baseline_tree_sha256: str = ""
     candidate_snapshot_sha256: str = ""
+    current_change_plan_sha256: str = ""
     candidate_iteration: int = -1
     baseline_path: str = ""
     preview_url: str = ""
@@ -228,6 +303,9 @@ class RefinementImplementationResult(BaseModel):
     browser_review_performed: bool = False
     functional_scenarios: list["FunctionalScenarioEvidence"] = Field(default_factory=list)
     reference_scope_evidence: list["ReferenceScopeEvidence"] = Field(default_factory=list)
+    requirement_change_evidence: list["RequirementChangeEvidence"] = Field(
+        default_factory=list
+    )
 
 
 class FunctionalScenarioEvidence(BaseModel):
@@ -238,14 +316,95 @@ class FunctionalScenarioEvidence(BaseModel):
     evidence: str
 
 
+class RequirementSourceVerification(BaseModel):
+    changed_file: str
+    target_locator: str
+    before: str
+    after: str
+    verifiable: bool = False
+
+    @model_validator(mode="after")
+    def normalize_evidence(self) -> "RequirementSourceVerification":
+        self.changed_file = self.changed_file.strip().replace("\\", "/")
+        self.target_locator = " ".join(self.target_locator.split())
+        return self
+
+
+class RequirementChangeEvidence(BaseModel):
+    requirement_id: str
+    changed_files: list[str] = Field(default_factory=list)
+    scope: list[str] = Field(default_factory=list)
+    source_verifications: list[RequirementSourceVerification] = Field(
+        default_factory=list
+    )
+    evidence: str
+
+    @model_validator(mode="after")
+    def normalize_evidence(self) -> "RequirementChangeEvidence":
+        self.requirement_id = " ".join(self.requirement_id.split())
+        self.changed_files = list(dict.fromkeys(
+            normalized for value in self.changed_files
+            if (normalized := value.strip().replace("\\", "/"))
+        ))
+        self.scope = list(dict.fromkeys(
+            normalized for value in self.scope
+            if (normalized := " ".join(value.split()))
+        ))
+        self.evidence = " ".join(self.evidence.split())
+        return self
+
+
+class ReferencePropertyVerification(BaseModel):
+    property: ReferenceProperty
+    target_component: str
+    changed_files: list[str] = Field(default_factory=list)
+    target_locator: str
+    before: str
+    after: str
+    verifiable: bool = False
+
+    @field_validator("property", mode="before")
+    @classmethod
+    def normalize_property(cls, value: Any) -> Any:
+        return _normalize_reference_property(value)
+
+    @model_validator(mode="after")
+    def normalize_evidence(self) -> "ReferencePropertyVerification":
+        self.target_component = " ".join(self.target_component.split())
+        self.target_locator = " ".join(self.target_locator.split())
+        self.changed_files = list(dict.fromkeys(
+            normalized for value in self.changed_files
+            if (normalized := value.strip().replace("\\", "/"))
+        ))
+        return self
+
+
 class ReferenceScopeEvidence(BaseModel):
     attachment_id: str
     target_page: str
     target_section: str
     target_component: str
+    target_locator: str
     properties: list[ReferenceProperty]
     changed_files: list[str] = Field(default_factory=list)
     evidence: str
+    property_verifications: list[ReferencePropertyVerification] = Field(
+        default_factory=list
+    )
+    scope_isolated: bool = False
+
+    @field_validator("properties", mode="before")
+    @classmethod
+    def normalize_properties(cls, value: Any) -> Any:
+        return _normalize_reference_properties(value)
+
+    @field_validator("changed_files", mode="after")
+    @classmethod
+    def normalize_changed_files(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(
+            normalized for value in values
+            if (normalized := value.strip().replace("\\", "/"))
+        ))
 
 
 RefinementImplementationResult.model_rebuild()
@@ -269,15 +428,32 @@ class RefinementReviewResult(BaseModel):
     functional_qa_passed: bool
     content_qa_passed: bool
     animation_qa_passed: bool
+    reference_property_scope_verified: bool = True
     issues: list[RefinementReviewIssue] = Field(default_factory=list)
     remaining_differences: list[str] = Field(default_factory=list)
     summary: str
+
+    @model_validator(mode="after")
+    def enforce_acceptance_invariants(self) -> "RefinementReviewResult":
+        blocking = any(issue.severity in {"p0", "p1"} for issue in self.issues)
+        mandatory_gates = (
+            self.visual_qa_passed, self.responsive_qa_passed,
+            self.requirements_match, self.reference_comparison_passed,
+            self.functional_qa_passed, self.content_qa_passed,
+            self.animation_qa_passed, self.reference_property_scope_verified,
+        )
+        if self.decision == "accept" and (
+                not all(mandatory_gates) or blocking
+                or bool(_normalized_nonempty(self.remaining_differences))):
+            self.decision = "revise"
+        return self
 
 
 class ReferenceAnalysisResult(BaseModel):
     target_page: str
     target_section: str
     target_component: str
+    target_locator: str
     target_properties: list[ReferenceProperty] = Field(default_factory=list)
     match_kind: Literal["exact", "visual_direction"]
     interpretation: str
@@ -285,11 +461,17 @@ class ReferenceAnalysisResult(BaseModel):
     ambiguous: bool = False
     blocker: str = ""
 
+    @field_validator("target_properties", mode="before")
+    @classmethod
+    def normalize_properties(cls, value: Any) -> Any:
+        return _normalize_reference_properties(value)
+
     @model_validator(mode="after")
     def reject_broad_scope(self) -> "ReferenceAnalysisResult":
         self.target_page = " ".join(self.target_page.split())
         self.target_section = " ".join(self.target_section.split())
         self.target_component = " ".join(self.target_component.split())
+        self.target_locator = " ".join(self.target_locator.split())
         self.interpretation = " ".join(self.interpretation.split())
         self.target_properties = list(dict.fromkeys(self.target_properties))
         if self.ambiguous:
@@ -300,12 +482,13 @@ class ReferenceAnalysisResult(BaseModel):
             _specific_reference_scope(self.target_page),
             _specific_reference_scope(self.target_section),
             _specific_reference_scope(self.target_component),
+            _specific_reference_scope(self.target_locator),
             self.interpretation,
             self.target_properties,
         )):
             raise ValueError(
                 "Reference scope must identify a specific page, section, component, "
-                "property allowlist, and interpretation."
+                "target locator, property allowlist, and interpretation."
             )
         return self
 
@@ -353,7 +536,16 @@ for every applicable navigation/CTA/form/menu/accordion/modal/slider/map/video
 journey, including invalid plus success/error or honest fallback states for forms.
 For every visual reference, record reference_scope_evidence with the exact
 attachment ID, page, section, component and property allowlist from the session.
-Do not report a broader target or additional transferred property.
+Use the mapping's exact target_locator in every property verification.
+Do not report a broader target or additional transferred property. Include one
+structured property_verification per transferred property, bound to the exact
+component, changed file, target locator, and distinct before/after evidence.
+Set scope_isolated=true only when the changed region is verifiably free of other
+material changes. Attribute every other changed file to a concrete active user
+requirement in requirement_change_evidence, copy that requirement's exact scope,
+and include exact source before/after replacement evidence whenever a requirement
+also changes a reference-touched file. Never use a reference as authority for an
+unrelated change.
 
 Accumulated session contract:
 {session.model_dump_json(indent=2)}
@@ -386,6 +578,9 @@ reference mappings. Do not edit. Reject when an active requirement is missing,
 a scoped reference was applied globally, a P0/P1 defect remains, or responsive,
 functional, content, animation/reduced-motion or browser evidence is missing.
 A passing build alone is never acceptance.
+Set reference_property_scope_verified=true only after the structured property
+evidence and rendered/source comparison prove that every reference-driven
+change stayed inside its component and property allowlist.
 
 Session:
 {session.model_dump_json(indent=2)}
@@ -1208,6 +1403,12 @@ def _file_sha(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _payload_sha(payload: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
 def _unique(values: list[str]) -> list[str]:
     return list(dict.fromkeys(value for value in values if value))
 
@@ -1216,15 +1417,92 @@ def _normalized_nonempty(values: list[str]) -> list[str]:
     return _unique([" ".join(value.split()) for value in values if value and value.strip()])
 
 
+def _scope_locators(values: list[str]) -> set[str]:
+    locators: set[str] = set()
+    for value in _normalized_nonempty(values):
+        _, separator, fragment = value.partition("#")
+        if separator and fragment:
+            locators.add("#" + fragment.strip())
+        elif value.startswith(("#", ".")):
+            locators.add(value)
+    return locators
+
+
 _BROAD_REFERENCE_SCOPE = {
     "*", "all", "global", "site", "sitewide", "whole page", "entire page",
-    "whole site", "entire site",
+    "whole site", "entire site", "all pages", "every page", "any page",
+    "all sections", "every section", "any section", "all components",
+    "every component", "any component", "site wide", "whole component",
+    "entire component", "everything", "body", "html", ":root", "document",
+    "window", "main", "header", "footer",
 }
 
 
 def _specific_reference_scope(value: str) -> bool:
-    normalized = " ".join(value.split()).casefold()
-    return bool(normalized) and normalized not in _BROAD_REFERENCE_SCOPE
+    normalized = " ".join(re.sub(r"[_-]+", " ", value).split()).casefold()
+    tokens = set(normalized.split())
+    broad_tokens = {
+        "all", "every", "any", "whole", "entire", "global", "globally",
+        "everything", "sitewide", "pagewide", "websitewide",
+    }
+    broad_full = "full" in tokens and bool(tokens & {"site", "page", "website"})
+    global_selector = bool(re.match(
+        r"^(?:body|html|:root)(?:\b|[#.:\[])", normalized
+    ))
+    return bool(normalized) and normalized not in _BROAD_REFERENCE_SCOPE \
+        and not bool(tokens & broad_tokens) and not broad_full and not global_selector
+
+
+def _canonical_locator_identity(locator: str) -> str:
+    """Return a conservative component identity for an id/class locator."""
+    normalized = " ".join(locator.split())
+    selector_tokens = re.sub(r"\[[^\]]*\]", "", normalized)
+    id_match = re.search(r"#([A-Za-z][\w-]*)", selector_tokens)
+    if not id_match:
+        id_match = re.search(
+            r"(?:^|[\s\[])id\s*=\s*[\"']?([A-Za-z][\w-]*)[\"']?\]?",
+            normalized, flags=re.IGNORECASE,
+        )
+    if id_match:
+        return "id:" + id_match.group(1).casefold()
+    class_match = re.search(r"\.([A-Za-z][\w-]*)", selector_tokens)
+    if class_match:
+        return "class:" + class_match.group(1).casefold()
+    return ""
+
+
+def _merge_reference_analysis_without_widening(
+        attachment: RefinementAttachment,
+        analysis: ReferenceAnalysisResult) -> tuple[RefinementAttachment | None, list[str]]:
+    """Fill legacy gaps while preserving every explicit user scope boundary."""
+    conflicts: list[str] = []
+    for field in ("target_page", "target_section", "target_component", "target_locator"):
+        explicit = " ".join(str(getattr(attachment, field)).split())
+        proposed = " ".join(str(getattr(analysis, field)).split())
+        if explicit and explicit.casefold() != proposed.casefold():
+            conflicts.append(field)
+    explicit_properties = set(attachment.target_properties)
+    proposed_properties = set(analysis.target_properties)
+    if (
+        attachment.target_properties_explicit
+        and not explicit_properties
+        and proposed_properties
+    ) or (explicit_properties and not proposed_properties.issubset(explicit_properties)):
+        conflicts.append("target_properties")
+    if conflicts:
+        return None, conflicts
+
+    merged = attachment.model_copy(deep=True)
+    for field in ("target_page", "target_section", "target_component", "target_locator"):
+        if not str(getattr(merged, field)).strip():
+            setattr(merged, field, getattr(analysis, field))
+    if not merged.target_properties and not merged.target_properties_explicit:
+        merged.target_properties = list(analysis.target_properties)
+    if not merged.interpretation.strip():
+        merged.interpretation = analysis.interpretation
+    if not merged.transfer:
+        merged.transfer = list(analysis.transfer)
+    return merged, []
 
 
 def _reference_scope_rejection_reasons(
@@ -1254,6 +1532,7 @@ def _reference_scope_rejection_reasons(
                 ("page", attachment.target_page),
                 ("section", attachment.target_section),
                 ("component", attachment.target_component),
+                ("target locator", attachment.target_locator),
                 ("interpretation", attachment.interpretation),
             ) if not _specific_reference_scope(value)
         ]
@@ -1276,6 +1555,14 @@ def _reference_scope_rejection_reasons(
                 reasons.append(
                     f"Reference {attachment.id} page/section scope is outside the requested scope."
                 )
+            else:
+                expected_locator = _canonical_locator_identity("#" + target[1])
+                actual_locator = _canonical_locator_identity(attachment.target_locator)
+                if not actual_locator or actual_locator != expected_locator:
+                    reasons.append(
+                        f"Reference {attachment.id} target locator does not match "
+                        "its requested page/section scope."
+                    )
         if implementation is None:
             continue
         evidence = evidence_by_id.get(attachment.id, [])
@@ -1291,6 +1578,8 @@ def _reference_scope_rejection_reasons(
             != attachment.target_section.strip().casefold()
             or record.target_component.strip().casefold()
             != attachment.target_component.strip().casefold()
+            or record.target_locator.strip().casefold()
+            != attachment.target_locator.strip().casefold()
             or set(record.properties) != set(properties)
         ):
             reasons.append(
@@ -1308,10 +1597,422 @@ def _reference_scope_rejection_reasons(
             reasons.append(
                 f"Reference {attachment.id} scope evidence names an unrecorded changed file."
             )
+        verifications_by_property: dict[str, list[ReferencePropertyVerification]] = {}
+        verified_changed_files: set[str] = set()
+        for verification in record.property_verifications:
+            verifications_by_property.setdefault(verification.property, []).append(verification)
+            verified_changed_files.update(verification.changed_files)
+        if set(verifications_by_property) != set(properties) or any(
+                len(items) != 1 for items in verifications_by_property.values()):
+            reasons.append(
+                f"Reference {attachment.id} lacks exact per-property verification coverage."
+            )
+        if verified_changed_files != set(record.changed_files):
+            reasons.append(
+                f"Reference {attachment.id} lacks exact changed-file verification coverage."
+            )
+        for property_name, verifications in verifications_by_property.items():
+            for verification in verifications:
+                if property_name not in properties:
+                    reasons.append(
+                        f"Reference {attachment.id} verifies a property outside its allowlist."
+                    )
+                if (
+                    not verification.verifiable
+                    or not _specific_reference_scope(verification.target_component)
+                    or verification.target_component.strip().casefold()
+                    != attachment.target_component.strip().casefold()
+                    or verification.target_locator.strip().casefold()
+                    != attachment.target_locator.strip().casefold()
+                    or not verification.changed_files
+                    or not verification.target_locator.strip()
+                    or not verification.before.strip()
+                    or not verification.after.strip()
+                    or verification.before == verification.after
+                ):
+                    reasons.append(
+                        f"Reference {attachment.id} property {property_name!r} "
+                        "has unverifiable change evidence."
+                    )
+                elif not set(verification.changed_files).issubset(
+                        set(record.changed_files)):
+                    reasons.append(
+                        f"Reference {attachment.id} property verification escapes "
+                        "its recorded changed files."
+                    )
+        if not record.scope_isolated:
+            reasons.append(
+                f"Reference {attachment.id} property changes were not proven isolated "
+                "from out-of-scope material changes."
+            )
     if implementation is not None:
         for attachment_id in evidence_by_id.keys() - mapping_ids:
             reasons.append(
                 f"Implementation reported scope for unknown reference {attachment_id}."
+            )
+    return _unique(reasons)
+
+
+def _requirement_change_rejection_reasons(
+        session: RefinementSession,
+        implementation: RefinementImplementationResult,
+        *, authorized_requirement_ids: set[str] | None = None) -> list[str]:
+    """Require every computed file change to have a user-authorized cause."""
+    reasons: list[str] = []
+    changed_files = set(implementation.changed_files)
+    known_requirements = {item.id: item for item in session.requirements}
+    if authorized_requirement_ids is None:
+        reasons.append(
+            "Requirement change attribution cannot be verified without the current change plan."
+        )
+        authorized_requirement_ids = set()
+    attributed_files: set[str] = set()
+    for record in implementation.reference_scope_evidence:
+        attributed_files.update(record.changed_files)
+    for record in implementation.requirement_change_evidence:
+        requirement = known_requirements.get(record.requirement_id)
+        if requirement is None:
+            reasons.append(
+                f"Change attribution names unknown requirement {record.requirement_id!r}."
+            )
+        elif requirement.state not in {RequirementState.ACTIVE, RequirementState.COMPLETED}:
+            reasons.append(
+                f"Change attribution uses non-authorizing requirement "
+                f"{record.requirement_id!r} in state {requirement.state.value!r}."
+            )
+        if (
+            record.requirement_id not in authorized_requirement_ids
+            or record.requirement_id not in implementation.completed_requirement_ids
+        ):
+            reasons.append(
+                f"Change attribution uses requirement {record.requirement_id!r} "
+                "outside the current implementation plan."
+            )
+        if requirement is not None:
+            expected_scope = set(_normalized_nonempty(requirement.scope))
+            actual_scope = set(_normalized_nonempty(record.scope))
+            if expected_scope and actual_scope != expected_scope:
+                reasons.append(
+                    f"Requirement {record.requirement_id!r} change attribution does "
+                    "not match its recorded scope."
+                )
+            expected_locators = _scope_locators(requirement.scope)
+        else:
+            expected_locators = set()
+        if not record.changed_files or not record.evidence.strip():
+            reasons.append(
+                f"Requirement {record.requirement_id!r} change attribution is incomplete."
+            )
+        elif not set(record.changed_files).issubset(changed_files):
+            reasons.append(
+                f"Requirement {record.requirement_id!r} attribution names an "
+                "unrecorded changed file."
+            )
+        else:
+            attributed_files.update(record.changed_files)
+        for verification in record.source_verifications:
+            if (
+                not verification.verifiable
+                or not verification.changed_file
+                or verification.changed_file not in record.changed_files
+                or not verification.target_locator
+                or not verification.before
+                or not verification.after
+                or verification.before == verification.after
+            ):
+                reasons.append(
+                    f"Requirement {record.requirement_id!r} has unverifiable "
+                    "source-change evidence."
+                )
+            if expected_locators and verification.target_locator not in expected_locators:
+                reasons.append(
+                    f"Requirement {record.requirement_id!r} source locator does not "
+                    "match its recorded scope."
+                )
+    unexplained = sorted(changed_files - attributed_files)
+    if unexplained:
+        reasons.append(
+            "Computed changes lack reference or requirement attribution: "
+            + ", ".join(unexplained) + "."
+        )
+    return _unique(reasons)
+
+
+def _planned_requirement_ids(
+        snapshot_dir: Path | None,
+        session: RefinementSession) -> set[str] | None:
+    if snapshot_dir is None:
+        return None
+    try:
+        plan = json.loads(
+            (snapshot_dir.parent / "change_plan.json").read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError):
+        return set()
+    if (
+        plan.get("schema_version") != 2
+        or plan.get("session_id") != session.session_id
+        or plan.get("project_id") != session.project_id
+        or plan.get("iteration") != session.iteration
+        or plan.get("requirements_authority_sha256")
+        != _requirement_authority_checksum(session.requirements)
+        or not session.current_change_plan_sha256
+        or _payload_sha(plan) != session.current_change_plan_sha256
+    ):
+        return set()
+    return {
+        str(item.get("id", "")) for item in plan.get("active_requirements", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+
+
+def _inferred_css_reference_properties(before: str, after: str) -> set[str]:
+    """Conservatively classify changed CSS declarations in one exact hunk."""
+    declaration = re.compile(r"(?P<name>--[\w-]+|[A-Za-z][\w-]*)\s*:\s*(?P<value>[^;{}]+)")
+
+    def isolated_rule(source: str) -> bool:
+        if "<" in source or ">" in source:
+            return False
+        rule = re.fullmatch(r"\s*([^{}]+)\{([^{}]*)\}\s*", source, re.DOTALL)
+        if not rule:
+            return False
+        residue = declaration.sub("", rule.group(2))
+        residue = re.sub(r"/\*.*?\*/", "", residue, flags=re.DOTALL)
+        return not residue.replace(";", "").strip()
+
+    if not isolated_rule(before) or not isolated_rule(after):
+        return {"unverifiable"}
+
+    def values(source: str) -> dict[str, list[str]]:
+        result: dict[str, list[str]] = {}
+        for match in declaration.finditer(source):
+            result.setdefault(match.group("name").casefold(), []).append(
+                " ".join(match.group("value").split())
+            )
+        return result
+
+    before_values, after_values = values(before), values(after)
+    changed = {
+        name for name in before_values.keys() | after_values.keys()
+        if before_values.get(name) != after_values.get(name)
+    }
+    inferred: set[str] = set()
+    for name in changed:
+        if name.startswith("--"):
+            inferred.add("color" if "color" in name or "colour" in name else "unverifiable")
+            if any(
+                marker in value.casefold()
+                for value in before_values.get(name, []) + after_values.get(name, [])
+                for marker in ("url(", "image-set(", "cross-fade(")
+            ):
+                inferred.add("photography")
+        elif name in {"color", "background", "background-color", "fill", "stroke",
+                      "border-color", "outline-color", "box-shadow", "text-shadow"}:
+            inferred.add("color")
+            if name == "background" and any(
+                marker in value.casefold()
+                for value in before_values.get(name, []) + after_values.get(name, [])
+                for marker in ("url(", "image-set(", "cross-fade(")
+            ):
+                inferred.add("photography")
+        elif name.startswith("grid-"):
+            inferred.update({"grid", "composition"})
+        elif name in {"display", "position", "inset", "top", "right", "bottom", "left",
+                      "order", "place-items", "align-items", "justify-content",
+                      "flex", "flex-flow", "flex-direction", "flex-wrap"}:
+            inferred.add("composition")
+        elif name in {"gap", "row-gap", "column-gap", "margin", "margin-top",
+                      "margin-right", "margin-bottom", "margin-left", "padding",
+                      "padding-top", "padding-right", "padding-bottom", "padding-left"}:
+            inferred.add("spacing")
+        elif name in {"font-size", "line-height", "width", "height", "min-width",
+                      "min-height", "max-width", "max-height"}:
+            inferred.add("scale")
+        elif name == "transform":
+            transform_functions = {
+                function.casefold()
+                for value in before_values.get(name, []) + after_values.get(name, [])
+                for function in re.findall(r"([A-Za-z][\w-]*)\s*\(", value)
+            }
+            for function in transform_functions:
+                if function.startswith("scale"):
+                    inferred.add("scale")
+                elif function.startswith("translate"):
+                    inferred.add("composition")
+                else:
+                    inferred.add("unverifiable")
+            if not transform_functions:
+                inferred.add("unverifiable")
+        elif name.startswith("font") or name in {"letter-spacing", "text-transform",
+                                                  "text-align"}:
+            inferred.add("typography")
+        elif name in {"border-radius", "clip-path"}:
+            inferred.add("shape")
+        elif name.startswith("animation") or name in {"transition", "transition-property",
+                                                       "transition-duration"}:
+            inferred.add("animation")
+        elif name in {"cursor", "pointer-events", "touch-action", "scroll-behavior"}:
+            inferred.add("interaction")
+        elif name.startswith("object-") or name in {"filter", "mix-blend-mode",
+                                                     "background-position", "background-size"}:
+            inferred.add("photography")
+        else:
+            inferred.add("unverifiable")
+    if before != after and not inferred:
+        inferred.add("unverifiable")
+    return inferred
+
+
+def _source_replacement_targets_locator(before: str, after: str, locator: str) -> bool:
+    """Reject broad/multi-selector hunks masquerading as component evidence."""
+    locator_identity = _canonical_locator_identity(locator)
+    if (not locator_identity or not _specific_reference_scope(locator)
+            or len(before) > 4096 or len(after) > 4096):
+        return False
+    if locator not in before or locator not in after:
+        return False
+    if "{" in before or "{" in after:
+        selector_pattern = re.compile(r"(?:^|})\s*([^{}]+)\{")
+        selectors = selector_pattern.findall(before) + selector_pattern.findall(after)
+        if not selectors:
+            return False
+        for selector in selectors:
+            normalized = " ".join(selector.split())
+            selector_without_attributes = re.sub(r"\[[^\]]*\]", "", normalized)
+            if (
+                "," in normalized
+                or re.search(r"[>+~]", selector_without_attributes)
+                or " " in selector_without_attributes
+                or _canonical_locator_identity(normalized) != locator_identity
+            ):
+                return False
+    return True
+
+
+def _reference_source_verification_reasons(
+        session: RefinementSession,
+        implementation: RefinementImplementationResult,
+        snapshot_dir: Path | None) -> list[str]:
+    """Bind property assertions to exact UTF-8 source before/after evidence."""
+    mappings = {
+        item.id for item in session.attachments
+        if item.kind in {"reference", "screenshot"}
+    }
+    if not mappings:
+        return []
+    if snapshot_dir is None:
+        return ["Reference property verification requires the pre-change snapshot."]
+    snapshot_root = snapshot_dir.resolve()
+    project_root = Path(session.project_path).resolve()
+    reasons: list[str] = []
+    reference_changed_files: set[str] = set()
+    for record in implementation.reference_scope_evidence:
+        if record.attachment_id not in mappings:
+            continue
+        for verification in record.property_verifications:
+            for changed_file in verification.changed_files:
+                reference_changed_files.add(changed_file)
+                if changed_file.startswith("deleted:"):
+                    reasons.append(
+                        f"Reference {record.attachment_id} property "
+                        f"{verification.property!r} cannot verify a deleted source file."
+                    )
+                    continue
+                relative = Path(changed_file)
+                before_path = (snapshot_root / relative).resolve()
+                after_path = (project_root / relative).resolve()
+                if (
+                    relative.is_absolute()
+                    or (before_path != snapshot_root and snapshot_root not in before_path.parents)
+                    or (after_path != project_root and project_root not in after_path.parents)
+                ):
+                    reasons.append(
+                        f"Reference {record.attachment_id} property verification escapes "
+                        "the project or recovery snapshot."
+                    )
+                    continue
+                try:
+                    before_source = before_path.read_text(encoding="utf-8")
+                    after_source = after_path.read_text(encoding="utf-8")
+                except (OSError, UnicodeError):
+                    reasons.append(
+                        f"Reference {record.attachment_id} property "
+                        f"{verification.property!r} is not verifiable in UTF-8 source."
+                    )
+                    continue
+                if (
+                    before_source == after_source
+                    or verification.target_locator not in before_source
+                    or verification.target_locator not in after_source
+                    or verification.before not in before_source
+                    or verification.after not in after_source
+                    or not _source_replacement_targets_locator(
+                        verification.before, verification.after,
+                        verification.target_locator,
+                    )
+                ):
+                    reasons.append(
+                        f"Reference {record.attachment_id} property "
+                        f"{verification.property!r} before/after evidence does not "
+                        "match the computed source change."
+                    )
+    for changed_file in sorted(reference_changed_files):
+        if changed_file.startswith("deleted:"):
+            continue
+        relative = Path(changed_file)
+        before_path = (snapshot_root / relative).resolve()
+        after_path = (project_root / relative).resolve()
+        try:
+            before_source = before_path.read_text(encoding="utf-8")
+            after_source = after_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue  # The specific unreadable-source reason is recorded above.
+        replacements: list[tuple[str, str, str]] = []
+        reference_properties: dict[tuple[str, str, str], set[str]] = {}
+        for record in implementation.reference_scope_evidence:
+            for verification in record.property_verifications:
+                if changed_file in verification.changed_files:
+                    replacement = (
+                        verification.before, verification.after,
+                        verification.target_locator,
+                    )
+                    replacements.append(replacement)
+                    reference_properties.setdefault(replacement, set()).add(
+                        verification.property
+                    )
+        for record in implementation.requirement_change_evidence:
+            for verification in record.source_verifications:
+                if verification.changed_file == changed_file:
+                    replacements.append((
+                        verification.before, verification.after,
+                        verification.target_locator,
+                    ))
+        working = before_source
+        for before, after, locator in list(dict.fromkeys(replacements)):
+            if (
+                not before or not after or before == after
+                or working.count(before) != 1
+                or not _source_replacement_targets_locator(before, after, locator)
+            ):
+                reasons.append(
+                    f"Changed file {changed_file!r} has ambiguous or unverifiable "
+                    "source replacement evidence."
+                )
+                continue
+            inferred = _inferred_css_reference_properties(before, after)
+            allowed = reference_properties.get((before, after, locator))
+            if allowed is not None and (
+                    "unverifiable" in inferred or not inferred.issubset(allowed)):
+                reasons.append(
+                    f"Changed file {changed_file!r} contains CSS properties outside "
+                    "the verified reference property allowlist."
+                )
+                continue
+            working = working.replace(before, after, 1)
+        if working != after_source:
+            reasons.append(
+                f"Changed file {changed_file!r} contains material changes outside "
+                "its verified reference and requirement replacements."
             )
     return _unique(reasons)
 
@@ -1327,6 +2028,20 @@ def _brief_checksum(session: RefinementSession) -> str:
         "scope": session.scope,
         "attachments": [item.model_dump(mode="json") for item in session.attachments],
     }
+    return hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def _requirement_authority_checksum(
+        requirements: list[RefinementRequirement]) -> str:
+    payload = [{
+        "id": item.id,
+        "text": item.text,
+        "scope": item.scope,
+        "iteration": item.iteration,
+        "supersedes": item.supersedes,
+    } for item in requirements]
     return hashlib.sha256(
         json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
     ).hexdigest()
@@ -2453,13 +3168,19 @@ class SiteRefinementOrchestrator:
         self._analyze_unmapped_references(session, iteration_dir)
         self._save(session)
         plan = {
-            "schema_version": 1, "iteration": session.iteration,
+            "schema_version": 2, "session_id": session.session_id,
+            "project_id": session.project_id, "iteration": session.iteration,
             "active_requirements": [item.model_dump(mode="json") for item in session.active_requirements],
+            "requirements_authority_sha256": _requirement_authority_checksum(
+                session.requirements
+            ),
             "immutable_constraints": session.immutable_constraints, "scope": session.scope,
             "reference_mappings": [item.model_dump(mode="json") for item in session.attachments
                                    if item.kind in {"reference", "screenshot"}],
         }
         _atomic_json(iteration_dir / "change_plan.json", plan)
+        session.current_change_plan_sha256 = _payload_sha(plan)
+        self._save(session)
         project = Path(session.project_path)
         current_before = _project_manifest(project)
         pre_manifest_path = iteration_dir / "pre_change_manifest.json"
@@ -2703,7 +3424,9 @@ class SiteRefinementOrchestrator:
             stored_path=relative.as_posix(), sha256=digest, kind=incoming.kind,
             target_page=incoming.target_page, target_section=incoming.target_section,
             target_component=incoming.target_component,
+            target_locator=incoming.target_locator,
             target_properties=list(dict.fromkeys(incoming.target_properties)),
+            target_properties_explicit=incoming.target_properties_explicit,
             match_kind=incoming.match_kind, interpretation=incoming.interpretation,
             transfer=_unique(incoming.transfer), extracted_text=extracted_text, added_at=_now(),
         )
@@ -2842,15 +3565,19 @@ class SiteRefinementOrchestrator:
             prompt = f"""
 Analyze this user-supplied visual reference for an existing-site refinement.
 Using the user's live goal and requirements below, determine its exact
-page/section/component scope, whether it is an exact target or visual direction,
+page/section/component scope, a concrete selector/locator for that component,
+whether it is an exact target or visual direction,
 and a strict property allowlist plus only the visual
 principles to transfer (composition, grid, typography, scale, spacing, component
 shape, color, density, photography, interaction, animation, responsive behavior).
-Do not copy a whole third-party site. Mark ambiguous only when the user context
-cannot support a safe mapping.
+Do not copy a whole third-party site. Never change a non-empty page, section,
+component, locator, or property allowlist already supplied by the user; property analysis
+may only stay within that explicit allowlist. Mark ambiguous when the user
+context cannot support a safe mapping without changing an explicit boundary.
 
 Goal: {session.user_goal}
 Requirements: {json.dumps([item.text for item in session.active_requirements], ensure_ascii=False)}
+Existing mapping: {attachment.model_dump_json(indent=2)}
 """.strip()
             analysis = _invoke_codex_model(
                 project_dir=Path(session.project_path), prompt=prompt,
@@ -2864,13 +3591,32 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
                     analysis.blocker or f"Reference {attachment.id} mapping is ambiguous."
                 ])
                 continue
-            attachment.target_page = analysis.target_page
-            attachment.target_section = analysis.target_section
-            attachment.target_component = analysis.target_component
-            attachment.target_properties = list(dict.fromkeys(analysis.target_properties))
-            attachment.match_kind = analysis.match_kind
-            attachment.interpretation = analysis.interpretation
-            attachment.transfer = analysis.transfer
+            merged, conflicts = _merge_reference_analysis_without_widening(
+                attachment, analysis
+            )
+            if merged is None:
+                session.blockers = _unique(session.blockers + [
+                    f"Automatic analysis tried to widen or replace explicit scope for "
+                    f"reference {attachment.id}: {', '.join(conflicts)}."
+                ])
+                continue
+            proposed_session = session.model_copy(
+                update={"attachments": [merged]}, deep=True
+            )
+            proposed_reasons = _reference_scope_rejection_reasons(proposed_session)
+            if proposed_reasons:
+                session.blockers = _unique(session.blockers + [
+                    f"Automatic analysis could not produce a safe mapping for reference "
+                    f"{attachment.id}: {'; '.join(proposed_reasons)}"
+                ])
+                continue
+            attachment.target_page = merged.target_page
+            attachment.target_section = merged.target_section
+            attachment.target_component = merged.target_component
+            attachment.target_locator = merged.target_locator
+            attachment.target_properties = list(merged.target_properties)
+            attachment.interpretation = merged.interpretation
+            attachment.transfer = list(merged.transfer)
 
     def _browser_target(self, session: RefinementSession) -> str:
         if session.preview_url:
@@ -3257,9 +4003,28 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         functional_coverage_passes = _functional_coverage_passes(
             implementation, observations
         )
-        snapshot_passes = snapshot_dir is None or _snapshot_valid(snapshot_dir)
+        snapshot_passes = (
+            snapshot_dir is not None and _snapshot_valid(snapshot_dir)
+            if browser_evidence_required else
+            snapshot_dir is None or _snapshot_valid(snapshot_dir)
+        )
         reference_scope_reasons = _reference_scope_rejection_reasons(
             session, implementation
+        )
+        planned_requirement_ids = _planned_requirement_ids(snapshot_dir, session)
+        if planned_requirement_ids is None and not browser_evidence_required:
+            # Focused model/candidate tests may intentionally omit artifact
+            # directories; production candidate evaluation never does.
+            planned_requirement_ids = set(implementation.completed_requirement_ids)
+        requirement_change_reasons = _requirement_change_rejection_reasons(
+            session, implementation,
+            authorized_requirement_ids=planned_requirement_ids,
+        )
+        reference_source_reasons = _reference_source_verification_reasons(
+            session, implementation, snapshot_dir
+        )
+        has_reference_mappings = any(
+            item.kind in {"reference", "screenshot"} for item in session.attachments
         )
         checks = (
             (not session.last_qa_result.get("runtime_failure"),
@@ -3316,6 +4081,8 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
              "Independent review did not confirm that requirements match."),
             (review.reference_comparison_passed,
              "Independent reference comparison did not pass."),
+            (not has_reference_mappings or review.reference_property_scope_verified,
+             "Independent review did not verify reference property-scope isolation."),
             (review.functional_qa_passed, "Independent functional QA did not pass."),
             (review.content_qa_passed, "Independent content QA did not pass."),
             (review.animation_qa_passed, "Independent animation QA did not pass."),
@@ -3327,7 +4094,8 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         )
         reasons = _unique(
             [message for passed, message in checks if not passed] +
-            browser_evidence_reasons + reference_scope_reasons
+            browser_evidence_reasons + reference_scope_reasons +
+            requirement_change_reasons + reference_source_reasons
         )
         if rejection_reasons is not None:
             rejection_reasons[:] = reasons

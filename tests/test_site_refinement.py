@@ -25,7 +25,9 @@ from site_agent.refinement import (
     RefinementReviewResult,
     RefinementSession,
     RefinementStatus,
+    ReferencePropertyVerification,
     ReferenceScopeEvidence,
+    RequirementChangeEvidence,
     RequirementState,
     SiteRefinementOrchestrator,
     _business_data_matches,
@@ -56,6 +58,11 @@ class PassingExecutor:
             placeholders_absent=True,
             browser_review_performed=True,
             functional_scenarios=[],
+            requirement_change_evidence=[RequirementChangeEvidence(
+                requirement_id=item.id, changed_files=["index.html"],
+                scope=list(item.scope),
+                evidence="The computed index.html change implements this requirement.",
+            ) for item in session.active_requirements],
         )
 
 
@@ -79,6 +86,12 @@ class PassingReviewer:
             functional_qa_passed=True,
             content_qa_passed=True,
             animation_qa_passed=True,
+            reference_property_scope_verified=(
+                not any(item.kind in {"reference", "screenshot"}
+                        for item in session.attachments)
+                or all(item.scope_isolated
+                       for item in implementation.reference_scope_evidence)
+            ),
             summary="Independent refinement review passed.",
         )
 
@@ -93,15 +106,14 @@ class ScopedReferenceExecutor:
             reference = reference.convert("RGB")
             left = reference.getpixel((reference.width // 4, reference.height // 2))
             right = reference.getpixel((reference.width * 3 // 4, reference.height // 2))
-        visual_rule = (
-            "#hero[data-reference-applied=\"hero-composition\"]{"
-            f"background:linear-gradient(90deg,rgb{left} 0 50%,rgb{right} 50% 100%);"
-            "color:#fff}"
+        before_rule = "#hero{display:grid;place-items:center;background:#d9c6a2}"
+        after_rule = (
+            "#hero{display:grid;grid-template-columns:1fr 1fr;"
+            "gap:clamp(1rem,4vw,4rem);place-items:center;"
+            f"background:linear-gradient(90deg,rgb{left} 0 50%,rgb{right} 50% 100%)}}"
         )
         index.write_text(
-            source.replace("</style>", visual_rule + "</style>", 1).replace(
-                'id="hero"', 'id="hero" data-reference-applied="hero-composition"', 1
-            ),
+            source.replace(before_rule, after_rule, 1),
             encoding="utf-8",
         )
         return RefinementImplementationResult(
@@ -121,9 +133,18 @@ class ScopedReferenceExecutor:
                 attachment_id=session.attachments[0].id,
                 target_page="index.html", target_section="hero",
                 target_component="hero-layout",
-                properties=["composition", "spacing"],
+                target_locator="#hero",
+                properties=["composition", "grid", "spacing", "color"],
                 changed_files=["index.html"],
                 evidence="The hero layout alone carries the transferred split composition.",
+                property_verifications=[
+                    ReferencePropertyVerification(
+                        property=property_name, target_component="hero-layout",
+                        changed_files=["index.html"], target_locator="#hero",
+                        before=before_rule, after=after_rule, verifiable=True,
+                    ) for property_name in ("composition", "grid", "spacing", "color")
+                ],
+                scope_isolated=True,
             )],
         )
 
@@ -131,7 +152,7 @@ class ScopedReferenceExecutor:
 class ScopedReferenceReviewer(PassingReviewer):
     def review(self, *, session, iteration_dir, implementation, gate, screenshots):
         source = Path(session.project_path, "index.html").read_text(encoding="utf-8")
-        scoped = 'id="hero" data-reference-applied="hero-composition"' in source
+        scoped = "grid-template-columns:1fr 1fr" in source
         unrelated = 'id="cards" data-immutable="unchanged"' in source
         session_dir = iteration_dir.parents[1]
         reference_path = session_dir / session.attachments[0].stored_path
@@ -355,6 +376,7 @@ class RefinementStateTests(unittest.TestCase):
                 attachments=[RefinementAttachmentInput(
                     path=str(reference), kind="reference", target_page="home",
                     target_section="hero", target_component="hero-layout",
+                    target_locator="#hero",
                     target_properties=["composition", "spacing"],
                     interpretation="Use the split composition only",
                     transfer=["composition", "spacing"],
@@ -404,6 +426,10 @@ class RefinementCandidateTests(unittest.TestCase):
             animation_qa_passed=True,
             business_data_applied=business_data_applied,
             placeholders_absent=True, browser_review_performed=True,
+            requirement_change_evidence=[RequirementChangeEvidence(
+                requirement_id="req-done", changed_files=["index.html"],
+                evidence="The computed index.html change implements req-done.",
+            )],
         )
         review = PassingReviewer().review(
             session=session, iteration_dir=root, implementation=implementation,
@@ -1106,14 +1132,15 @@ class RefinementBrowserIntegrationTests(unittest.TestCase):
                 attachments=[RefinementAttachmentInput(
                     path=str(reference), kind="reference", target_page="index.html",
                     target_section="hero", target_component="hero-layout",
-                    target_properties=["composition", "spacing"],
+                    target_locator="#hero",
+                    target_properties=["composition", "grid", "spacing", "color"],
                     interpretation="Use only the hero composition",
                     transfer=["composition", "spacing"],
                 )],
             ), session_id="real-reference-cycle", execute=True)
             self.assertEqual(result.status, RefinementStatus.CANDIDATE_READY)
             source = project.joinpath("index.html").read_text(encoding="utf-8")
-            self.assertIn('id="hero" data-reference-applied="hero-composition"', source)
+            self.assertIn("grid-template-columns:1fr 1fr", source)
             self.assertIn("linear-gradient", source)
             self.assertIn('id="cards" data-immutable="unchanged"', source)
             iteration = workflow.session_dir("real-reference-cycle") / "iterations" / "000"

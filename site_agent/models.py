@@ -286,7 +286,7 @@ class AcceptanceAuditResult(BaseModel):
     technical_gate_passed: bool
     visual_director_approved: bool
     business_approved: bool
-    score: int
+    score: int = Field(ge=0, le=100)
     no_blocking_issues: bool
     index_present: bool
     reasons: list[str] = Field(default_factory=list)
@@ -295,6 +295,66 @@ class AcceptanceAuditResult(BaseModel):
     category_scores: dict[str, int] = Field(default_factory=dict)
     quality_floors: dict[str, int] = Field(default_factory=dict)
     artifacts_reviewed: list[str] = Field(default_factory=list)
+
+    @field_validator("reasons", "artifacts_reviewed", mode="after")
+    @classmethod
+    def normalize_audit_lists(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(
+            normalized for value in values
+            if (normalized := " ".join(value.split()))
+        ))
+
+    @field_validator("category_scores", "quality_floors", mode="after")
+    @classmethod
+    def validate_quality_values(cls, values: dict[str, int]) -> dict[str, int]:
+        invalid = {
+            name: value for name, value in values.items()
+            if not 0 <= value <= 100
+        }
+        if invalid:
+            raise ValueError("Acceptance quality scores and floors must be between 0 and 100.")
+        return values
+
+    @model_validator(mode="after")
+    def enforce_approval_invariants(self) -> "AcceptanceAuditResult":
+        contradictions: list[str] = []
+        if not self.technical_gate_passed:
+            contradictions.append("Technical gate did not pass.")
+        if not self.visual_director_approved:
+            contradictions.append("Visual director approval is missing.")
+        if not self.business_approved:
+            contradictions.append("Business approval is missing.")
+        if self.score < 88:
+            contradictions.append(f"Critic score {self.score} is below 88.")
+        if not self.no_blocking_issues:
+            contradictions.append("Critical or high severity issues remain.")
+        if not self.index_present:
+            contradictions.append("Built site/index.html is missing or empty.")
+        for category, floor in self.quality_floors.items():
+            score = self.category_scores.get(category)
+            if score is None:
+                contradictions.append(
+                    f"Quality category {category!r} is missing for its declared floor."
+                )
+            elif score < floor:
+                contradictions.append(
+                    f"Quality category {category!r} score {score} is below floor {floor}."
+                )
+        if (self.category_scores or self.quality_floors) and (
+                set(self.category_scores) != set(self.quality_floors)):
+            contradictions.append(
+                "Acceptance category scores and quality floors must cover the same categories."
+            )
+
+        # A producer cannot assert approval over contradictory gate evidence.
+        # Normalize fail-closed and retain a durable explanation, matching the
+        # TechnicalGate invariant above.
+        if self.approved and (contradictions or self.reasons):
+            self.approved = False
+            self.reasons = list(dict.fromkeys(self.reasons + contradictions))
+        if not self.approved and not self.reasons:
+            raise ValueError("A rejected acceptance audit requires at least one reason.")
+        return self
 
 
 class DeploymentResult(BaseModel):
