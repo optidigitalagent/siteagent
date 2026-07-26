@@ -173,6 +173,39 @@ class CommercialUsefulnessTests(unittest.TestCase):
         self.assertTrue(report.checks["offer_clear_within_five_seconds"], report.model_dump())
         self.assertTrue(report.approved, report.model_dump())
 
+    def test_primary_ukrainian_half_of_verified_bilingual_offer_is_recognized(self) -> None:
+        dental = research(
+            business_name="Hereta Dental",
+            niche="dentistry",
+            primary_language="ukrainian",
+            sells=["Повний спектр стоматологічних послуг (Full range of dental services)"],
+            product_identity=ProductIdentity(
+                exact_product="Full range of dental services in Lviv for families",
+                evidence_sources=["fixture:product"],
+                confidence="high",
+            ),
+        )
+        current = spec(language="uk", primary_cta="Написати в Instagram Direct")
+        context = build_context(dental, strategy(), current)
+        html = """
+        <section data-decision-role='identity_value'>Hereta Dental — сімейна стоматологія у Львові. Повний спектр стоматологічних послуг для дорослих і дітей із турботою про всю родину. <a href='https://instagram.com'>Написати в Instagram Direct</a></section>
+        <section data-decision-role='offer_services'>Стоматологічна допомога для дорослих і дітей.</section>
+        <section data-decision-role='proof'>Підтверджений сімейний фокус.</section>
+        <section data-decision-role='brand_about'>Турбота про всю родину.</section>
+        <section data-decision-role='trust_process'>Як почати розмову.</section>
+        <section data-decision-role='commercial_decision'>Описати ситуацію.</section>
+        <section data-decision-role='objection_handling'>Що уточнити перед записом.</section>
+        <section data-decision-role='final_conversion'>Написати в Instagram Direct.</section>
+        """
+
+        report = commercial_usefulness_report(
+            current, context, html_text=html, hero_cta_present=True, page_scope="full_site"
+        )
+
+        self.assertTrue(report.checks["offer_clear_within_five_seconds"], report.model_dump())
+        self.assertTrue(report.checks["reason_to_choose_present"], report.model_dump())
+        self.assertTrue(report.approved, report.model_dump())
+
     def test_polish_spatial_floristry_copy_can_create_evidence_backed_desire(self) -> None:
         current = spec()
         context = build_context(research(), strategy(), current)

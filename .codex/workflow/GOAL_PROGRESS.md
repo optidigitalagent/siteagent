@@ -867,3 +867,15 @@ Live end-to-end verification requires local runtime credentials:
   suite passed 401 tests in 201.997 seconds with three expected skips. The
   immutable saved business/brand package was independently checked as stable,
   media-checksum matched and valid before restoration.
+- The restored package reached final Studio rendering. An independent Art
+  Director rejected the first full build at 56/100 with three high findings:
+  commercial usefulness 17/100, repetitive broad-claim narration, and
+  photorealistic generated clinic/equipment media that read as documentary.
+  The technical shell, navigation, CTA and footer passed. The rejection remains
+  blocking while a separate fixer revises the canonical source. During root
+  cause analysis, the commercial gate was found to require a literal bilingual
+  offering label instead of recognizing its verified Ukrainian customer-facing
+  half. The gate now derives safe variants from parenthetical bilingual labels
+  and recognizes a valid localized dental category stem. A Unicode regression
+  covers the Hereta-style contract. Focused verification passed 20 tests; the
+  complete suite passed 402 tests in 238.590 seconds with three expected skips.

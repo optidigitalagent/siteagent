@@ -1,6 +1,6 @@
 # Next Action
 
-Operational checkpoint: `SAME_RUN_DESIGN_CACHE_VERIFIED_READY_TO_RESUME_STUDIO`.
+Operational checkpoint: `ART_DIRECTOR_REJECTED_FIX_IN_PROGRESS`.
 
 The exact job/run `fdbc8d77bc244eccb8590347640bb51d` remains recoverable at
 its saved media-input checkpoint. Do not enqueue a duplicate and do not repeat
@@ -23,6 +23,16 @@ full suite passes 401 tests with three skips. Complete final screenshots,
 independent Art Director/acceptance evidence and publish only an isolated
 noindex preview. Customer production, custom-domain changes and the production
 Telegram notifier remain forbidden.
+
+The first final build is not acceptable and must not be published. Independent
+Art Direction rejected it at 56/100 because the long path repeated sparse
+claims, commercial usefulness scored 17/100, and photorealistic generated
+clinic/equipment scenes read as documentary. A separate fixer is revising the
+canonical source. The deterministic bilingual-offer recognition bug is fixed
+and the full suite passes 402 tests with three skips. After fixer validation,
+render fresh desktop/tablet/mobile evidence, require a new independent Art
+Director report with no high issue and calibrated commercial usefulness >=85,
+then continue critics/acceptance and isolated preview only.
 
 Previous operational checkpoint:
 `TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.

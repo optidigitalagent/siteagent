@@ -214,7 +214,23 @@ def commercial_usefulness_report(
         spec.h1, spec.hero_subtitle, *spec.trust_points,
         *[" ".join([section.title, *section.content]) for section in spec.sections],
     ])
-    offer_terms = [item.lower() for item in context.business_brief.verified_offerings if item.strip()]
+    offer_terms: list[str] = []
+    for item in context.business_brief.verified_offerings:
+        term = item.strip().lower()
+        if not term:
+            continue
+        offer_terms.append(term)
+        # A verified offering may retain both research languages, for example
+        # "Сімейна стоматологія (Family dentistry)". Rendering either half is
+        # truthful; the gate must not require customer copy to repeat both.
+        lead = term.split("(", 1)[0].strip(" -—")
+        if lead:
+            offer_terms.append(lead)
+        offer_terms.extend(
+            value.strip()
+            for value in re.findall(r"\(([^()]+)\)", term)
+            if value.strip()
+        )
     if context.business_brief.exact_product.strip():
         offer_terms.append(context.business_brief.exact_product.strip().lower())
     category_terms = [term for term in re.findall(r"[a-z]{4,}", context.business_brief.business_category.lower()) if term not in {"private", "independent"}]
@@ -228,7 +244,7 @@ def commercial_usefulness_report(
     offer_visible = any(
         term in hero or term.rstrip("s") in hero
         for term in [*offer_terms, *category_terms]
-    ) or sum(term in hero for term in localized_category_terms) >= 2
+    ) or any(term in hero for term in localized_category_terms)
     primary_action = bool(spec.primary_cta.strip())
     hero_action = primary_action if hero_cta_present is None else hero_cta_present
     audience = (context.business_brief.audience or "").strip().lower()
