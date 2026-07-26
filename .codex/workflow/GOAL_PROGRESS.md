@@ -856,3 +856,14 @@ Live end-to-end verification requires local runtime credentials:
   passed 37 tests; the full suite passed 398 tests in 229.392 seconds with three
   expected skips. The live checkpoint was repaired to `completed` with five
   assets and a matching media-plan checksum without calling the image provider.
+- The next resume reused media correctly but exposed a third cache issue before
+  Studio: `_apply_provisional_preview_contract` appended the same missing-fact
+  provenance rows on every recovery, which changed the research and brand
+  checksums and forced a new Design Director API request. The preview contract
+  is now append-idempotent while preserving the exact order and multiplicity of
+  already checksum-bound historical rows. Provider `insufficient_quota` and
+  billing-limit failures before preview delivery are also classified as
+  same-run recoverable. Focused recovery verification passed 46 tests; the full
+  suite passed 401 tests in 201.997 seconds with three expected skips. The
+  immutable saved business/brand package was independently checked as stable,
+  media-checksum matched and valid before restoration.

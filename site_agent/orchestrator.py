@@ -1464,15 +1464,33 @@ class SiteAgentOrchestrator:
             if duration_rule not in forbidden:
                 forbidden.append(duration_rule)
         research["forbidden_claims"] = forbidden
-        provenance = list(research.get("content_provenance") or [])
+        # Existing rows may already be checksum-bound into a recoverable Studio
+        # package. Preserve their order and multiplicity; idempotence here means
+        # never appending another copy on later preview resumes.
+        provenance = [
+            record for record in research.get("content_provenance") or []
+            if isinstance(record, dict)
+        ]
+        seen_provenance: set[str] = {
+            json.dumps(record, ensure_ascii=False, sort_keys=True, default=str)
+            for record in provenance
+        }
         if not provenance:
             provenance.extend([
                 {"field": "business_identity", "value": research["business_name"], "status": "verified_fact", "sources": [source_url]},
                 {"field": "brand_philosophy", "value": "Calm, clear guidance centred on the visitor's next decision.", "status": "inferred_brand_copy", "sources": [source_url]},
                 {"field": "faq", "value": "Questions are generated from the confirmed service context; answers avoid unsupported clinical promises.", "status": "generated_demo_content", "sources": [source_url]},
             ])
+            seen_provenance.update(
+                json.dumps(record, ensure_ascii=False, sort_keys=True, default=str)
+                for record in provenance
+            )
         for item in missing:
-            provenance.append({"field": item, "status": "missing_required_fact", "production_blocker": True, "sources": []})
+            record = {"field": item, "status": "missing_required_fact", "production_blocker": True, "sources": []}
+            key = json.dumps(record, ensure_ascii=False, sort_keys=True, default=str)
+            if key not in seen_provenance:
+                provenance.append(record)
+                seen_provenance.add(key)
         research["content_provenance"] = provenance
         payload["research"] = research
         payload["recommended_scope"] = "full_site"

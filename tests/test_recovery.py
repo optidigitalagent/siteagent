@@ -120,6 +120,21 @@ class RecoveryQueueTests(unittest.TestCase):
             self.assertEqual(reclaimed.run_dir, r"runs\same-run")
             self.assertEqual(reclaimed.status, "running")
 
+    def test_llm_quota_failure_remains_recoverable_before_preview_delivery(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
+            job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
+            queue.set_run_dir(job.id, r"runs\same-run")
+
+            failed = queue.fail(
+                job.id,
+                "Error code 429: insufficient_quota before Design Director completed",
+            )
+
+            self.assertEqual(failed.recovery_failure_code, "PREVIEW_RECOVERABLE_FAILURE")
+            self.assertTrue(failed.recovery_eligible)
+            self.assertEqual(queue.reclaim_failed_preview(job.id).run_dir, r"runs\same-run")
+
     def test_acceptance_failure_reclaims_same_preview_after_artifact_revision(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)

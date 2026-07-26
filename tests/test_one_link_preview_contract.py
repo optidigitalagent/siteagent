@@ -166,6 +166,48 @@ class OneLinkPreviewContractTests(unittest.TestCase):
         statuses = {item["status"] for item in research["content_provenance"]}
         self.assertTrue({"verified_fact", "inferred_brand_copy", "generated_demo_content", "missing_required_fact"} <= statuses)
 
+    def test_provisional_preview_contract_is_idempotent_across_recovery(self) -> None:
+        business = {"research": {}}
+        intake = {
+            "title": "Hereta Dental",
+            "description": "Family dentistry in Lviv",
+            "public_text": "dental care for the family",
+            "business_name": "Hereta Dental",
+        }
+
+        first = SiteAgentOrchestrator._apply_provisional_preview_contract(
+            business, intake, SOURCE
+        )
+        second = SiteAgentOrchestrator._apply_provisional_preview_contract(
+            first, intake, SOURCE
+        )
+
+        self.assertEqual(first, second)
+        records = second["research"]["content_provenance"]
+        serialized = [json.dumps(item, sort_keys=True) for item in records]
+        self.assertEqual(len(serialized), len(set(serialized)))
+
+    def test_recovery_preserves_preexisting_checksum_bound_provenance_rows(self) -> None:
+        intake = {
+            "title": "Hereta Dental",
+            "description": "Family dentistry in Lviv",
+            "public_text": "dental care for the family",
+            "business_name": "Hereta Dental",
+        }
+        first = SiteAgentOrchestrator._apply_provisional_preview_contract(
+            {"research": {}}, intake, SOURCE
+        )
+        first["research"]["content_provenance"].append(
+            dict(first["research"]["content_provenance"][-1])
+        )
+        before = json.dumps(first, ensure_ascii=False, sort_keys=True)
+
+        recovered = SiteAgentOrchestrator._apply_provisional_preview_contract(
+            first, intake, SOURCE
+        )
+
+        self.assertEqual(json.dumps(recovered, ensure_ascii=False, sort_keys=True), before)
+
     def test_preview_social_media_is_usable_for_preview_but_never_production_authorised(self) -> None:
         manifest = {
             "media": [{

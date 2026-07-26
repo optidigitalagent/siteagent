@@ -1,6 +1,6 @@
 # Next Action
 
-Operational checkpoint: `SAME_RUN_MEDIA_REUSE_VERIFIED_READY_TO_RESUME_STUDIO`.
+Operational checkpoint: `SAME_RUN_DESIGN_CACHE_VERIFIED_READY_TO_RESUME_STUDIO`.
 
 The exact job/run `fdbc8d77bc244eccb8590347640bb51d` remains recoverable at
 its saved media-input checkpoint. Do not enqueue a duplicate and do not repeat
@@ -16,10 +16,13 @@ five-item set, restored the completed checkpoint and checksum-matched plan, and
 the full suite passes 398 tests with three skips. Three materially distinct
 concepts, canonical screenshots, independent selection of `concept_c`, and a
 complete deterministic-pass staging build are saved in the exact run. Commit
-the same-run reuse correction without push, then resume from those artifacts.
-Complete final screenshots, independent Art Director/acceptance evidence and
-publish only an isolated noindex preview. Customer production, custom-domain
-changes and the production Telegram notifier remain forbidden.
+the append-idempotent design-cache correction without push, restore the exact
+checksum-bound business/brand package already embedded in Studio, reclassify
+the quota failure through the queue API, then resume from those artifacts. The
+full suite passes 401 tests with three skips. Complete final screenshots,
+independent Art Director/acceptance evidence and publish only an isolated
+noindex preview. Customer production, custom-domain changes and the production
+Telegram notifier remain forbidden.
 
 Previous operational checkpoint:
 `TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.
