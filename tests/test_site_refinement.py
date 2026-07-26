@@ -25,6 +25,7 @@ from site_agent.refinement import (
     RefinementReviewResult,
     RefinementSession,
     RefinementStatus,
+    ReferenceScopeEvidence,
     RequirementState,
     SiteRefinementOrchestrator,
     _business_data_matches,
@@ -115,6 +116,14 @@ class ScopedReferenceExecutor:
                 kind="cta", target="mailto:studio@example.test",
                 states_checked=["default", "keyboard focus"], passed=True,
                 evidence="Primary contact CTA rendered and remained reachable at every target width.",
+            )],
+            reference_scope_evidence=[ReferenceScopeEvidence(
+                attachment_id=session.attachments[0].id,
+                target_page="index.html", target_section="hero",
+                target_component="hero-layout",
+                properties=["composition", "spacing"],
+                changed_files=["index.html"],
+                evidence="The hero layout alone carries the transferred split composition.",
             )],
         )
 
@@ -345,7 +354,9 @@ class RefinementStateTests(unittest.TestCase):
                 project=str(project), goal="Match the hero composition",
                 attachments=[RefinementAttachmentInput(
                     path=str(reference), kind="reference", target_page="home",
-                    target_section="hero", interpretation="Use the split composition only",
+                    target_section="hero", target_component="hero-layout",
+                    target_properties=["composition", "spacing"],
+                    interpretation="Use the split composition only",
                     transfer=["composition", "spacing"],
                 )],
             ), session_id="reference", execute=False)
@@ -406,7 +417,8 @@ class RefinementCandidateTests(unittest.TestCase):
         reasons: list[str] = []
         allowed = workflow._candidate_allowed(
             session, implementation, review, TechnicalGate(passed=True),
-            observations, commands, rejection_reasons=reasons,
+            observations, commands, browser_evidence_required=False,
+            rejection_reasons=reasons,
         )
         report_dir = root / "candidate-report"
         report_dir.mkdir(exist_ok=True)
@@ -1093,7 +1105,9 @@ class RefinementBrowserIntegrationTests(unittest.TestCase):
                 scope=["index.html#hero"],
                 attachments=[RefinementAttachmentInput(
                     path=str(reference), kind="reference", target_page="index.html",
-                    target_section="hero", interpretation="Use only the hero composition",
+                    target_section="hero", target_component="hero-layout",
+                    target_properties=["composition", "spacing"],
+                    interpretation="Use only the hero composition",
                     transfer=["composition", "spacing"],
                 )],
             ), session_id="real-reference-cycle", execute=True)

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Callable, Literal, Protocol
 
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from site_agent.config import settings
 from site_agent.critic import TechnicalInspector
@@ -39,6 +39,11 @@ from site_agent.studio import CodexStudioRunner
 
 REFINEMENT_MODE = "site_refinement"
 TARGET_WIDTHS = (1440, 1024, 768, 390, 360)
+ReferenceProperty = Literal[
+    "composition", "grid", "typography", "scale", "spacing", "shape",
+    "color", "density", "photography", "interaction", "animation",
+    "responsive_behavior",
+]
 
 
 def _now() -> str:
@@ -95,6 +100,8 @@ class RefinementAttachmentInput(BaseModel):
     kind: Literal["reference", "screenshot", "business_photo", "document", "other"] = "other"
     target_page: str = ""
     target_section: str = ""
+    target_component: str = ""
+    target_properties: list[ReferenceProperty] = Field(default_factory=list)
     match_kind: Literal["exact", "visual_direction"] = "visual_direction"
     interpretation: str = ""
     transfer: list[str] = Field(default_factory=list)
@@ -108,6 +115,8 @@ class RefinementAttachment(BaseModel):
     kind: str
     target_page: str = ""
     target_section: str = ""
+    target_component: str = ""
+    target_properties: list[ReferenceProperty] = Field(default_factory=list)
     match_kind: str = "visual_direction"
     interpretation: str = ""
     transfer: list[str] = Field(default_factory=list)
@@ -218,6 +227,7 @@ class RefinementImplementationResult(BaseModel):
     placeholders_absent: bool = False
     browser_review_performed: bool = False
     functional_scenarios: list["FunctionalScenarioEvidence"] = Field(default_factory=list)
+    reference_scope_evidence: list["ReferenceScopeEvidence"] = Field(default_factory=list)
 
 
 class FunctionalScenarioEvidence(BaseModel):
@@ -225,6 +235,16 @@ class FunctionalScenarioEvidence(BaseModel):
     target: str
     states_checked: list[str] = Field(default_factory=list)
     passed: bool
+    evidence: str
+
+
+class ReferenceScopeEvidence(BaseModel):
+    attachment_id: str
+    target_page: str
+    target_section: str
+    target_component: str
+    properties: list[ReferenceProperty]
+    changed_files: list[str] = Field(default_factory=list)
     evidence: str
 
 
@@ -257,11 +277,37 @@ class RefinementReviewResult(BaseModel):
 class ReferenceAnalysisResult(BaseModel):
     target_page: str
     target_section: str
+    target_component: str
+    target_properties: list[ReferenceProperty] = Field(default_factory=list)
     match_kind: Literal["exact", "visual_direction"]
     interpretation: str
     transfer: list[str]
     ambiguous: bool = False
     blocker: str = ""
+
+    @model_validator(mode="after")
+    def reject_broad_scope(self) -> "ReferenceAnalysisResult":
+        self.target_page = " ".join(self.target_page.split())
+        self.target_section = " ".join(self.target_section.split())
+        self.target_component = " ".join(self.target_component.split())
+        self.interpretation = " ".join(self.interpretation.split())
+        self.target_properties = list(dict.fromkeys(self.target_properties))
+        if self.ambiguous:
+            if not self.blocker.strip():
+                raise ValueError("An ambiguous reference mapping requires a blocker reason.")
+            return self
+        if not all((
+            _specific_reference_scope(self.target_page),
+            _specific_reference_scope(self.target_section),
+            _specific_reference_scope(self.target_component),
+            self.interpretation,
+            self.target_properties,
+        )):
+            raise ValueError(
+                "Reference scope must identify a specific page, section, component, "
+                "property allowlist, and interpretation."
+            )
+        return self
 
 
 class RefinementExecutor(Protocol):
@@ -305,6 +351,9 @@ deploy, touch Telegram state or recreate the site from scratch. After editing,
 return only the structured iteration result. Record a passed functional_scenario
 for every applicable navigation/CTA/form/menu/accordion/modal/slider/map/video
 journey, including invalid plus success/error or honest fallback states for forms.
+For every visual reference, record reference_scope_evidence with the exact
+attachment ID, page, section, component and property allowlist from the session.
+Do not report a broader target or additional transferred property.
 
 Accumulated session contract:
 {session.model_dump_json(indent=2)}
@@ -1167,6 +1216,106 @@ def _normalized_nonempty(values: list[str]) -> list[str]:
     return _unique([" ".join(value.split()) for value in values if value and value.strip()])
 
 
+_BROAD_REFERENCE_SCOPE = {
+    "*", "all", "global", "site", "sitewide", "whole page", "entire page",
+    "whole site", "entire site",
+}
+
+
+def _specific_reference_scope(value: str) -> bool:
+    normalized = " ".join(value.split()).casefold()
+    return bool(normalized) and normalized not in _BROAD_REFERENCE_SCOPE
+
+
+def _reference_scope_rejection_reasons(
+        session: RefinementSession,
+        implementation: RefinementImplementationResult | None = None) -> list[str]:
+    """Validate exact reference boundaries independently of model self-ratings."""
+    reasons: list[str] = []
+    mappings = [
+        item for item in session.attachments
+        if item.kind in {"reference", "screenshot"}
+    ]
+    explicit_page_sections: list[tuple[str, str]] = []
+    for value in session.scope:
+        page, separator, section = value.partition("#")
+        if separator and page.strip() and section.strip():
+            explicit_page_sections.append((page.strip().casefold(), section.strip().casefold()))
+
+    evidence_by_id: dict[str, list[ReferenceScopeEvidence]] = {}
+    if implementation is not None:
+        for item in implementation.reference_scope_evidence:
+            evidence_by_id.setdefault(item.attachment_id, []).append(item)
+
+    mapping_ids = {item.id for item in mappings}
+    for attachment in mappings:
+        missing = [
+            label for label, value in (
+                ("page", attachment.target_page),
+                ("section", attachment.target_section),
+                ("component", attachment.target_component),
+                ("interpretation", attachment.interpretation),
+            ) if not _specific_reference_scope(value)
+        ]
+        if missing:
+            reasons.append(
+                f"Reference {attachment.id} lacks a specific " + ", ".join(missing) + "."
+            )
+        properties = list(dict.fromkeys(attachment.target_properties))
+        if not properties:
+            reasons.append(f"Reference {attachment.id} has no property-level transfer scope.")
+        elif len(properties) != len(attachment.target_properties):
+            reasons.append(f"Reference {attachment.id} repeats property-level scope values.")
+        if explicit_page_sections and _specific_reference_scope(attachment.target_page) \
+                and _specific_reference_scope(attachment.target_section):
+            target = (
+                attachment.target_page.strip().casefold(),
+                attachment.target_section.strip().casefold(),
+            )
+            if target not in explicit_page_sections:
+                reasons.append(
+                    f"Reference {attachment.id} page/section scope is outside the requested scope."
+                )
+        if implementation is None:
+            continue
+        evidence = evidence_by_id.get(attachment.id, [])
+        if len(evidence) != 1:
+            reasons.append(
+                f"Reference {attachment.id} requires exactly one implementation scope record."
+            )
+            continue
+        record = evidence[0]
+        if (
+            record.target_page.strip().casefold() != attachment.target_page.strip().casefold()
+            or record.target_section.strip().casefold()
+            != attachment.target_section.strip().casefold()
+            or record.target_component.strip().casefold()
+            != attachment.target_component.strip().casefold()
+            or set(record.properties) != set(properties)
+        ):
+            reasons.append(
+                f"Reference {attachment.id} implementation scope does not exactly match its mapping."
+            )
+        if len(set(record.properties)) != len(record.properties):
+            reasons.append(
+                f"Reference {attachment.id} implementation repeats property scope values."
+            )
+        if not record.changed_files or not record.evidence.strip():
+            reasons.append(
+                f"Reference {attachment.id} implementation scope evidence is incomplete."
+            )
+        elif not set(record.changed_files).issubset(set(implementation.changed_files)):
+            reasons.append(
+                f"Reference {attachment.id} scope evidence names an unrecorded changed file."
+            )
+    if implementation is not None:
+        for attachment_id in evidence_by_id.keys() - mapping_ids:
+            reasons.append(
+                f"Implementation reported scope for unknown reference {attachment_id}."
+            )
+    return _unique(reasons)
+
+
 def _brief_checksum(session: RefinementSession) -> str:
     payload = {
         "user_goal": session.user_goal,
@@ -1582,6 +1731,8 @@ def _manifest_diff(before: dict[str, Any], after: dict[str, Any]) -> dict[str, l
 
 
 def _merge_technical_gates(gates: list[TechnicalGate]) -> TechnicalGate:
+    if not gates:
+        raise RefinementError("Technical readiness requires at least one browser gate result.")
     list_fields = (
         "missing_images", "console_errors", "failed_network_requests", "broken_links",
         "small_tap_targets", "persistent_header_issues", "footer_issues",
@@ -1592,7 +1743,7 @@ def _merge_technical_gates(gates: list[TechnicalGate]) -> TechnicalGate:
         for field in list_fields
     }
     return TechnicalGate(
-        passed=bool(gates) and all(gate.passed for gate in gates),
+        passed=all(gate.passed for gate in gates),
         horizontal_scroll=any(gate.horizontal_scroll for gate in gates),
         **values,
     )
@@ -2433,6 +2584,7 @@ class SiteRefinementOrchestrator:
         if self._candidate_allowed(
                 session, implementation, review, gate, observations, commands,
                 browser_dir=browser_dir, route_count=len(targets), snapshot_dir=snapshot,
+                browser_evidence_required=True,
                 rejection_reasons=candidate_rejection_reasons):
             session.candidate_summary = review.summary
             session.candidate_tree_sha256 = browser_source_tree_sha256
@@ -2550,6 +2702,8 @@ class SiteRefinementOrchestrator:
             id=attachment_id, original_name=source.name,
             stored_path=relative.as_posix(), sha256=digest, kind=incoming.kind,
             target_page=incoming.target_page, target_section=incoming.target_section,
+            target_component=incoming.target_component,
+            target_properties=list(dict.fromkeys(incoming.target_properties)),
             match_kind=incoming.match_kind, interpretation=incoming.interpretation,
             transfer=_unique(incoming.transfer), extracted_text=extracted_text, added_at=_now(),
         )
@@ -2681,15 +2835,15 @@ class SiteRefinementOrchestrator:
         for attachment in session.attachments:
             if attachment.kind not in {"reference", "screenshot"}:
                 continue
-            if (attachment.target_page or attachment.target_section) and (
-                attachment.interpretation or attachment.transfer
-            ):
+            if not _reference_scope_rejection_reasons(
+                    session.model_copy(update={"attachments": [attachment], "scope": []})):
                 continue
             path = self._validated_attachment_paths(session)[session.attachments.index(attachment)]
             prompt = f"""
 Analyze this user-supplied visual reference for an existing-site refinement.
-Using the user's live goal and requirements below, determine its page/section
-scope, whether it is an exact target or visual direction, and only the visual
+Using the user's live goal and requirements below, determine its exact
+page/section/component scope, whether it is an exact target or visual direction,
+and a strict property allowlist plus only the visual
 principles to transfer (composition, grid, typography, scale, spacing, component
 shape, color, density, photography, interaction, animation, responsive behavior).
 Do not copy a whole third-party site. Mark ambiguous only when the user context
@@ -2712,6 +2866,8 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
                 continue
             attachment.target_page = analysis.target_page
             attachment.target_section = analysis.target_section
+            attachment.target_component = analysis.target_component
+            attachment.target_properties = list(dict.fromkeys(analysis.target_properties))
             attachment.match_kind = analysis.match_kind
             attachment.interpretation = analysis.interpretation
             attachment.transfer = analysis.transfer
@@ -3048,6 +3204,7 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
                            *, browser_dir: Path | None = None,
                            route_count: int = 1,
                            snapshot_dir: Path | None = None,
+                           browser_evidence_required: bool = True,
                            rejection_reasons: list[str] | None = None) -> bool:
         observed_by_route: dict[str, set[int]] = {}
         for key, value in observations.items():
@@ -3101,6 +3258,9 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             implementation, observations
         )
         snapshot_passes = snapshot_dir is None or _snapshot_valid(snapshot_dir)
+        reference_scope_reasons = _reference_scope_rejection_reasons(
+            session, implementation
+        )
         checks = (
             (not session.last_qa_result.get("runtime_failure"),
              "A fail-closed executor or reviewer runtime failure is recorded."),
@@ -3122,6 +3282,10 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             (not review_differences,
              "Review remaining differences: " + "; ".join(review_differences)),
             (gate.passed, "The technical browser gate did not pass."),
+            (not gate.blocking_reasons,
+             "The technical browser gate contains blocking evidence."),
+            (not browser_evidence_required or browser_dir is not None,
+             "Mandatory browser evidence is missing."),
             (viewport_matrix_passes,
              "The browser evidence does not cover every required route and target width."),
             (screenshot_matrix_passes,
@@ -3163,7 +3327,7 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         )
         reasons = _unique(
             [message for passed, message in checks if not passed] +
-            browser_evidence_reasons
+            browser_evidence_reasons + reference_scope_reasons
         )
         if rejection_reasons is not None:
             rejection_reasons[:] = reasons

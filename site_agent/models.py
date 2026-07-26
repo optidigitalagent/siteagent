@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 
 class Evidence(BaseModel):
@@ -208,6 +208,54 @@ class TechnicalGate(BaseModel):
     functional_issues: list[str] = Field(default_factory=list)
     reduced_motion_issues: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+
+    @field_validator(
+        "missing_images", "console_errors", "failed_network_requests",
+        "broken_links", "small_tap_targets", "persistent_header_issues",
+        "footer_issues", "clipped_primary_ctas", "functional_issues",
+        "reduced_motion_issues", "notes", mode="after",
+    )
+    @classmethod
+    def normalize_findings(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(
+            normalized for value in values
+            if (normalized := " ".join(value.split()))
+        ))
+
+    @property
+    def blocking_reasons(self) -> list[str]:
+        """Return the existing technical findings that make readiness unsafe."""
+        reasons: list[str] = []
+        if self.horizontal_scroll:
+            reasons.append("horizontal overflow")
+        for field, label in (
+            (self.missing_images, "broken or missing images"),
+            (self.console_errors, "console errors"),
+            (self.failed_network_requests, "blocking failed network requests"),
+            (self.broken_links, "broken links"),
+            (self.small_tap_targets, "small tap targets"),
+            (self.persistent_header_issues, "persistent header issues"),
+            (self.footer_issues, "footer issues"),
+            (self.clipped_primary_ctas, "clipped primary CTAs"),
+            (self.functional_issues, "functional issues"),
+            (self.reduced_motion_issues, "reduced-motion issues"),
+        ):
+            if field:
+                reasons.append(label)
+        return reasons
+
+    @model_validator(mode="after")
+    def enforce_readiness_invariants(self) -> "TechnicalGate":
+        blocking = self.blocking_reasons
+        if blocking and self.passed:
+            # A producer cannot override observed blocking evidence. Normalize
+            # fail-closed so downstream consumers never see the contradiction.
+            self.passed = False
+        if not self.passed and not blocking:
+            raise ValueError(
+                "A failed technical gate requires blocking evidence in an existing issue field."
+            )
+        return self
 
 
 class CritiqueReport(BaseModel):
