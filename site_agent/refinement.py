@@ -10,11 +10,14 @@ import fnmatch
 import json
 import os
 import re
+import signal
 import shlex
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
+import threading
 import time
 import uuid
 from urllib.parse import urljoin, urlparse
@@ -44,6 +47,16 @@ def _now() -> str:
 
 class RefinementError(RuntimeError):
     pass
+
+
+class RefinementRuntimeError(RefinementError):
+    """Controlled fail-closed error from the executor/reviewer runtime."""
+
+    def __init__(self, role: str, reason: str, *, evidence_path: str = "") -> None:
+        self.role = role
+        self.reason = reason
+        self.evidence_path = evidence_path
+        super().__init__(f"Refinement {role} runtime failed: {reason}")
 
 
 class RefinementStatus(str, Enum):
@@ -189,6 +202,8 @@ class RefinementRequest(BaseModel):
 
 
 class RefinementImplementationResult(BaseModel):
+    session_id: str = ""
+    iteration: int = -1
     summary: str
     changed_files: list[str] = Field(default_factory=list)
     completed_requirement_ids: list[str] = Field(default_factory=list)
@@ -224,6 +239,8 @@ class RefinementReviewIssue(BaseModel):
 
 
 class RefinementReviewResult(BaseModel):
+    session_id: str = ""
+    iteration: int = -1
     decision: Literal["accept", "revise", "blocked"]
     visual_qa_passed: bool
     responsive_qa_passed: bool
@@ -262,7 +279,10 @@ class CodexRefinementExecutor:
     """Edit the existing project with the local Codex implementation plane."""
 
     def __init__(self, *, timeout: int | None = None) -> None:
-        self.timeout = timeout or settings.codex_creative_fixer_timeout_seconds
+        self.timeout = (
+            settings.refinement_executor_timeout_seconds
+            if timeout is None else timeout
+        )
 
     def run(self, *, session: RefinementSession, iteration_dir: Path,
             attachments: list[Path]) -> RefinementImplementationResult:
@@ -294,6 +314,7 @@ Accumulated session contract:
             schema=RefinementImplementationResult,
             output_dir=iteration_dir / "implementation", sandbox="workspace-write",
             images=attachments, timeout=self.timeout,
+            session=session, role="executor",
         )
 
 
@@ -301,7 +322,10 @@ class CodexRefinementReviewer:
     """Independent screenshot-led critic that cannot edit the project."""
 
     def __init__(self, *, timeout: int | None = None) -> None:
-        self.timeout = timeout or settings.codex_art_director_timeout_seconds
+        self.timeout = (
+            settings.refinement_reviewer_timeout_seconds
+            if timeout is None else timeout
+        )
 
     def review(self, *, session: RefinementSession, iteration_dir: Path,
                implementation: RefinementImplementationResult, gate: TechnicalGate,
@@ -328,6 +352,7 @@ Deterministic browser gate:
             schema=RefinementReviewResult,
             output_dir=iteration_dir / "independent_review", sandbox="read-only",
             images=screenshots, timeout=self.timeout,
+            session=session, role="reviewer",
         )
 
 
@@ -340,7 +365,24 @@ def load_refinement_request(path: Path) -> RefinementRequest:
 
 def _invoke_codex_model(*, project_dir: Path, prompt: str, schema: type[BaseModel],
                         output_dir: Path, sandbox: Literal["workspace-write", "read-only"],
-                        images: list[Path], timeout: int) -> Any:
+                        images: list[Path], timeout: int,
+                        session: RefinementSession | None = None,
+                        role: Literal["executor", "reviewer"] | None = None) -> Any:
+    if session is not None and role is not None:
+        return _invoke_refinement_codex_runtime(
+            project_dir=project_dir,
+            prompt=prompt,
+            schema=schema,
+            output_dir=output_dir,
+            sandbox=sandbox,
+            images=images,
+            timeout=timeout,
+            session=session,
+            role=role,
+        )
+
+    # Reference analysis is intentionally outside the executor/reviewer
+    # lifecycle hardened by this checkpoint. Preserve its existing behavior.
     codex = shutil.which(settings.codex_command)
     if not codex:
         raise RefinementError(f"Codex CLI command not found: {settings.codex_command}")
@@ -371,6 +413,710 @@ def _invoke_codex_model(*, project_dir: Path, prompt: str, schema: type[BaseMode
         return schema.model_validate_json(output_path.read_text(encoding="utf-8"))
     except (ValidationError, json.JSONDecodeError) as exc:
         raise RefinementError(f"Codex returned invalid {schema.__name__} output.") from exc
+
+
+def _atomic_bytes(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def _secret_environment_values() -> list[str]:
+    markers = ("TOKEN", "SECRET", "PASSWORD", "PASSWD", "API_KEY", "PRIVATE_KEY", "CREDENTIAL")
+    return sorted(
+        {
+            value for key, value in os.environ.items()
+            if value and len(value) >= 4 and any(marker in key.upper() for marker in markers)
+        },
+        key=len,
+        reverse=True,
+    )
+
+
+def _redact_runtime_text(value: str) -> str:
+    redacted = value
+    for secret in _secret_environment_values():
+        redacted = redacted.replace(secret, "[REDACTED]")
+    redacted = re.sub(
+        r"(?i)(token|secret|password|passwd|api[_-]?key|credential)(\s*[=:]\s*)[^\s,;]+",
+        r"\1\2[REDACTED]",
+        redacted,
+    )
+    return redacted
+
+
+def _redacted_stream_bytes(raw: bytes, maximum: int) -> bytes:
+    text = raw[:maximum].decode("utf-8", errors="replace")
+    content = _redact_runtime_text(text).encode("utf-8")
+    if len(content) > maximum:
+        content = content[:maximum]
+    return content
+
+
+def _drain_bounded_pipe(pipe: Any, maximum: int,
+                        result: dict[str, tuple[bytes, bool]], key: str) -> None:
+    captured = bytearray()
+    truncated = False
+    try:
+        while True:
+            chunk = pipe.read(64 * 1024)
+            if not chunk:
+                break
+            available = max(0, maximum - len(captured))
+            if available:
+                captured.extend(chunk[:available])
+            if len(chunk) > available:
+                truncated = True
+    except (OSError, ValueError):
+        truncated = True
+    result[key] = (_redacted_stream_bytes(bytes(captured), maximum), truncated)
+
+
+def _write_prompt_pipe(pipe: Any, payload: bytes,
+                       result: dict[str, str]) -> None:
+    try:
+        pipe.write(payload)
+        pipe.flush()
+        result["status"] = "completed"
+    except (BrokenPipeError, OSError, ValueError) as exc:
+        result["status"] = type(exc).__name__
+    finally:
+        try:
+            pipe.close()
+        except OSError:
+            pass
+
+
+_WINDOWS_JOB_SUPERVISOR = (
+    "import os,subprocess,sys; "
+    "gate=os.read(sys.stdin.fileno(),1); "
+    "sys.exit(125) if gate != b'\\x00' else None; "
+    "child=subprocess.Popen(sys.argv[1:]); "
+    "sys.exit(child.wait())"
+)
+
+
+def _resolved_refinement_executable() -> tuple[str, list[str]]:
+    override = settings.refinement_codex_executable.strip()
+    if not override:
+        native = str(_codex_sandbox_executable())
+        return native, [native]
+    configured = override
+    located = shutil.which(configured)
+    if not located:
+        candidate = Path(configured).expanduser()
+        if candidate.is_file():
+            located = str(candidate.resolve())
+    if not located:
+        raise RefinementError("refinement Codex executable not found")
+    resolved = str(Path(located).resolve())
+    # A Python script is a convenient deterministic Codex-compatible executable
+    # for tests on Windows and POSIX. Production binaries remain direct argv[0].
+    if Path(resolved).suffix.lower() in {".py", ".pyw"}:
+        return str(Path(sys.executable).resolve()), [str(Path(sys.executable).resolve()), resolved]
+    if Path(resolved).suffix.lower() in {".cmd", ".bat"}:
+        if Path(resolved).stem.lower() == "codex":
+            native = str(_codex_sandbox_executable())
+            return native, [native]
+        raise RefinementError(
+            "REFINEMENT_CODEX_EXECUTABLE must be a native executable, not a shell wrapper."
+        )
+    return resolved, [resolved]
+
+
+def _runtime_artifact_path(path: Path, iteration_root: Path) -> str:
+    # Use the lexical in-root location for evidence. Resolving a malicious
+    # result symlink here would itself escape and prevent failure evidence.
+    return path.absolute().relative_to(iteration_root.absolute()).as_posix()
+
+
+def _posix_process_group_exists(process_group: int) -> bool:
+    try:
+        os.killpg(process_group, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _assign_windows_kill_job(process: subprocess.Popen[Any]) -> int:
+    """Put the subprocess tree in a kill-on-close Windows Job Object."""
+    import ctypes
+    from ctypes import wintypes
+
+    class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            ("PerProcessUserTimeLimit", ctypes.c_longlong),
+            ("PerJobUserTimeLimit", ctypes.c_longlong),
+            ("LimitFlags", wintypes.DWORD),
+            ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t),
+            ("ActiveProcessLimit", wintypes.DWORD),
+            ("Affinity", ctypes.c_size_t),
+            ("PriorityClass", wintypes.DWORD),
+            ("SchedulingClass", wintypes.DWORD),
+        ]
+
+    class IO_COUNTERS(ctypes.Structure):
+        _fields_ = [
+            ("ReadOperationCount", ctypes.c_ulonglong),
+            ("WriteOperationCount", ctypes.c_ulonglong),
+            ("OtherOperationCount", ctypes.c_ulonglong),
+            ("ReadTransferCount", ctypes.c_ulonglong),
+            ("WriteTransferCount", ctypes.c_ulonglong),
+            ("OtherTransferCount", ctypes.c_ulonglong),
+        ]
+
+    class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            ("BasicLimitInformation", JOBOBJECT_BASIC_LIMIT_INFORMATION),
+            ("IoInfo", IO_COUNTERS),
+            ("ProcessMemoryLimit", ctypes.c_size_t),
+            ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t),
+            ("PeakJobMemoryUsed", ctypes.c_size_t),
+        ]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+    kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+    kernel32.SetInformationJobObject.argtypes = [
+        wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
+    ]
+    kernel32.SetInformationJobObject.restype = wintypes.BOOL
+    kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+    kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+
+    job = kernel32.CreateJobObjectW(None, None)
+    if not job:
+        raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
+    information = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+    information.BasicLimitInformation.LimitFlags = 0x00002000  # KILL_ON_JOB_CLOSE
+    if not kernel32.SetInformationJobObject(
+            job, 9, ctypes.byref(information), ctypes.sizeof(information)):
+        error = ctypes.get_last_error()
+        kernel32.CloseHandle(job)
+        raise OSError(error, "SetInformationJobObject failed")
+    if not kernel32.AssignProcessToJobObject(job, wintypes.HANDLE(int(process._handle))):
+        error = ctypes.get_last_error()
+        kernel32.CloseHandle(job)
+        raise OSError(error, "AssignProcessToJobObject failed")
+    return int(job)
+
+
+def _close_windows_job(job_handle: int | None) -> bool:
+    if job_handle is None:
+        return False
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    return bool(kernel32.CloseHandle(wintypes.HANDLE(job_handle)))
+
+
+def _terminate_refinement_process_tree(
+        process: subprocess.Popen[Any], graceful_timeout: int,
+        *, windows_job: int | None = None) -> tuple[str, bool]:
+    """Bounded best-effort tree termination with an explicit confirmation."""
+    if os.name == "nt":
+        taskkill_confirmed = False
+        try:
+            graceful = subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T"],
+                capture_output=True, text=True, timeout=graceful_timeout, check=False,
+            )
+            taskkill_confirmed = graceful.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            pass
+        try:
+            process.wait(timeout=graceful_timeout)
+        except subprocess.TimeoutExpired:
+            try:
+                forced = subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    capture_output=True, text=True, timeout=graceful_timeout, check=False,
+                )
+                taskkill_confirmed = forced.returncode == 0
+            except (OSError, subprocess.SubprocessError):
+                taskkill_confirmed = False
+            try:
+                process.wait(timeout=graceful_timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                    process.wait(timeout=graceful_timeout)
+                except (OSError, subprocess.SubprocessError):
+                    pass
+        job_closed = _close_windows_job(windows_job)
+        if process.poll() is None:
+            try:
+                process.wait(timeout=graceful_timeout)
+            except subprocess.TimeoutExpired:
+                pass
+        remaining = process.poll() is None or not (taskkill_confirmed or job_closed)
+        return ("confirmed" if not remaining else "unconfirmed", remaining)
+
+    process_group = process.pid
+    try:
+        os.killpg(process_group, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    deadline = time.monotonic() + graceful_timeout
+    while time.monotonic() < deadline and _posix_process_group_exists(process_group):
+        time.sleep(0.05)
+    if _posix_process_group_exists(process_group):
+        try:
+            os.killpg(process_group, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        deadline = time.monotonic() + graceful_timeout
+        while time.monotonic() < deadline and _posix_process_group_exists(process_group):
+            time.sleep(0.05)
+    try:
+        process.wait(timeout=graceful_timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            process.kill()
+            process.wait(timeout=graceful_timeout)
+        except (OSError, subprocess.SubprocessError):
+            pass
+    remaining = process.poll() is None or _posix_process_group_exists(process_group)
+    return ("confirmed" if not remaining else "unconfirmed", remaining)
+
+
+def _invoke_refinement_codex_runtime(
+        *, project_dir: Path, prompt: str, schema: type[BaseModel], output_dir: Path,
+        sandbox: Literal["workspace-write", "read-only"], images: list[Path],
+        timeout: int, session: RefinementSession,
+        role: Literal["executor", "reviewer"]) -> Any:
+    def persist_setup_failure(reason: str) -> str:
+        evidence_relative = ""
+        try:
+            iteration_root = output_dir.parent.resolve()
+            output_dir.mkdir(parents=True, exist_ok=True)
+            if _unsafe_project_link(output_dir) or output_dir.resolve().parent != iteration_root:
+                raise OSError("runtime artifact directory is unsafe")
+            stdout_path = output_dir / "stdout.log"
+            stderr_path = output_dir / "stderr.log"
+            evidence_path = output_dir / "runtime.json"
+            for path in (stdout_path, stderr_path, evidence_path):
+                if path.exists() and _unsafe_project_link(path):
+                    raise OSError("runtime failure artifact path is unsafe")
+            _atomic_bytes(stdout_path, b"")
+            _atomic_bytes(stderr_path, b"")
+            try:
+                manifest = _project_manifest(
+                    project_dir.resolve(), include_all=role == "reviewer"
+                )
+                tree_hash = manifest["tree_sha256"]
+            except (OSError, RefinementError):
+                tree_hash = ""
+            configured = (
+                settings.refinement_codex_executable.strip()
+                or settings.codex_command.strip()
+                or "codex"
+            )
+            _atomic_json(evidence_path, {
+                "schema_version": 1,
+                "role": role,
+                "session_id": session.session_id,
+                "iteration": session.iteration,
+                "command_executable": _redact_runtime_text(configured),
+                "command_arguments": [],
+                "working_directory": str(project_dir.resolve()),
+                "sandbox_mode": sandbox,
+                "network_mode": "restricted",
+                "started_at": _now(),
+                "ended_at": _now(),
+                "duration_seconds": 0.0,
+                "timeout_seconds": timeout,
+                "timed_out": False,
+                "return_code": None,
+                "stdout_artifact_path": _runtime_artifact_path(stdout_path, iteration_root),
+                "stderr_artifact_path": _runtime_artifact_path(stderr_path, iteration_root),
+                "stdout_sha256": _file_sha(stdout_path),
+                "stderr_sha256": _file_sha(stderr_path),
+                "stdout_truncated": False,
+                "stderr_truncated": False,
+                "result_artifact_path": _runtime_artifact_path(
+                    output_dir / "result.json", iteration_root
+                ),
+                "result_artifact_sha256": "",
+                "result_parsing_status": "setup_failed",
+                "cleanup_status": "not_started",
+                "detected_remaining_processes": False,
+                "project_tree_hash_before": tree_hash,
+                "project_tree_hash_after": tree_hash,
+                "project_modified_by_reviewer": False,
+                "project_manifest_diff": {"added": [], "modified": [], "deleted": []},
+                "failure_reason": reason,
+            })
+            evidence_relative = _runtime_artifact_path(evidence_path, iteration_root)
+        except (OSError, ValueError, RefinementError):
+            evidence_relative = ""
+        return evidence_relative
+
+    try:
+        return _invoke_refinement_codex_runtime_inner(
+            project_dir=project_dir, prompt=prompt, schema=schema,
+            output_dir=output_dir, sandbox=sandbox, images=images,
+            timeout=timeout, session=session, role=role,
+        )
+    except RefinementRuntimeError as exc:
+        if exc.evidence_path:
+            raise
+        evidence_relative = persist_setup_failure(exc.reason)
+        raise RefinementRuntimeError(
+            role, exc.reason, evidence_path=evidence_relative
+        ) from exc
+    except (OSError, ValueError, RefinementError, subprocess.SubprocessError) as exc:
+        if isinstance(exc, RefinementError) and "executable not found" in str(exc).lower():
+            reason = "refinement Codex executable not found"
+        else:
+            reason = f"runtime setup or evidence failed: {type(exc).__name__}"
+        evidence_relative = persist_setup_failure(reason)
+        raise RefinementRuntimeError(
+            role, reason, evidence_path=evidence_relative
+        ) from exc
+
+
+def _invoke_refinement_codex_runtime_inner(
+        *, project_dir: Path, prompt: str, schema: type[BaseModel], output_dir: Path,
+        sandbox: Literal["workspace-write", "read-only"], images: list[Path],
+        timeout: int, session: RefinementSession,
+        role: Literal["executor", "reviewer"]) -> Any:
+    """Run one Codex role and always leave bounded, redacted runtime evidence."""
+    project = project_dir.resolve()
+    iteration_root = output_dir.parent.resolve()
+    if iteration_root == project or project in iteration_root.parents:
+        raise RefinementRuntimeError(
+            role, "runtime artifacts must be outside the editable project workspace"
+        )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if _unsafe_project_link(output_dir) or output_dir.resolve().parent != iteration_root:
+        raise RefinementRuntimeError(role, "runtime artifact directory escapes the iteration root")
+
+    schema_path = output_dir / "schema.json"
+    result_path = output_dir / "result.json"
+    stdout_path = output_dir / "stdout.log"
+    stderr_path = output_dir / "stderr.log"
+    evidence_path = output_dir / "runtime.json"
+    for path in (schema_path, result_path, stdout_path, stderr_path, evidence_path):
+        if path.exists() and _unsafe_project_link(path):
+            raise RefinementRuntimeError(role, "runtime artifact path is a link or junction")
+    # A prior interrupted attempt may not satisfy this attempt's output contract.
+    result_path.unlink(missing_ok=True)
+    _atomic_json(schema_path, _strict_schema(schema.model_json_schema()))
+
+    command_executable, prefix = _resolved_refinement_executable()
+    command = [*prefix, "exec", "--disable", "code_mode_host",
+               "-c", "sandbox_workspace_write.network_access=false", "-C", str(project),
+               "--sandbox", sandbox, "--output-schema", str(schema_path),
+               "-o", str(result_path), "-"]
+    for image in images:
+        if image.is_file():
+            command[len(prefix) + 1:len(prefix) + 1] = ["--image", str(image.resolve())]
+    model = settings.refinement_codex_model.strip() or settings.codex_model.strip()
+    if model:
+        command[len(prefix) + 1:len(prefix) + 1] = ["-m", model]
+
+    started_at = _now()
+    started_monotonic = time.monotonic()
+    timed_out = False
+    return_code: int | None = None
+    cleanup_status = "not_started"
+    remaining_processes: bool | None = False
+    parsing_status = "not_attempted"
+    result_sha256 = ""
+    failure_reason = ""
+    typed_result: Any = None
+    project_before = _project_manifest(project, include_all=role == "reviewer")
+    project_after = project_before
+    stdout_content = b""
+    stderr_content = b""
+    stdout_truncated = False
+    stderr_truncated = False
+
+    process: subprocess.Popen[Any] | None = None
+    windows_job: int | None = None
+    stream_results: dict[str, tuple[bytes, bool]] = {}
+    stream_threads: list[threading.Thread] = []
+    prompt_result: dict[str, str] = {}
+    prompt_thread: threading.Thread | None = None
+    try:
+        launch_command = (
+            [str(Path(sys.executable).resolve()), "-c", _WINDOWS_JOB_SUPERVISOR, *command]
+            if os.name == "nt" else command
+        )
+        process = subprocess.Popen(
+            launch_command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=False,
+            bufsize=0,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+            start_new_session=os.name != "nt",
+            env=_safe_refinement_env(),
+            cwd=str(project),
+            shell=False,
+        )
+        if process.stdout is None or process.stderr is None or process.stdin is None:
+            raise OSError("subprocess pipes were not created")
+        stream_threads = [
+            threading.Thread(
+                target=_drain_bounded_pipe,
+                args=(process.stdout, settings.refinement_max_stdout_bytes,
+                      stream_results, "stdout"),
+                daemon=True,
+            ),
+            threading.Thread(
+                target=_drain_bounded_pipe,
+                args=(process.stderr, settings.refinement_max_stderr_bytes,
+                      stream_results, "stderr"),
+                daemon=True,
+            ),
+        ]
+        for thread in stream_threads:
+            thread.start()
+        if os.name == "nt":
+            windows_job = _assign_windows_kill_job(process)
+        prompt_payload = (b"\x00" if os.name == "nt" else b"") + prompt.encode("utf-8")
+        prompt_thread = threading.Thread(
+            target=_write_prompt_pipe,
+            args=(process.stdin, prompt_payload, prompt_result),
+            daemon=True,
+        )
+        prompt_thread.start()
+        try:
+            remaining_timeout = max(0.001, timeout - (time.monotonic() - started_monotonic))
+            return_code = process.wait(timeout=remaining_timeout)
+            if os.name == "nt":
+                job_closed = _close_windows_job(windows_job)
+                windows_job = None
+                cleanup_status = "confirmed" if job_closed else "unconfirmed"
+                remaining_processes = not job_closed
+            else:
+                remaining_processes = _posix_process_group_exists(process.pid)
+                if remaining_processes:
+                    cleanup_status, remaining_processes = _terminate_refinement_process_tree(
+                        process, settings.refinement_graceful_termination_timeout_seconds
+                    )
+                else:
+                    cleanup_status = "confirmed"
+            if cleanup_status != "confirmed":
+                failure_reason = "process-tree cleanup was not confirmed after process exit"
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            cleanup_status, remaining_processes = _terminate_refinement_process_tree(
+                process,
+                settings.refinement_graceful_termination_timeout_seconds,
+                windows_job=windows_job,
+            )
+            windows_job = None
+            return_code = process.returncode
+            failure_reason = f"timeout after {timeout} seconds"
+            if cleanup_status != "confirmed":
+                failure_reason += "; process-tree cleanup was not confirmed"
+    except FileNotFoundError:
+        failure_reason = f"executable not found: {command_executable}"
+        cleanup_status = "not_started"
+    except (OSError, subprocess.SubprocessError) as exc:
+        failure_reason = f"subprocess launch or communication failed: {type(exc).__name__}"
+        if process is not None and process.poll() is None:
+            cleanup_status, remaining_processes = _terminate_refinement_process_tree(
+                process,
+                settings.refinement_graceful_termination_timeout_seconds,
+                windows_job=windows_job,
+            )
+            windows_job = None
+        elif windows_job is not None:
+            job_closed = _close_windows_job(windows_job)
+            windows_job = None
+            cleanup_status = "confirmed" if job_closed else "unconfirmed"
+            remaining_processes = not job_closed
+        return_code = process.returncode if process is not None else None
+    finally:
+        if windows_job is not None:
+            job_closed = _close_windows_job(windows_job)
+            windows_job = None
+            if not job_closed:
+                cleanup_status = "unconfirmed"
+                remaining_processes = True
+                failure_reason = failure_reason or "Windows process job cleanup was not confirmed"
+        join_timeout = settings.refinement_graceful_termination_timeout_seconds
+        if prompt_thread is not None:
+            prompt_thread.join(timeout=join_timeout)
+            if prompt_thread.is_alive() and process is not None and process.stdin is not None:
+                try:
+                    process.stdin.close()
+                except OSError:
+                    pass
+                prompt_thread.join(timeout=join_timeout)
+            if prompt_thread.is_alive():
+                cleanup_status = "unconfirmed"
+                remaining_processes = True
+                failure_reason = failure_reason or "runtime prompt cleanup was not confirmed"
+        for thread in stream_threads:
+            thread.join(timeout=join_timeout)
+        alive_threads = [thread for thread in stream_threads if thread.is_alive()]
+        if alive_threads and process is not None:
+            for pipe in (process.stdout, process.stderr):
+                try:
+                    if pipe is not None:
+                        pipe.close()
+                except OSError:
+                    pass
+            for thread in alive_threads:
+                thread.join(timeout=join_timeout)
+        if any(thread.is_alive() for thread in stream_threads):
+            cleanup_status = "unconfirmed"
+            remaining_processes = True
+            failure_reason = failure_reason or "runtime stream cleanup was not confirmed"
+        if process is not None:
+            for pipe in (process.stdout, process.stderr):
+                try:
+                    if pipe is not None:
+                        pipe.close()
+                except OSError:
+                    pass
+        stdout_content, stdout_truncated = stream_results.get("stdout", (b"", False))
+        stderr_content, stderr_truncated = stream_results.get("stderr", (b"", False))
+
+    try:
+        _atomic_bytes(stdout_path, stdout_content)
+        _atomic_bytes(stderr_path, stderr_content)
+    except OSError as exc:
+        raise RefinementRuntimeError(
+            role, f"runtime streams could not be persisted: {type(exc).__name__}"
+        ) from exc
+
+    try:
+        project_after = _project_manifest(project, include_all=role == "reviewer")
+    except RefinementError as exc:
+        failure_reason = failure_reason or f"project manifest failed: {exc}"
+    project_modified = project_before["tree_sha256"] != project_after["tree_sha256"]
+    project_diff = _manifest_diff(project_before, project_after)
+
+    if not failure_reason and return_code != 0:
+        failure_reason = f"non-zero exit code: {return_code}"
+        parsing_status = "not_attempted_nonzero_exit"
+    if not failure_reason:
+        try:
+            if not result_path.exists():
+                parsing_status = "missing"
+                raise RefinementRuntimeError(role, "result artifact is missing")
+            if _unsafe_project_link(result_path):
+                parsing_status = "artifact_escape"
+                raise RefinementRuntimeError(role, "result artifact is a link or junction")
+            resolved_result = result_path.resolve()
+            if resolved_result.parent != output_dir.resolve() or iteration_root not in resolved_result.parents:
+                parsing_status = "artifact_escape"
+                raise RefinementRuntimeError(role, "result artifact escapes the iteration root")
+            if result_path.stat().st_size == 0:
+                parsing_status = "empty"
+                raise RefinementRuntimeError(role, "result artifact is empty")
+            result_sha256 = _file_sha(result_path)
+            try:
+                raw_result = json.loads(result_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+                parsing_status = "malformed_json"
+                raise RefinementRuntimeError(role, "result artifact contains malformed JSON") from exc
+            if not isinstance(raw_result, dict):
+                parsing_status = "schema_invalid"
+                raise RefinementRuntimeError(role, "result artifact is not a JSON object")
+            if str(raw_result.get("session_id", "")) != session.session_id:
+                parsing_status = "session_mismatch"
+                raise RefinementRuntimeError(
+                    role, "result artifact is missing or has another session binding"
+                )
+            try:
+                result_iteration = int(raw_result.get("iteration"))
+            except (TypeError, ValueError) as exc:
+                parsing_status = "iteration_mismatch"
+                raise RefinementRuntimeError(
+                    role, "result artifact has an invalid iteration binding"
+                ) from exc
+            if result_iteration != session.iteration:
+                parsing_status = "iteration_mismatch"
+                raise RefinementRuntimeError(
+                    role, "result artifact belongs to another iteration"
+                )
+            try:
+                typed_result = schema.model_validate(raw_result)
+            except (ValidationError, ValueError, TypeError) as exc:
+                parsing_status = "schema_invalid"
+                raise RefinementRuntimeError(
+                    role, f"result artifact failed {schema.__name__} validation"
+                ) from exc
+            parsing_status = "validated"
+        except RefinementRuntimeError as exc:
+            failure_reason = exc.reason
+
+    if role == "reviewer" and project_modified:
+        failure_reason = "reviewer modified the project"
+        parsing_status = parsing_status if parsing_status != "validated" else "validated_but_project_modified"
+
+    ended_at = _now()
+    evidence = {
+        "schema_version": 1,
+        "role": role,
+        "session_id": session.session_id,
+        "iteration": session.iteration,
+        "command_executable": _redact_runtime_text(command[0]),
+        "command_arguments": [_redact_runtime_text(value) for value in command[1:]],
+        "working_directory": str(project),
+        "sandbox_mode": sandbox,
+        "network_mode": "restricted",
+        "started_at": started_at,
+        "ended_at": ended_at,
+        "duration_seconds": round(time.monotonic() - started_monotonic, 6),
+        "timeout_seconds": timeout,
+        "timed_out": timed_out,
+        "return_code": return_code,
+        "stdout_artifact_path": _runtime_artifact_path(stdout_path, iteration_root),
+        "stderr_artifact_path": _runtime_artifact_path(stderr_path, iteration_root),
+        "stdout_sha256": _file_sha(stdout_path),
+        "stderr_sha256": _file_sha(stderr_path),
+        "stdout_truncated": stdout_truncated,
+        "stderr_truncated": stderr_truncated,
+        "result_artifact_path": _runtime_artifact_path(result_path, iteration_root),
+        "result_artifact_sha256": result_sha256,
+        "result_parsing_status": parsing_status,
+        "cleanup_status": cleanup_status,
+        "detected_remaining_processes": remaining_processes,
+        "project_tree_hash_before": project_before["tree_sha256"],
+        "project_tree_hash_after": project_after["tree_sha256"],
+        "project_modified_by_reviewer": role == "reviewer" and project_modified,
+        "project_manifest_diff": project_diff,
+        "failure_reason": failure_reason,
+    }
+    try:
+        _atomic_json(evidence_path, evidence)
+    except OSError as exc:
+        raise RefinementRuntimeError(
+            role, f"runtime evidence could not be persisted: {type(exc).__name__}"
+        ) from exc
+    if failure_reason:
+        raise RefinementRuntimeError(
+            role,
+            failure_reason,
+            evidence_path=_runtime_artifact_path(evidence_path, iteration_root),
+        )
+    return typed_result
 
 
 def _strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
@@ -783,8 +1529,11 @@ def _merge_business_data(current: RefinementBusinessData,
     )
 
 
-def _project_manifest(project: Path) -> dict[str, Any]:
-    excluded = {".git", "node_modules", ".venv", "__pycache__", ".siteagent"}
+def _project_manifest(project: Path, *, include_all: bool = False) -> dict[str, Any]:
+    excluded = (
+        set() if include_all
+        else {".git", "node_modules", ".venv", "__pycache__", ".siteagent"}
+    )
     records, digest = [], hashlib.sha256()
     files = []
     for item in project.rglob("*"):
@@ -792,15 +1541,32 @@ def _project_manifest(project: Path) -> dict[str, Any]:
         if excluded.intersection(relative.parts):
             continue
         if _unsafe_project_link(item):
-            raise RefinementError(
-                f"Refinement projects and recovery snapshots may not contain links: {relative.as_posix()}"
-            )
+            if not include_all:
+                raise RefinementError(
+                    f"Refinement projects and recovery snapshots may not contain links: {relative.as_posix()}"
+                )
+            try:
+                link_target = os.readlink(item)
+            except OSError:
+                link_target = str(item.resolve(strict=False))
+            link_digest = hashlib.sha256(
+                ("link\0" + link_target).encode("utf-8", errors="surrogatepass")
+            ).hexdigest()
+            records.append({
+                "path": relative.as_posix(),
+                "sha256": link_digest,
+                "size": 0,
+            })
+            continue
         if item.is_file():
             files.append(item)
     for path in sorted(files):
         relative, file_digest = path.relative_to(project).as_posix(), _file_sha(path)
         records.append({"path": relative, "sha256": file_digest, "size": path.stat().st_size})
-        digest.update(relative.encode("utf-8")); digest.update(file_digest.encode("ascii"))
+    records.sort(key=lambda item: item["path"])
+    for record in records:
+        digest.update(record["path"].encode("utf-8"))
+        digest.update(record["sha256"].encode("ascii"))
     return {"tree_sha256": digest.hexdigest(), "files": records}
 
 
@@ -1588,11 +2354,15 @@ class SiteRefinementOrchestrator:
                 )
             resumed_implementation = True
         if not resumed_implementation:
-            implementation = self.executor.run(
-                session=session, iteration_dir=iteration_dir,
-                attachments=[path for path in attachments if path.is_file()
-                             and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}],
-            )
+            try:
+                implementation = self.executor.run(
+                    session=session, iteration_dir=iteration_dir,
+                    attachments=[path for path in attachments if path.is_file()
+                                 and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}],
+                )
+            except RefinementRuntimeError as exc:
+                self._block_runtime_failure(session, exc)
+                return session
             current_manifest = _project_manifest(project)
             computed_diff = _manifest_diff(pre_manifest, current_manifest)
             implementation.changed_files = computed_diff["added"] + computed_diff["modified"] + [
@@ -1627,11 +2397,15 @@ class SiteRefinementOrchestrator:
                              "rendered screenshots captured")
             reference_images = [session_dir / item.stored_path for item in session.attachments
                                 if item.kind in {"reference", "screenshot"}]
-            review = self.reviewer.review(
-                session=session, iteration_dir=iteration_dir, implementation=implementation,
-                gate=gate, screenshots=sorted(browser_dir.rglob("*.png")) +
-                [path for path in reference_images if path.is_file()],
-            )
+            try:
+                review = self.reviewer.review(
+                    session=session, iteration_dir=iteration_dir, implementation=implementation,
+                    gate=gate, screenshots=sorted(browser_dir.rglob("*.png")) +
+                    [path for path in reference_images if path.is_file()],
+                )
+            except RefinementRuntimeError as exc:
+                self._block_runtime_failure(session, exc)
+                return session
         _atomic_json(iteration_dir / "independent_review.json", review.model_dump(mode="json"))
         self._transition(session, RefinementStatus.CONTENT_QA,
                          "content and business-data review recorded")
@@ -2222,6 +2996,25 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         session.open_tasks = [item.id for item in session.active_requirements]
         session.blockers = _unique(session.blockers + result.blockers)
 
+    def _block_runtime_failure(self, session: RefinementSession,
+                               error: RefinementRuntimeError) -> None:
+        reason = f"{error.role} runtime failure: {error.reason}"
+        session.blockers = _unique(session.blockers + [reason])
+        session.last_qa_result = {
+            "runtime_failure": {
+                "role": error.role,
+                "reason": error.reason,
+                "evidence_path": error.evidence_path,
+                "candidate_allowed": False,
+            }
+        }
+        self._transition(
+            session,
+            RefinementStatus.BLOCKED,
+            f"fail-closed {error.role} runtime failure",
+        )
+        self._save(session)
+
     def _finalize_completed(self, session: RefinementSession,
                             requirement_ids: list[str]) -> None:
         by_id = {item.id: item for item in session.requirements}
@@ -2309,6 +3102,8 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         )
         snapshot_passes = snapshot_dir is None or _snapshot_valid(snapshot_dir)
         checks = (
+            (not session.last_qa_result.get("runtime_failure"),
+             "A fail-closed executor or reviewer runtime failure is recorded."),
             (not active_requirement_ids,
              "Active requirements remain: " + ", ".join(active_requirement_ids)),
             (not session.open_tasks,

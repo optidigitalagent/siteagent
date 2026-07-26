@@ -34,6 +34,35 @@ class Settings(BaseSettings):
     codex_full_creative_build_timeout_seconds: int = Field(default=2700, alias="CODEX_FULL_CREATIVE_BUILD_TIMEOUT_SECONDS")
     codex_art_director_timeout_seconds: int = Field(default=900, alias="CODEX_ART_DIRECTOR_TIMEOUT_SECONDS")
     codex_creative_fixer_timeout_seconds: int = Field(default=1800, alias="CODEX_CREATIVE_FIXER_TIMEOUT_SECONDS")
+    # Existing-site refinement has an independent, bounded Codex lifecycle.  It
+    # must not inherit the much longer creative-build budgets or their retry
+    # assumptions.
+    refinement_executor_timeout_seconds: int = Field(
+        default=900, ge=1, le=7200,
+        alias="REFINEMENT_EXECUTOR_TIMEOUT_SECONDS",
+    )
+    refinement_reviewer_timeout_seconds: int = Field(
+        default=600, ge=1, le=3600,
+        alias="REFINEMENT_REVIEWER_TIMEOUT_SECONDS",
+    )
+    refinement_graceful_termination_timeout_seconds: int = Field(
+        default=10, ge=1, le=60,
+        alias="REFINEMENT_GRACEFUL_TERMINATION_TIMEOUT_SECONDS",
+    )
+    refinement_max_stdout_bytes: int = Field(
+        default=1_000_000, ge=1024, le=50_000_000,
+        alias="REFINEMENT_MAX_STDOUT_BYTES",
+    )
+    refinement_max_stderr_bytes: int = Field(
+        default=1_000_000, ge=1024, le=50_000_000,
+        alias="REFINEMENT_MAX_STDERR_BYTES",
+    )
+    refinement_codex_executable: str = Field(
+        default="", alias="REFINEMENT_CODEX_EXECUTABLE",
+    )
+    refinement_codex_model: str = Field(
+        default="", alias="REFINEMENT_CODEX_MODEL",
+    )
     telegram_bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
 
     hosting_provider: str = Field(default="cloudflare_pages", alias="HOSTING_PROVIDER")
