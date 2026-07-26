@@ -13,13 +13,17 @@ from site_agent.critic import TechnicalInspector
 from site_agent.models import TechnicalGate
 from site_agent.refinement import (
     RefinementImplementationResult,
+    RequirementChangeEvidence,
     RefinementRequirement,
     RefinementReviewResult,
     RefinementSession,
     RequirementState,
     SiteRefinementOrchestrator,
     _browser_evidence_rejection_reasons,
+    _copy_project_snapshot,
+    _payload_sha,
     _project_manifest,
+    _requirement_authority_checksum,
 )
 
 
@@ -93,6 +97,25 @@ class RefinementBrowserEvidenceTests(unittest.TestCase):
         self.artifact_root = (
             self.workflow.session_dir(self.session.session_id) / "iterations" / "000"
         )
+        self.snapshot_dir = self.artifact_root / "pre_change_snapshot"
+        _copy_project_snapshot(self.project, self.snapshot_dir)
+        plan = {
+            "schema_version": 2,
+            "session_id": self.session.session_id,
+            "project_id": self.session.project_id,
+            "iteration": self.session.iteration,
+            "active_requirements": [self.session.requirements[0].model_dump(mode="json")],
+            "requirements_authority_sha256": _requirement_authority_checksum(
+                self.session.requirements
+            ),
+            "immutable_constraints": [],
+            "scope": [],
+            "reference_mappings": [],
+        }
+        (self.artifact_root / "change_plan.json").write_text(
+            json.dumps(plan), encoding="utf-8"
+        )
+        self.session.current_change_plan_sha256 = _payload_sha(plan)
         self.browser_dir = self.artifact_root / "browser_qa"
         self.source_sha = _project_manifest(self.project)["tree_sha256"]
         self.gate, self.observations = self.workflow._inspect_targets(
@@ -129,6 +152,11 @@ class RefinementBrowserEvidenceTests(unittest.TestCase):
             functional_qa_passed=True, content_qa_passed=True,
             animation_qa_passed=True, placeholders_absent=True,
             browser_review_performed=True,
+            requirement_change_evidence=[RequirementChangeEvidence(
+                requirement_id="req-complete",
+                changed_files=["index.html"],
+                evidence="The computed index.html change implements req-complete.",
+            )],
         )
         review = RefinementReviewResult(
             decision="accept", visual_qa_passed=True,
@@ -143,6 +171,7 @@ class RefinementBrowserEvidenceTests(unittest.TestCase):
             self.session, implementation, review, self.gate,
             observations or self.observations, commands,
             browser_dir=self.browser_dir, route_count=route_count,
+            snapshot_dir=self.snapshot_dir,
             rejection_reasons=reasons,
         )
 

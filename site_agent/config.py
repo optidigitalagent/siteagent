@@ -1,5 +1,7 @@
 ﻿from pathlib import Path
 
+import os
+
 from dotenv import load_dotenv
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,13 +9,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPOSITORY_ROOT / ".env"
+DOTENV_DISABLED = os.getenv("PYTHON_DOTENV_DISABLED", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+}
 
 
-load_dotenv(dotenv_path=ENV_FILE)
+if not DOTENV_DISABLED:
+    load_dotenv(dotenv_path=ENV_FILE)
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=None if DOTENV_DISABLED else ENV_FILE,
+        extra="ignore",
+    )
 
     llm_provider: str = Field(default="codex", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")

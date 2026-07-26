@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from site_agent import cli
-from site_agent.config import ENV_FILE, REPOSITORY_ROOT, Settings
+from site_agent.config import DOTENV_DISABLED, ENV_FILE, REPOSITORY_ROOT, Settings
 from site_agent.refinement import RefinementRequest, SiteRefinementOrchestrator
 
 
@@ -146,7 +146,13 @@ class StableConfigRootTests(unittest.TestCase):
 
     def test_default_env_file_is_bound_to_repository_root(self) -> None:
         self.assertEqual(Path(ENV_FILE).resolve(), (REPOSITORY_ROOT / ".env").resolve())
-        self.assertEqual(Path(Settings.model_config["env_file"]).resolve(), ENV_FILE.resolve())
+        if DOTENV_DISABLED:
+            self.assertIsNone(Settings.model_config["env_file"])
+        else:
+            self.assertEqual(
+                Path(Settings.model_config["env_file"]).resolve(),
+                ENV_FILE.resolve(),
+            )
 
     def test_refinement_session_lookup_survives_cwd_change(self) -> None:
         with tempfile.TemporaryDirectory() as project_temp, \
