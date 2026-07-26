@@ -21,6 +21,7 @@ from site_agent.refinement import (
     RefinementError,
     RefinementImplementationResult,
     RefinementRequest,
+    RefinementRequirement,
     RefinementReviewResult,
     RefinementSession,
     RefinementStatus,
@@ -355,6 +356,215 @@ class RefinementStateTests(unittest.TestCase):
 
 
 class RefinementCandidateTests(unittest.TestCase):
+    def _candidate_context(self, root: Path, *,
+                           business_data: RefinementBusinessData | None = None,
+                           business_data_applied: bool = False):
+        project = make_project(root)
+        workflow = SiteRefinementOrchestrator(runs_dir=root / "runs")
+        session_id = "candidate-integrity"
+        business_data = business_data or RefinementBusinessData()
+        session = RefinementSession(
+            session_id=session_id, project_id="existing-site",
+            project_path=str(project), user_goal="Refine the hero",
+            requirements=[RefinementRequirement(
+                id="req-done", text="Refine the hero",
+                state=RequirementState.COMPLETED, created_at="now", iteration=0,
+                resolution="Implemented and verified.",
+            )],
+            business_data=business_data,
+            baseline_path="baseline/baseline.json",
+            created_at="now", updated_at="now",
+        )
+        body_text = " ".join(
+            business_data.contacts + business_data.hours + business_data.prices +
+            business_data.services + business_data.texts + [business_data.address]
+        ).strip()
+        observations = {
+            name: json.dumps({"viewport": viewport, "bodyText": body_text})
+            for name, viewport in FiveWidthInspector.widths.items()
+        }
+        baseline = workflow.session_dir(session_id) / session.baseline_path
+        baseline.parent.mkdir(parents=True, exist_ok=True)
+        baseline.write_text(json.dumps({"observations": {}}), encoding="utf-8")
+        implementation = RefinementImplementationResult(
+            summary="All scoped work is complete.", changed_files=["index.html"],
+            completed_requirement_ids=["req-done"],
+            functional_qa_passed=True, content_qa_passed=True,
+            animation_qa_passed=True,
+            business_data_applied=business_data_applied,
+            placeholders_absent=True, browser_review_performed=True,
+        )
+        review = PassingReviewer().review(
+            session=session, iteration_dir=root, implementation=implementation,
+            gate=TechnicalGate(passed=True), screenshots=[],
+        )
+        commands = {"build": {"passed": True}, "tests": [{"passed": True}]}
+        return workflow, session, implementation, review, observations, commands
+
+    def _evaluate_candidate(self, root: Path, context):
+        workflow, session, implementation, review, observations, commands = context
+        reasons: list[str] = []
+        allowed = workflow._candidate_allowed(
+            session, implementation, review, TechnicalGate(passed=True),
+            observations, commands, rejection_reasons=reasons,
+        )
+        report_dir = root / "candidate-report"
+        report_dir.mkdir(exist_ok=True)
+        workflow._write_report(
+            session, report_dir, implementation, review, TechnicalGate(passed=True),
+            commands, candidate_rejection_reasons=reasons,
+        )
+        report = json.loads(
+            (report_dir / "candidate_report.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(report["candidate_readiness"]["allowed"], allowed)
+        self.assertEqual(report["candidate_readiness"]["rejection_reasons"], reasons)
+        return allowed, reasons, report
+
+    def test_user_accepted_run_iteration_is_fail_closed_and_immutable(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            project = make_project(root)
+            workflow = SiteRefinementOrchestrator(
+                runs_dir=root / "runs", executor=PassingExecutor(),
+                reviewer=PassingReviewer(), inspector=FiveWidthInspector(),
+            )
+            candidate = workflow.start(
+                RefinementRequest(project=str(project), goal="Refine the hero"),
+                session_id="accepted-final", execute=True,
+            )
+            self.assertEqual(candidate.status, RefinementStatus.CANDIDATE_READY)
+            accepted = workflow.accept("accepted-final")
+            self.assertEqual(accepted.status, RefinementStatus.USER_ACCEPTED)
+            session_path = workflow.session_dir("accepted-final") / "session.json"
+            iterations = workflow.session_dir("accepted-final") / "iterations"
+            session_before = session_path.read_bytes()
+            iteration_before = accepted.iteration
+            artifacts_before = {
+                path.relative_to(iterations).as_posix() for path in iterations.rglob("*")
+            }
+            project_before = _project_manifest(project)
+
+            with self.assertRaisesRegex(RefinementError, "accepted session is immutable"):
+                workflow.run_iteration("accepted-final")
+
+            reloaded = workflow.load("accepted-final")
+            self.assertEqual(reloaded.status, RefinementStatus.USER_ACCEPTED)
+            self.assertEqual(reloaded.iteration, iteration_before)
+            self.assertEqual(session_path.read_bytes(), session_before)
+            self.assertEqual(
+                {path.relative_to(iterations).as_posix() for path in iterations.rglob("*")},
+                artifacts_before,
+            )
+            self.assertEqual(_project_manifest(project), project_before)
+
+    def test_active_requirement_denies_candidate_with_specific_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[1].requirements[0].state = RequirementState.ACTIVE
+            allowed, reasons, _ = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn("Active requirements remain: req-done", reasons)
+
+    def test_session_open_tasks_deny_candidate_with_specific_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[1].open_tasks = ["req-stale"]
+            allowed, reasons, _ = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn("Session open tasks remain: req-stale", reasons)
+
+    def test_implementation_open_requirement_ids_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[2].open_requirement_ids = ["req-open"]
+            allowed, reasons, _ = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn("Implementation open requirement IDs remain: req-open", reasons)
+
+    def test_unapplied_nonempty_business_data_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(
+                root,
+                business_data=RefinementBusinessData(texts=["Verified service detail"]),
+                business_data_applied=False,
+            )
+            allowed, reasons, _ = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn(
+                "Confirmed business data exists, but the implementation did not confirm it was applied.",
+                reasons,
+            )
+
+    def test_semantically_empty_business_data_do_not_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(
+                root,
+                business_data=RefinementBusinessData(
+                    contacts=["", "   "], address="  ", services=[],
+                    other={"blank": "  ", "nested": {"items": []}},
+                ),
+                business_data_applied=False,
+            )
+            allowed, reasons, _ = self._evaluate_candidate(root, context)
+            self.assertTrue(allowed, reasons)
+
+    def test_implementation_remaining_differences_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[2].remaining_differences = ["Hero spacing still differs"]
+            allowed, reasons, report = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn(
+                "Implementation remaining differences: Hero spacing still differs", reasons
+            )
+            self.assertEqual(
+                report["remaining_differences_by_source"]["implementation"],
+                ["Hero spacing still differs"],
+            )
+
+    def test_review_remaining_differences_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[3].remaining_differences = ["Mobile crop still differs"]
+            allowed, reasons, report = self._evaluate_candidate(root, context)
+            self.assertFalse(allowed)
+            self.assertIn("Review remaining differences: Mobile crop still differs", reasons)
+            self.assertEqual(
+                report["remaining_differences_by_source"]["review"],
+                ["Mobile crop still differs"],
+            )
+
+    def test_blank_remaining_difference_items_do_not_deny_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(root)
+            context[2].remaining_differences = ["", "   ", "\t\r\n"]
+            context[3].remaining_differences = [" ", "\n"]
+            allowed, reasons, report = self._evaluate_candidate(root, context)
+            self.assertTrue(allowed, reasons)
+            self.assertEqual(report["remaining_differences"], [])
+
+    def test_fully_completed_candidate_passes_integrity_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = self._candidate_context(
+                root,
+                business_data=RefinementBusinessData(texts=["Verified service detail"]),
+                business_data_applied=True,
+            )
+            allowed, reasons, report = self._evaluate_candidate(root, context)
+            self.assertTrue(allowed, reasons)
+            self.assertEqual(reasons, [])
+            self.assertTrue(report["candidate_readiness"]["allowed"])
+
     def test_failed_baseline_browser_capture_blocks_before_implementation(self) -> None:
         class FailingInspector:
             def inspect_url(self, url, artifacts_dir):

@@ -417,6 +417,10 @@ def _unique(values: list[str]) -> list[str]:
     return list(dict.fromkeys(value for value in values if value))
 
 
+def _normalized_nonempty(values: list[str]) -> list[str]:
+    return _unique([" ".join(value.split()) for value in values if value and value.strip()])
+
+
 def _brief_checksum(session: RefinementSession) -> str:
     payload = {
         "user_goal": session.user_goal,
@@ -1070,6 +1074,9 @@ class SiteRefinementOrchestrator:
     def run_iteration(self, session_id: str) -> RefinementSession:
         session = self.load(session_id)
         with self._project_lock(session):
+            session = self.load(session_id)
+            if session.status is RefinementStatus.USER_ACCEPTED:
+                raise RefinementError("An accepted session is immutable; start a new session.")
             for attempt in range(settings.max_fix_iterations + 1):
                 result = self._run_iteration_locked(session_id)
                 if result.status is not RefinementStatus.IMPLEMENTING:
@@ -1226,9 +1233,11 @@ class SiteRefinementOrchestrator:
             "implementation": implementation.model_dump(mode="json"),
             "independent_review": review.model_dump(mode="json"), "commands": commands,
         }
+        candidate_rejection_reasons: list[str] = []
         if self._candidate_allowed(
                 session, implementation, review, gate, observations, commands,
-                browser_dir=browser_dir, route_count=len(targets), snapshot_dir=snapshot):
+                browser_dir=browser_dir, route_count=len(targets), snapshot_dir=snapshot,
+                rejection_reasons=candidate_rejection_reasons):
             session.candidate_summary = review.summary
             session.candidate_tree_sha256 = _project_manifest(Path(session.project_path))["tree_sha256"]
             session.candidate_requirement_sha256 = _brief_checksum(session)
@@ -1250,7 +1259,10 @@ class SiteRefinementOrchestrator:
         else:
             self._transition(session, RefinementStatus.IMPLEMENTING,
                              "candidate gates require another material iteration")
-        self._write_report(session, iteration_dir, implementation, review, gate, commands)
+        self._write_report(
+            session, iteration_dir, implementation, review, gate, commands,
+            candidate_rejection_reasons=candidate_rejection_reasons,
+        )
         if session.status is RefinementStatus.CANDIDATE_READY:
             bound = [
                 iteration_dir / relative for relative in (
@@ -1806,7 +1818,8 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
                            observations: dict[str, str], commands: dict[str, Any],
                            *, browser_dir: Path | None = None,
                            route_count: int = 1,
-                           snapshot_dir: Path | None = None) -> bool:
+                           snapshot_dir: Path | None = None,
+                           rejection_reasons: list[str] | None = None) -> bool:
         observed_by_route: dict[str, set[int]] = {}
         for key, value in observations.items():
             try:
@@ -1826,40 +1839,106 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         commands_pass = bool(commands["build"].get("passed")) and all(
             item.get("passed") for item in commands["tests"]
         )
-        return all((
-            not session.active_requirements,
-            not any(item.state is RequirementState.REJECTED for item in session.requirements),
-            not session.blockers,
-            gate.passed,
-            viewport_matrix_passes,
-            screenshot_matrix_passes,
-            snapshot_dir is None or _snapshot_valid(snapshot_dir),
-            implementation.browser_review_performed,
-            implementation.functional_qa_passed,
-            _functional_coverage_passes(implementation, observations),
-            implementation.content_qa_passed,
-            implementation.animation_qa_passed,
-            _business_data_matches(session, observations, self.session_dir(session.session_id)),
-            _numeric_claims_safe(session, observations, self.session_dir(session.session_id)),
-            implementation.placeholders_absent,
-            review.decision == "accept",
-            review.visual_qa_passed,
-            review.responsive_qa_passed,
-            review.requirements_match,
-            review.reference_comparison_passed,
-            review.functional_qa_passed,
-            review.content_qa_passed,
-            review.animation_qa_passed,
-            not blocking_review,
-            commands_pass,
-            bool(implementation.changed_files),
-        ))
+        active_requirement_ids = [item.id for item in session.active_requirements]
+        rejected_requirement_ids = [
+            item.id for item in session.requirements
+            if item.state is RequirementState.REJECTED
+        ]
+        implementation_differences = _normalized_nonempty(
+            implementation.remaining_differences
+        )
+        review_differences = _normalized_nonempty(review.remaining_differences)
+        has_business_data = bool(_business_values(session.business_data))
+        business_data_matches = _business_data_matches(
+            session, observations, self.session_dir(session.session_id)
+        )
+        numeric_claims_safe = _numeric_claims_safe(
+            session, observations, self.session_dir(session.session_id)
+        )
+        functional_coverage_passes = _functional_coverage_passes(
+            implementation, observations
+        )
+        snapshot_passes = snapshot_dir is None or _snapshot_valid(snapshot_dir)
+        checks = (
+            (not active_requirement_ids,
+             "Active requirements remain: " + ", ".join(active_requirement_ids)),
+            (not session.open_tasks,
+             "Session open tasks remain: " + ", ".join(session.open_tasks)),
+            (not implementation.open_requirement_ids,
+             "Implementation open requirement IDs remain: " +
+             ", ".join(implementation.open_requirement_ids)),
+            (not rejected_requirement_ids,
+             "Rejected requirements remain: " + ", ".join(rejected_requirement_ids)),
+            (not session.blockers,
+             "Session blockers remain: " + "; ".join(session.blockers)),
+            (not has_business_data or implementation.business_data_applied,
+             "Confirmed business data exists, but the implementation did not confirm it was applied."),
+            (not implementation_differences,
+             "Implementation remaining differences: " + "; ".join(implementation_differences)),
+            (not review_differences,
+             "Review remaining differences: " + "; ".join(review_differences)),
+            (gate.passed, "The technical browser gate did not pass."),
+            (viewport_matrix_passes,
+             "The browser evidence does not cover every required route and target width."),
+            (screenshot_matrix_passes,
+             "The browser screenshot matrix is incomplete or invalid."),
+            (snapshot_passes,
+             "The pre-change recovery snapshot is incomplete or checksum-invalid."),
+            (implementation.browser_review_performed,
+             "The implementation did not confirm browser review."),
+            (implementation.functional_qa_passed,
+             "The implementation functional QA did not pass."),
+            (functional_coverage_passes,
+             "The implementation functional-scenario evidence is incomplete."),
+            (implementation.content_qa_passed,
+             "The implementation content QA did not pass."),
+            (implementation.animation_qa_passed,
+             "The implementation animation QA did not pass."),
+            (business_data_matches,
+             "Confirmed business data is not fully present in rendered evidence."),
+            (numeric_claims_safe,
+             "Rendered numeric claims are not supported by the refinement evidence."),
+            (implementation.placeholders_absent,
+             "The implementation did not confirm that placeholders are absent."),
+            (review.decision == "accept",
+             f"Independent review decision is {review.decision!r}, not 'accept'."),
+            (review.visual_qa_passed, "Independent visual QA did not pass."),
+            (review.responsive_qa_passed, "Independent responsive QA did not pass."),
+            (review.requirements_match,
+             "Independent review did not confirm that requirements match."),
+            (review.reference_comparison_passed,
+             "Independent reference comparison did not pass."),
+            (review.functional_qa_passed, "Independent functional QA did not pass."),
+            (review.content_qa_passed, "Independent content QA did not pass."),
+            (review.animation_qa_passed, "Independent animation QA did not pass."),
+            (not blocking_review,
+             "Independent review contains a P0 or P1 issue."),
+            (commands_pass, "A required local build or test command did not pass."),
+            (bool(implementation.changed_files),
+             "No authored project change was recorded for this iteration."),
+        )
+        reasons = [message for passed, message in checks if not passed]
+        if rejection_reasons is not None:
+            rejection_reasons[:] = reasons
+        return not reasons
 
     def _write_report(self, session: RefinementSession, iteration_dir: Path,
                       implementation: RefinementImplementationResult,
                       review: RefinementReviewResult | None,
                       gate: TechnicalGate | None,
-                      commands: dict[str, Any]) -> None:
+                      commands: dict[str, Any],
+                      *, candidate_rejection_reasons: list[str] | None = None) -> None:
+        implementation_differences = _normalized_nonempty(
+            implementation.remaining_differences
+        )
+        review_differences = _normalized_nonempty(
+            review.remaining_differences if review else []
+        )
+        remaining_differences = _unique(
+            implementation_differences + review_differences
+        )
+        candidate_readiness_evaluated = candidate_rejection_reasons is not None
+        candidate_rejection_reasons = list(candidate_rejection_reasons or [])
         payload = {
             "what_changed": implementation.changed_files,
             "what_verified": {
@@ -1872,8 +1951,16 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
                               if item.state is state]
                 for state in RequirementState
             },
-            "remaining_differences": (review.remaining_differences if review
-                                      else implementation.remaining_differences),
+            "remaining_differences": remaining_differences,
+            "remaining_differences_by_source": {
+                "implementation": implementation_differences,
+                "review": review_differences,
+            },
+            "candidate_readiness": {
+                "evaluated": candidate_readiness_evaluated,
+                "allowed": candidate_readiness_evaluated and not candidate_rejection_reasons,
+                "rejection_reasons": candidate_rejection_reasons,
+            },
             "blockers": session.blockers,
             "current_status": session.status.value,
             "independent_review": review.model_dump(mode="json") if review else None,
@@ -1881,6 +1968,10 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         _atomic_json(iteration_dir / "candidate_report.json", payload)
         changed = implementation.changed_files or ["No file change was reported."]
         remaining = payload["remaining_differences"] or ["None recorded."]
+        readiness = candidate_rejection_reasons or [
+            "None recorded." if candidate_readiness_evaluated
+            else "Not evaluated because the iteration stopped before the complete candidate gate."
+        ]
         blockers = session.blockers or ["None recorded."]
         lines = [
             "# Refinement iteration report", "", "## What changed",
@@ -1888,6 +1979,7 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             f"- Responsive widths: {', '.join(str(width) for width in TARGET_WIDTHS)}",
             f"- Browser gate: {'passed' if gate and gate.passed else 'not passed'}",
             "", "## Remaining differences", *(f"- {item}" for item in remaining),
+            "", "## Candidate rejection reasons", *(f"- {item}" for item in readiness),
             "", "## Blockers", *(f"- {item}" for item in blockers),
             "", "## Current status", f"- {session.status.value}",
         ]
