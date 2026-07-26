@@ -155,7 +155,7 @@
     "user_id": 5674963513,
     "status": "failed",
     "received_at": "2026-07-26T12:01:44.187019+00:00",
-    "updated_at": "2026-07-26T12:04:59.980688+00:00",
+    "updated_at": "2026-07-26T12:09:00.168931+00:00",
     "site_url": "",
     "repo_url": "",
     "preview_url": "",
@@ -179,8 +179,8 @@
     "telegram_receipt": {},
     "manual_resend_authorization": {},
     "recovery_events": [],
-    "recovery_eligible": false,
-    "recovery_failure_code": "UNCLASSIFIED_FAILURE",
+    "recovery_eligible": true,
+    "recovery_failure_code": "PREVIEW_RECOVERABLE_FAILURE",
     "workflow_lane": "preview",
     "production_authorization": {}
   }
