@@ -20,6 +20,7 @@ from site_agent.identifiers import normalize_instagram_url
 
 
 RECOVERABLE_PREVIEW_FAILURE_PATTERNS = (
+    "media-input checkpoint blocked",
     "media_input/manifest.json",
     "media input manifest",
     "research failed",
@@ -54,6 +55,7 @@ class TelegramJob(BaseModel):
     preview_project_name: str = ""
     preview_branch: str = ""
     requested_product_type: Literal["full_commercial_site"] = "full_commercial_site"
+    real_business_media_only: bool = False
     error: str = ""
     # Stored checkpoints make recovery independent of volatile process memory.
     run_dir: str = ""

@@ -1,6 +1,27 @@
 # Current Goal
 
-## Active goal — site refinement mode (2026-07-22)
+## Active goal — provenance-aware generated-media preview recovery (2026-07-26)
+
+Replace the fatal “no provable business photos” preview gate with a truthful
+media-planning contract. A user-provided logo is an authorised business asset;
+other site visuals may be verified official media, licensed stock, or original
+AI-generated media. Reference-only assets remain analysis inputs and can never
+enter rendered output.
+
+The exact recoverable Telegram job/run
+`fdbc8d77bc244eccb8590347640bb51d` must resume in place from media planning.
+It may reach an isolated noindex preview after generated-media provenance,
+truthfulness, responsive browser QA, independent criticism and acceptance pass.
+It must not enter customer production, mutate a custom domain, or use the
+production Telegram delivery lane.
+
+Acceptance requires the nine requested media-policy regressions, focused
+recovery/build-flow coverage, the full suite, compileall, dependency/smoke/diff
+checks, an isolated preview URL, and a provenance summary that identifies every
+generated asset. Copyright controls and the prohibition on fake team, cases,
+reviews, documents and business interiors remain blocking.
+
+## Previous completed goal — site refinement mode (2026-07-22)
 
 Implement a real `site_refinement` workflow for existing site projects. The
 mode must preserve an accumulating user brief and referenced files, edit the

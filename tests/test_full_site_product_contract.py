@@ -84,8 +84,13 @@ class FullSiteProductContractTests(unittest.TestCase):
             site = root / "site"
             studio = root / "studio"
             final_reviews = studio / "final_reviews"
+            studio_input = studio / "input"
             site.mkdir()
             final_reviews.mkdir(parents=True)
+            studio_input.mkdir()
+            (studio_input / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
             (site / "index.html").write_text("<html>accepted</html>", encoding="utf-8")
             (site / "styles.css").write_text("body { color: black; }", encoding="utf-8")
             for name in ("desktop.png", "tablet.png", "mobile.png"):

@@ -475,7 +475,7 @@ class ProviderAndDeliveryTests(unittest.TestCase):
                 json.dumps(_media_provenance_report(studio_dir=studio, site_dir=site)), encoding="utf-8"
             )
             publisher = Publisher(config(HOSTING_PROVIDER="local", PUBLISH_REQUIRED=False))
-            with self.assertRaisesRegex(PublisherConfigurationError, "selected fixture/stock/unverified media"):
+            with self.assertRaisesRegex(PublisherConfigurationError, "violates provenance"):
                 publisher.publish(
                     run_dir=root, site_dir=site, instagram_url=INSTAGRAM_URL, production=True
                 )

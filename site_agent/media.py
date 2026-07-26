@@ -15,6 +15,12 @@ import requests
 from PIL import Image, ImageDraw, ImageFilter, ImageStat
 
 from site_agent.config import Settings, settings
+from site_agent.media_policy import (
+    MediaProvenanceType,
+    asset_is_renderable,
+    canonical_provenance_type,
+    normalize_manifest_provenance,
+)
 
 
 class MediaInputBlocked(RuntimeError):
@@ -69,6 +75,12 @@ class PreviewMediaIngestor:
                 continue
             if source_kind == "business_social" and not self._verified_instagram_media_url(url):
                 rejected.append({"url": url, "reason": "unverified_instagram_media_path"})
+                continue
+            if source_kind == "business_web" and not self._verified_business_web_candidate(
+                candidate,
+                submitted_source_url=submitted_source_url,
+            ):
+                rejected.append({"url": url, "reason": "unverified_business_web_source"})
                 continue
             if kind == "video" and candidate.get("metadata_only", True):
                 digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
@@ -140,13 +152,12 @@ class PreviewMediaIngestor:
             "video_count": videos,
             "metadata_only_media_count": len(metadata_only_media),
             "full_preview_media_sufficient": sufficient,
-            "composition_mode": "full_media" if sufficient else ("adapted_media" if media else "blocked"),
+            "composition_mode": "full_media" if sufficient else ("adapted_media" if media else "generated_media_required"),
             "rejected": rejected,
             "production_policy": "preview authorisation never grants customer-production rights",
         }
+        manifest = normalize_manifest_provenance(manifest)
         self._write_manifest(output_dir / "manifest.json", manifest)
-        if not media:
-            raise MediaInputBlocked("media-input checkpoint blocked: no provable business media remained after all fallbacks")
         return manifest
 
     def _prepare_image(self, candidate: dict, submitted_source_url: str, raw_checksum: str, original: Path, processed: Path, output_dir: Path) -> tuple[dict, str]:
@@ -179,6 +190,7 @@ class PreviewMediaIngestor:
         return {
             "asset_id": checksum[:24], "kind": kind, "asset_url": str(candidate.get("url", "")),
             "source_kind": source_kind, "source_url": source_url,
+            "provenance_type": MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value,
             "source_record_id": str(candidate.get("source_record_id", "")),
             "source_role": str(candidate.get("source_role", "unknown_business_media")),
             "business_link_confidence": str(candidate.get("business_link_confidence", "medium")),
@@ -194,6 +206,20 @@ class PreviewMediaIngestor:
     def _public_url(value: str) -> bool:
         parsed = urlparse(value)
         return not value.lower().startswith(("data:", "blob:", "javascript:")) and parsed.scheme in {"http", "https"} and bool(parsed.hostname)
+
+    @staticmethod
+    def _verified_business_web_candidate(candidate: dict, *, submitted_source_url: str) -> bool:
+        if candidate.get("official_business_link_verified") is True:
+            return True
+        candidate_source = urlparse(str(candidate.get("source_url", "")))
+        submitted = urlparse(submitted_source_url)
+        candidate_host = (candidate_source.hostname or "").lower().removeprefix("www.")
+        submitted_host = (submitted.hostname or "").lower().removeprefix("www.")
+        return (
+            bool(candidate_host and submitted_host)
+            and candidate_host == submitted_host
+            and str(candidate.get("business_link_confidence", "")).lower() == "high"
+        )
 
     @staticmethod
     def _platform_owned_url(value: str) -> bool:
@@ -215,6 +241,7 @@ class PreviewMediaIngestor:
         return host.endswith("cdninstagram.com") and (
             "/t51.82787-15/" in path
             or "/t51.82787-19/" in path
+            or "/t51.2885-19/" in path
             or "/t16/" in path
             or "/t50.2886-16/" in path
         )
@@ -428,7 +455,9 @@ class MediaPreparer:
         if not media:
             raise MediaInputBlocked("media-input checkpoint blocked: cached media manifest has no authorised media.")
         for item in media:
-            if item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True:
+            if item.get("source_role") in {"profile_avatar", "official_profile_avatar", "user_provided_logo"}:
+                continue
+            if not asset_is_renderable(item, target="customer_production"):
                 raise MediaInputBlocked("media-input checkpoint blocked: cached manifest contains unauthorised media.")
             if not self.uploader._is_own_cloudinary_url(str(item.get("url", ""))):
                 raise MediaInputBlocked("media-input checkpoint blocked: cached manifest contains a non-Cloudinary or wrong-account URL.")
@@ -444,19 +473,19 @@ def authorised_media_assets(manifest: dict, *, preview: bool = False):
     from site_agent.models import MediaAsset
 
     assets = []
-    for item in manifest.get("media", []):
-        production_safe = (
-            item.get("source_kind") == "business"
-            and item.get("user_authorized") is True
-            and item.get("allowed_for_public_site") is True
-        )
-        preview_safe = (
-            preview
-            and item.get("source_kind") in {"business_social", "business_web"}
-            and item.get("user_authorized_for_preview") is True
-            and item.get("allowed_for_customer_production") is False
-        )
-        if not ((production_safe or preview_safe) and str(item.get("url", "")).startswith("https://res.cloudinary.com/")):
+    for raw_item in manifest.get("media", []):
+        if not isinstance(raw_item, dict):
+            continue
+        item = {**raw_item, "provenance_type": canonical_provenance_type(raw_item)}
+        provenance = item["provenance_type"]
+        # Logos establish identity but are not page-photo depth and are handed
+        # to Studio through the checksum-bound brand package instead.
+        if item.get("source_role") in {"profile_avatar", "official_profile_avatar", "user_provided_logo"}:
+            continue
+        target = "isolated_preview" if preview else "customer_production"
+        if not asset_is_renderable(item, target=target):
+            continue
+        if not str(item.get("url", "")).startswith("https://res.cloudinary.com/"):
             continue
         width, height = int(item.get("width", 0) or 0), int(item.get("height", 0) or 0)
         if width < 480 or height < 480:
@@ -465,11 +494,21 @@ def authorised_media_assets(manifest: dict, *, preview: bool = False):
             url=str(item["url"]), kind=str(item.get("kind", "image")), asset_id=str(item.get("asset_id", "")),
             alt=str(item.get("alt") or item.get("original_filename") or "Business media"),
             recommended_use=str(item.get("recommended_use") or "gallery"), width=width, height=height,
-            source_kind=str(item.get("source_kind", "business")), source_url=str(item.get("source_url", "")),
+            source_kind=str(item.get("source_kind", "business")),
+            provenance_type=provenance,
+            source_url=str(item.get("source_url", "")),
             provenance_note=(
-                "Business-social media authorised only for this isolated preview; production rights not granted."
-                if preview_safe else f"Authorised business media: {item.get('original_origin', '')}"
+                "Original AI-generated project visual; never documentary evidence of the business."
+                if provenance == MediaProvenanceType.AI_GENERATED_ORIGINAL.value
+                else (
+                    "Business media authorised only for this isolated preview; production rights not granted."
+                    if preview and item.get("allowed_for_customer_production") is False
+                    else f"Authorised media: {item.get('original_origin', '')}"
+                )
             ),
-            portfolio_claim=bool(production_safe),
+            portfolio_claim=bool(item.get("portfolio_claim")) and provenance in {
+                MediaProvenanceType.USER_PROVIDED_BUSINESS_ASSET.value,
+                MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value,
+            },
         ))
     return assets

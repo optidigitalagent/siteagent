@@ -173,6 +173,7 @@ def implementation_package(
     references: list[dict],
     brand_identity: dict | None = None,
     brand_assets_manifest: dict | None = None,
+    media_plan: dict | None = None,
     target: str = "production",
 ) -> dict:
     research = business_research.get("research", {})
@@ -188,6 +189,7 @@ def implementation_package(
     missing.extend(f"design.{key}" for key in required_design if key not in design_brief)
     brand_identity = brand_identity or {}
     brand_assets_manifest = brand_assets_manifest or {}
+    media_plan = media_plan or {}
     if not brand_identity.get("brand_identity_checksum"):
         missing.append("brand_identity.brand_identity_checksum")
     package_logo = brand_assets_manifest.get("logo", {})
@@ -195,12 +197,19 @@ def implementation_package(
         missing.append("brand_assets_manifest.logo.processed_checksum")
     if design_brief.get("brand_identity_checksum") != brand_identity.get("brand_identity_checksum"):
         missing.append("design.brand_identity_checksum")
+    if any(
+        item.get("provenance_type") == "ai_generated_original"
+        for item in media_manifest.get("media", [])
+        if isinstance(item, dict)
+    ) and not media_plan.get("items"):
+        missing.append("media_plan.items")
     package = {
-        "schema_version": 3,
+        "schema_version": 4,
         "requested_product_type": research.get("requested_product_type", "full_commercial_site"),
         "delivery_target": target,
         "business_research": business_research,
         "authorised_media_manifest": media_manifest,
+        "media_plan": media_plan,
         "brand_identity": brand_identity,
         "brand_assets_manifest": brand_assets_manifest,
         "design_implementation_brief": design_brief,
@@ -223,10 +232,15 @@ def implementation_package(
             "selected_references": checksum(references),
             "brand_identity": checksum(brand_identity),
             "brand_assets_manifest": checksum(brand_assets_manifest),
+            "media_plan": checksum(media_plan),
         },
         "acceptance_contract": {
-            "use_only_authorised_cloudinary_business_media": True,
+            "use_only_provenance_approved_media": True,
             "isolated_preview_business_social_media_allowed": target == "isolated_preview",
+            "ai_generated_original_media_allowed": True,
+            "reference_only_media_forbidden_in_output": True,
+            "generated_media_must_declare_safe_claim_role": True,
+            "generated_media_never_counts_as_documentary_business_proof": True,
             "preview_media_never_implies_production_rights": True,
             "official_logo_must_be_checksum_matched_when_available": True,
             "no_logo_fallback_must_not_invent_a_mark": True,

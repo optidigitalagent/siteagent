@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
+from site_agent.media_policy import MediaProvenanceType
+
 
 class Evidence(BaseModel):
     source: str
@@ -20,10 +22,37 @@ class MediaAsset(BaseModel):
     width: int = 0
     height: int = 0
     asset_id: str = ""
-    source_kind: Literal["business", "business_social", "business_web", "stock", "fixture_stock", "unknown"] = "unknown"
+    source_kind: Literal[
+        "business", "business_social", "business_web", "ai_generated",
+        "stock", "fixture_stock", "reference_only", "unknown",
+    ] = "unknown"
+    provenance_type: Literal[
+        "user_provided_business_asset",
+        "verified_official_business_asset",
+        "licensed_stock_asset",
+        "ai_generated_original",
+        "reference_only",
+    ] = "reference_only"
     source_url: str = ""
     provenance_note: str = ""
     portfolio_claim: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def upgrade_media_provenance(cls, value):
+        if not isinstance(value, dict) or value.get("provenance_type"):
+            return value
+        upgraded = dict(value)
+        source_kind = str(upgraded.get("source_kind", "unknown"))
+        if source_kind in {"business", "business_social", "business_web"}:
+            upgraded["provenance_type"] = MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value
+        elif source_kind == "ai_generated":
+            upgraded["provenance_type"] = MediaProvenanceType.AI_GENERATED_ORIGINAL.value
+        elif source_kind == "stock" and (upgraded.get("license_name") or upgraded.get("license_url")):
+            upgraded["provenance_type"] = MediaProvenanceType.LICENSED_STOCK_ASSET.value
+        else:
+            upgraded["provenance_type"] = MediaProvenanceType.REFERENCE_ONLY.value
+        return upgraded
 
 
 class ContentProvenance(BaseModel):

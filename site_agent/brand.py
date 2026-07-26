@@ -17,6 +17,7 @@ from PIL import Image, ImageChops
 from bs4 import BeautifulSoup
 
 from site_agent.workflow import checksum
+from site_agent.media_policy import MediaProvenanceType, canonical_provenance_type
 
 
 _LOGO_SCREENSHOT_CACHE: dict[tuple[str, str], bool] = {}
@@ -93,6 +94,7 @@ def brand_media_checksum(media_manifest: dict[str, Any]) -> str:
             for key in (
                 "asset_id", "asset_url", "url", "original_checksum", "source_role",
                 "source_kind", "source_url", "source_record_id", "ownership_evidence",
+                "provenance_type",
                 "business_link_confidence", "user_authorized_for_preview",
                 "allowed_for_customer_production", "user_authorized", "allowed_for_public_site",
             )
@@ -158,9 +160,28 @@ def _logo_candidate(
         path = _candidate_path(run_dir, item)
         if path is None or _platform_owned_asset(item):
             continue
+        provenance = canonical_provenance_type(item)
+        if (
+            provenance == MediaProvenanceType.USER_PROVIDED_BUSINESS_ASSET.value
+            and item.get("source_role") == "user_provided_logo"
+        ):
+            enriched = dict(item)
+            enriched["brand_mark_evidence"] = {
+                "direct_user_authorisation": 1.0,
+                "checksum_verified": 1.0,
+            }
+            ranked.append((1000, enriched, path))
+            continue
+        if provenance != MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value:
+            continue
         source = str(item.get("asset_url") or "").lower()
         width, height = int(item.get("width") or 0), int(item.get("height") or 0)
-        is_profile = "/t51.82787-19/" in source or "profile" in str(item.get("recommended_use", "")).lower()
+        is_profile = (
+            "/t51.82787-19/" in source
+            or "/t51.2885-19/" in source
+            or item.get("source_role") in {"profile_avatar", "official_profile_avatar"}
+            or "profile" in str(item.get("recommended_use", "")).lower()
+        )
         if not is_profile:
             continue
         mark_score, evidence = _brand_mark_score(path)
@@ -253,7 +274,14 @@ def _recurring_template_colours(
 ) -> list[tuple[tuple[int, int, int], list[str]]]:
     occurrences: dict[tuple[int, int, int], set[str]] = defaultdict(set)
     for item in media_manifest.get("media", []):
-        if _platform_owned_asset(item) or "/t51.82787-19/" in str(item.get("asset_url", "")):
+        if (
+            canonical_provenance_type(item) not in {
+                MediaProvenanceType.USER_PROVIDED_BUSINESS_ASSET.value,
+                MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value,
+            }
+            or _platform_owned_asset(item)
+            or "/t51.82787-19/" in str(item.get("asset_url", ""))
+        ):
             continue
         path = _candidate_path(run_dir, item)
         if path is None:
@@ -282,7 +310,14 @@ def _confirm_logo_colour(
 ) -> list[str]:
     confirmed: list[str] = []
     for item in media_manifest.get("media", []):
-        if _platform_owned_asset(item) or "/t51.82787-19/" in str(item.get("asset_url", "")):
+        if (
+            canonical_provenance_type(item) not in {
+                MediaProvenanceType.USER_PROVIDED_BUSINESS_ASSET.value,
+                MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value,
+            }
+            or _platform_owned_asset(item)
+            or "/t51.82787-19/" in str(item.get("asset_url", ""))
+        ):
             continue
         path = _candidate_path(run_dir, item)
         if path is None:
@@ -376,6 +411,7 @@ class BrandIdentityAnalyzer:
         logo_record: dict[str, Any]
         if candidate is not None:
             item, source, mark_evidence = candidate
+            direct_user_logo = bool(mark_evidence.get("direct_user_authorisation"))
             original = brand_dir / f"logo_original{source.suffix.lower() or '.bin'}"
             processed = brand_dir / "logo_processed.png"
             shutil.copy2(source, original)
@@ -390,20 +426,21 @@ class BrandIdentityAnalyzer:
                 "original_checksum": _file_checksum(original),
                 "processed_checksum": _file_checksum(processed),
                 "extraction_method": method,
-                "classification_method": "deterministic_flat_mark_heuristic",
+                "classification_method": "direct_user_provided_logo" if direct_user_logo else "deterministic_flat_mark_heuristic",
                 "classification_evidence": mark_evidence,
                 "original_resolution": {
                     "width": int(item.get("width") or 0),
                     "height": int(item.get("height") or 0),
                 },
                 "processed_resolution": {"width": width, "height": height},
-                "confidence": "high" if mark_evidence.get("score", 0) >= 80 else "medium",
+                "confidence": "high" if direct_user_logo or mark_evidence.get("score", 0) >= 80 else "medium",
                 "user_authorized_for_preview": bool(item.get("user_authorized_for_preview")) if preview else False,
                 "allowed_for_customer_production": bool(item.get("allowed_for_customer_production")),
                 "generatively_redrawn": False,
                 "recoloured": False,
             }
         else:
+            direct_user_logo = False
             logo_colours = []
             logo_record = {
                 "available": False,
@@ -430,7 +467,11 @@ class BrandIdentityAnalyzer:
             primary, secondary = logo_colours[:2]
             accent = logo_colours[2] if len(logo_colours) > 2 else secondary
             palette_confidence = "high"
-            palette_source = "official profile logo, cross-checked against recurring Instagram graphics"
+            palette_source = (
+                "user-provided authorised logo"
+                if direct_user_logo
+                else "official profile logo, cross-checked against recurring Instagram graphics"
+            )
         elif logo_record["available"] and recurring:
             primary = recurring[0][0]
             secondary = recurring[1][0] if len(recurring) > 1 else (35, 45, 43)

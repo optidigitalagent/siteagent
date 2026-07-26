@@ -1,5 +1,29 @@
 ﻿# Goal Progress
 
+## Telegram preview media-input block and recovery repair (2026-07-26)
+
+- Ran `python -m site_agent.cli go` for the newly synced Telegram job. The
+  first inbox pull fetched the remote commit but failed before rebase; an exact
+  manual retry fast-forwarded `main`, after which `go` claimed the existing job
+  and created its same-ID run directory.
+- Bounded intake completed static, browser, public-search and discovered
+  official-site source attempts. The media manifest contains zero renderable
+  business assets, so the run stopped before Studio generation with
+  `media-input checkpoint blocked`; no preview deployment, production field or
+  Telegram notification was created.
+- The canonical blocker was initially misclassified as
+  `UNCLASSIFIED_FAILURE` because its hyphenated checkpoint wording was missing
+  from the recovery pattern table. Added the exact pattern plus a regression
+  proving classification, automatic selection and same-run reclaim.
+- Focused recovery and one-link intake verification passes: 31 tests, targeted
+  compileall and `git diff --check`. An independent reviewer approved the fix
+  with no critical/high finding.
+- Durably repaired the exact queue entry to remain `failed` with
+  `PREVIEW_RECOVERABLE_FAILURE` and `recovery_eligible=true`; the repair was
+  committed and pushed as an inbox-only queue transition. No duplicate job or
+  run was created.
+- Current checkpoint: `TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.
+
 ## SITE_REFINEMENT Final Validation Checkpoint C (2026-07-26)
 
 - Added the standalone operator guide `docs/SITE_REFINEMENT.md` covering
@@ -786,3 +810,29 @@ Live end-to-end verification requires local runtime credentials:
 - Two independent read-only reviewers returned GO with no critical/high finding.
   No deployment, publication, Telegram state, queue state or production site was
   changed.
+
+## Logo-first generated-media policy implementation (2026-07-26)
+
+- Added the five canonical provenance types, target-aware rights validation,
+  section-level media planning, original GPT Image generation, Cloudinary
+  delivery, truthful rendered claim-role attributes and production provenance
+  preservation.
+- Zero verified photos now creates `generated_media_required`; five usable
+  non-logo visuals are generated or recovered. User-provided logos are direct
+  authorised brand assets, and user-provided business photos are uploaded before
+  readiness counting. `reference_only` and false documentary uses fail closed.
+- Added all nine requested regressions plus partial-generation crash recovery,
+  user-photo upload, secondary-page provenance and the current Instagram avatar
+  path. Recovery keeps the same queue ID/run and generated assets checkpoint
+  after each successful upload.
+- Focused post-review verification passed 86 tests. Final full verification
+  passed 395 tests in 195.711 seconds with three explicit skips. `compileall`,
+  `python -m pip check`, diff validation and Studio plugin-mirror integrity all
+  passed after the last correction.
+- Independent read-only reviews found provenance and rendered-media bypasses,
+  including two P1 and three P2 issues in the first broad pass; every reported
+  issue was reproduced, corrected and covered by a regression before the final
+  full suite. A final clean repeat could not start because the external Codex
+  reviewer had reached its usage limit, so that repeat remains explicitly
+  unverified. No deployment, production promotion, custom-domain action, push
+  or Telegram mutation has occurred yet.

@@ -378,13 +378,15 @@ def _verified_instagram_media_url(value: str) -> bool:
     host = (parsed.hostname or "").lower()
     path = parsed.path.lower()
     return host.endswith("cdninstagram.com") and (
-        "/t51.82787-15/" in path or "/t51.82787-19/" in path
+        "/t51.82787-15/" in path
+        or "/t51.82787-19/" in path
+        or "/t51.2885-19/" in path
     )
 
 
 def _source_media_role(value: str) -> str:
     lowered = str(value or "").lower()
-    if "/t51.82787-19/" in lowered:
+    if "/t51.82787-19/" in lowered or "/t51.2885-19/" in lowered:
         return "profile_avatar"
     if _platform_owned_media_url(lowered):
         return "platform_chrome"
@@ -475,7 +477,7 @@ def browser_fallback(source_url: str) -> PublicSource:
               const media = [...document.querySelectorAll('main img')]
                 .filter(i => i.naturalWidth >= 320 && i.naturalHeight >= 320)
                 .map(i => ({url: i.currentSrc || i.src, alt: (i.alt || '').toLowerCase(), inHeader: !!i.closest('header')}))
-                .filter(item => /cdninstagram\.com\/.*\/t51\.82787-(15|19)\//i.test(item.url))
+                .filter(item => /cdninstagram\.com\/.*\/(?:t51\.82787-(?:15|19)|t51\.2885-19)\//i.test(item.url))
                 .filter(item => item.inHeader || (handle && item.alt.includes(handle)))
                 .map(item => ({url: item.url, evidence: item.inHeader ? 'submitted_profile_header_avatar' : 'submitted_profile_alt_attribution'}));
               return {

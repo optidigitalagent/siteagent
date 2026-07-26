@@ -242,36 +242,66 @@ class PreviewMediaIntakeTests(unittest.TestCase):
         self.assertEqual(metadata["download_status"], "metadata_only")
         self.assertNotIn("url", metadata)
 
-    def test_zero_real_media_writes_blocked_manifest_then_blocks(self) -> None:
+    def test_zero_real_media_writes_generation_required_manifest_and_continues(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "media_input"
-            with self.assertRaisesRegex(MediaInputBlocked, "no provable business media"):
-                PreviewMediaIngestor().ingest(
-                    [{"url": "data:image/png;base64,AAAA", "kind": "image", "source_kind": "business_social"}],
-                    output,
-                    submitted_source_url="https://instagram.com/empty",
-                )
+            returned = PreviewMediaIngestor().ingest(
+                [{"url": "data:image/png;base64,AAAA", "kind": "image", "source_kind": "business_social"}],
+                output,
+                submitted_source_url="https://instagram.com/empty",
+            )
             manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(returned, manifest)
             self.assertEqual(manifest["media_count"], 0)
-            self.assertEqual(manifest["composition_mode"], "blocked")
+            self.assertEqual(manifest["composition_mode"], "generated_media_required")
+            self.assertFalse(manifest["full_preview_media_sufficient"])
 
     def test_preview_ingestor_rejects_platform_owned_media(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "media_input"
-            with self.assertRaisesRegex(MediaInputBlocked, "no provable business media"):
-                PreviewMediaIngestor(get=lambda *args, **kwargs: _Response(_image_bytes((0, 0, 255)), content_type="image/jpeg")).ingest(
-                    [{
-                        "url": "https://lookaside.fbsbx.com/elementpath/media/?media_id=1",
-                        "kind": "image",
-                        "source_kind": "business_social",
-                        "source_role": "platform_chrome",
-                    }],
-                    output,
-                    submitted_source_url="https://instagram.com/atelier",
-                )
+            PreviewMediaIngestor(get=lambda *args, **kwargs: _Response(_image_bytes((0, 0, 255)), content_type="image/jpeg")).ingest(
+                [{
+                    "url": "https://lookaside.fbsbx.com/elementpath/media/?media_id=1",
+                    "kind": "image",
+                    "source_kind": "business_social",
+                    "source_role": "platform_chrome",
+                }],
+                output,
+                submitted_source_url="https://instagram.com/atelier",
+            )
             manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["media_count"], 0)
+            self.assertEqual(manifest["composition_mode"], "generated_media_required")
             self.assertEqual(manifest["rejected"][0]["reason"], "platform_owned_media_is_not_business_evidence")
+
+    def test_business_web_media_requires_direct_or_explicit_official_linkage(self) -> None:
+        get = lambda *args, **kwargs: _Response(_image_bytes((30, 60, 90)), content_type="image/jpeg")
+        with tempfile.TemporaryDirectory() as temp:
+            direct = PreviewMediaIngestor(get=get).ingest(
+                [{
+                    "url": "https://cdn.business.example/hero.jpg",
+                    "kind": "image",
+                    "source_kind": "business_web",
+                    "source_url": "https://business.example",
+                    "business_link_confidence": "high",
+                }],
+                Path(temp) / "direct",
+                submitted_source_url="https://business.example",
+            )
+            self.assertEqual(direct["media_count"], 1)
+            unverified = PreviewMediaIngestor(get=get).ingest(
+                [{
+                    "url": "https://third-party.example/photo.jpg",
+                    "kind": "image",
+                    "source_kind": "business_web",
+                    "source_url": "https://third-party.example",
+                    "business_link_confidence": "medium",
+                }],
+                Path(temp) / "unverified",
+                submitted_source_url="https://instagram.com/business",
+            )
+            self.assertEqual(unverified["media_count"], 0)
+            self.assertEqual(unverified["rejected"][0]["reason"], "unverified_business_web_source")
 
     def test_bootstrap_writes_source_ledger_and_media_manifest(self) -> None:
         urls = tuple(f"https://cdninstagram.com/t51.82787-15/{index}.jpg" for index in range(6))

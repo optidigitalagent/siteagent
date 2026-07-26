@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     llm_provider: str = Field(default="codex", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4.1", alias="OPENAI_MODEL")
+    image_generation_model: str = Field(default="gpt-image-1", alias="IMAGE_GENERATION_MODEL")
+    image_generation_quality: str = Field(default="high", alias="IMAGE_GENERATION_QUALITY")
     codex_command: str = Field(default="codex", alias="CODEX_COMMAND")
     codex_model: str = Field(default="", alias="CODEX_MODEL")
     # The strategy plane is deliberately separate from the Codex implementation

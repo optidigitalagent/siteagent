@@ -324,3 +324,22 @@ repeat the same brief in every chat.
   must not overstate lexical command guards, package-manager shell behavior,
   runtime-CWD containment, unmanaged localhost ownership or atomicity of
   browser-owned artifacts.
+
+## Logo-first generated-media contract (2026-07-26)
+
+- The normal user input is a business logo plus an official business link;
+  confirmed copy, prices and contacts are optional additions. Do not require a
+  real business photograph merely to produce an isolated preview.
+- A directly supplied logo is an authorised `user_provided_business_asset`.
+  If verified business photos are absent, research the business, select visual
+  direction and references, create a section-level media plan, generate an
+  original sufficient visual set, and continue the same recoverable run.
+- Generated media is site-usable only as `ai_generated_original` with retained
+  model/prompt/checksum/section/claim-role provenance. It must never impersonate
+  documentary evidence such as staff, premises, work, cases, reviews,
+  certificates, awards, documents, clients, or results.
+- Unlicensed research imagery is `reference_only` and cannot enter HTML.
+  Missing evidence removes or reframes the affected section; it does not block
+  the whole preview. Explicit `real_business_media_only=true`, unavailable
+  generation, an insufficient visual set, unproven rights, or a false
+  documentary claim remains blocking.

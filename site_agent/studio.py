@@ -20,6 +20,7 @@ from html.parser import HTMLParser
 import re
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlsplit
 
 from site_agent.commercial_usefulness import (
     commercial_usefulness_report,
@@ -30,6 +31,12 @@ from site_agent.critic import TechnicalInspector
 from site_agent.config import settings
 from site_agent.design_quality import EvidenceAssessment, PageScope, assess_studio_readiness
 from site_agent.models import ResearchBrief, SiteSpec, StrategyBrief
+from site_agent.media_policy import (
+    MediaProvenanceType,
+    asset_is_renderable,
+    canonical_provenance_type,
+    rendered_media_policy_issues,
+)
 from site_agent.skill_lock import directory_checksum
 
 
@@ -65,20 +72,124 @@ UNVERIFIED_PRODUCTION_MEDIA_KINDS = frozenset({"fixture_stock", "stock", "unknow
 
 class _RenderedMediaParser(HTMLParser):
     def __init__(self) -> None:
-        super().__init__(); self.urls: list[str] = []
+        super().__init__(); self.urls: list[str] = []; self.external_stylesheets: list[str] = []; self.uninspectable_embeds: list[str] = []
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
-        for name in ("src", "poster", "data-src"):
-            if values.get(name): self.urls.append(values[name] or "")
-        for value in (values.get("srcset"), values.get("style")):
-            if value:
-                self.urls.extend(re.findall(r"https?://[^\s,'\")]+", value))
+        lowered_tag = tag.lower()
+        if lowered_tag in {"img", "source", "video", "audio", "embed"}:
+            for name in ("src", "poster", "data-src"):
+                if values.get(name): self.urls.append(values[name] or "")
+        if lowered_tag == "object" and values.get("data"):
+            self.urls.append(values["data"] or "")
+        if lowered_tag == "input" and str(values.get("type", "")).lower() == "image" and values.get("src"):
+            self.urls.append(values["src"] or "")
+        if lowered_tag in {"image", "use", "feimage"}:
+            for name in ("href", "xlink:href"):
+                if values.get(name): self.urls.append(values[name] or "")
+        if lowered_tag == "link" and any(
+            token in str(values.get("rel", "")).lower()
+            for token in ("icon", "apple-touch-icon")
+        ) and values.get("href"):
+            self.urls.append(values["href"] or "")
+        if lowered_tag == "meta" and str(values.get("property") or values.get("name") or "").lower().endswith("image") and values.get("content"):
+            self.urls.append(values["content"] or "")
+        if values.get("background"):
+            self.urls.append(values["background"] or "")
+        if lowered_tag == "iframe":
+            if values.get("src"):
+                self.uninspectable_embeds.append(str(values["src"]))
+            if values.get("srcdoc"):
+                self.uninspectable_embeds.append("iframe:srcdoc")
+        if lowered_tag == "link" and "stylesheet" in str(values.get("rel", "")).lower():
+            href = str(values.get("href", ""))
+            if href.startswith(("http://", "https://", "//")):
+                self.external_stylesheets.append(href)
+        srcset = values.get("srcset") if lowered_tag in {"img", "source"} else None
+        if srcset:
+            self.urls.extend(
+                candidate.strip().split()[0]
+                for candidate in srcset.split(",")
+                if candidate.strip()
+            )
+        style = values.get("style")
+        if style:
+            self.urls.extend(re.findall(r"url\(\s*['\"]?([^\s'\")]+)", style, flags=re.I))
+
+
+def _looks_like_media_url(value: str) -> bool:
+    lowered = value.strip().lower()
+    if not lowered or lowered.startswith(("#", "var(", "data:font/")):
+        return False
+    if lowered.startswith(("data:image/", "data:video/")):
+        return True
+    path = lowered.split("?", 1)[0].split("#", 1)[0]
+    if path.endswith((".woff", ".woff2", ".ttf", ".otf", ".eot", ".css", ".js", ".html", ".htm")):
+        return False
+    return True
 
 
 def _rendered_media_urls(html: str) -> set[str]:
     parser = _RenderedMediaParser(); parser.feed(html)
-    parser.urls.extend(re.findall(r"url\(\s*['\"]?(https?://[^\s'\")]+)", html))
-    return {url for url in parser.urls if url.startswith("http")}
+    parser.urls.extend(re.findall(r"url\(\s*['\"]?([^\s'\")]+)", html, flags=re.I))
+    for expression in re.findall(
+        r"(?:-webkit-)?image-set\s*\((.*?)\)", html, flags=re.I | re.S
+    ):
+        parser.urls.extend(re.findall(r"['\"]([^'\"]+)['\"]", expression))
+    return {url for url in parser.urls if _looks_like_media_url(url)}
+
+
+def _approved_external_font_stylesheet(value: str) -> bool:
+    parsed = urlsplit(value)
+    return parsed.scheme == "https" and (parsed.hostname or "").lower() == "fonts.googleapis.com" and parsed.path.startswith("/css")
+
+
+def _untrusted_external_stylesheets(value: str) -> set[str]:
+    parser = _RenderedMediaParser(); parser.feed(value)
+    imports = re.findall(
+        r"@import\s+(?:url\(\s*)?['\"]?((?:https?:)?//[^\s'\")]+)",
+        value,
+        flags=re.I,
+    )
+    return {
+        url for url in [*parser.external_stylesheets, *imports]
+        if not _approved_external_font_stylesheet(url)
+    }
+
+
+def _uninspectable_embeds(value: str) -> set[str]:
+    parser = _RenderedMediaParser(); parser.feed(value)
+    return set(parser.uninspectable_embeds)
+
+
+def _brand_logo_checksum(studio_dir: Path) -> str:
+    brand_manifest_path = studio_dir / "input" / "brand_assets_manifest.json"
+    if not brand_manifest_path.is_file():
+        return ""
+    try:
+        brand_manifest = json.loads(brand_manifest_path.read_text(encoding="utf-8"))
+        logo = brand_manifest.get("logo", {})
+        candidate = str(logo.get("processed_checksum", "")).lower()
+        return candidate if logo.get("available") is True and re.fullmatch(r"[0-9a-f]{64}", candidate) else ""
+    except (OSError, ValueError, TypeError):
+        return ""
+
+
+def _site_html_documents(site_dir: Path) -> list[Path]:
+    documents = sorted(path for path in site_dir.rglob("*.html") if path.is_file())
+    if site_dir / "index.html" not in documents:
+        raise StudioError("Media provenance requires a final index.html.")
+    return documents
+
+
+def _html_tree_checksum(site_dir: Path, documents: list[Path]) -> str:
+    digest = hashlib.sha256()
+    for document in documents:
+        relative = document.relative_to(site_dir).as_posix()
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(document.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, Any]:
@@ -88,32 +199,63 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
     concept's broader media manifest: unused stock cannot block a build, while
     a rendered fixture can never be hidden by removing its visible disclaimer.
     """
-    source = site_dir / "index.html"
     manifest_path = studio_dir / "input" / "media_manifest.json"
-    if not source.is_file() or not manifest_path.is_file():
+    if not manifest_path.is_file():
         raise StudioError("Media provenance requires final HTML and media_manifest.json.")
+    documents = _site_html_documents(site_dir)
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise StudioError("Media provenance manifest is unreadable.") from exc
 
-    rendered_html = unescape(source.read_text(encoding="utf-8"))
+    audited_documents = [
+        *documents,
+        *sorted(path for path in site_dir.rglob("*.css") if path.is_file()),
+    ]
+    document_text = {
+        document: unescape(document.read_text(encoding="utf-8"))
+        for document in audited_documents
+    }
+    rendered_html = "\n".join(document_text.values())
     assets: list[dict[str, Any]] = []
     blocked: list[dict[str, Any]] = []
-    rendered_urls = _rendered_media_urls(rendered_html)
+    rendered_urls: set[str] = set()
+    logo_checksum = _brand_logo_checksum(studio_dir)
+    for document, text in document_text.items():
+        for embed in _uninspectable_embeds(text):
+            blocked.append({"asset_id": f"{document.relative_to(site_dir)}:{embed}", "source_kind": "uninspectable_embed", "rendered_uses": 1})
+        for stylesheet in _untrusted_external_stylesheets(text):
+            blocked.append({"asset_id": f"{document.relative_to(site_dir)}:{stylesheet}", "source_kind": "uninspectable_external_stylesheet", "rendered_uses": 1})
+        for url in _rendered_media_urls(text):
+            if url.startswith(("http://", "https://", "data:")):
+                rendered_urls.add(url)
+                continue
+            local = (document.parent / url.split("?", 1)[0].split("#", 1)[0]).resolve()
+            try:
+                local.relative_to(site_dir.resolve())
+            except ValueError:
+                blocked.append({"asset_id": f"{document.relative_to(site_dir)}:{url}", "source_kind": "unlisted_local", "rendered_uses": 1})
+                continue
+            if logo_checksum and local.is_file() and hashlib.sha256(local.read_bytes()).hexdigest() == logo_checksum:
+                continue
+            blocked.append({"asset_id": f"{document.relative_to(site_dir)}:{url}", "source_kind": "unlisted_local", "rendered_uses": 1})
     manifest_urls = {str(item.get("url", "")) for item in manifest.get("media", [])}
     for item in manifest.get("media", []):
         record = dict(item)
         url = str(record.get("url", ""))
         record["rendered_uses"] = rendered_html.count(url) if url else 0
         record["status"] = "used" if record["rendered_uses"] else "not_used"
+        record["provenance_type"] = canonical_provenance_type(record)
+        record["site_safe"] = asset_is_renderable(record, target="customer_production")
         record["portfolio_safe"] = (
-            record.get("source_kind") == "business"
-            and record.get("user_authorized") is True
-            and record.get("allowed_for_public_site") is True
-            and str(record.get("url", "")).startswith("https://res.cloudinary.com/")
+            record["provenance_type"] in {
+                MediaProvenanceType.USER_PROVIDED_BUSINESS_ASSET.value,
+                MediaProvenanceType.VERIFIED_OFFICIAL_BUSINESS_ASSET.value,
+            }
+            and record.get("portfolio_claim") is True
+            and record["site_safe"]
         )
-        if record["rendered_uses"] and not record["portfolio_safe"]:
+        if record["rendered_uses"] and not record["site_safe"]:
             blocked.append({
                 "asset_id": record.get("asset_id") or url,
                 "source_kind": record.get("source_kind", "unknown"),
@@ -122,18 +264,26 @@ def _media_provenance_report(*, studio_dir: Path, site_dir: Path) -> dict[str, A
         assets.append(record)
     for url in sorted(rendered_urls - manifest_urls):
         blocked.append({"asset_id": url, "source_kind": "unlisted_external", "rendered_uses": 1})
+    truthfulness_issues = rendered_media_policy_issues(manifest, rendered_html)
     return {
-        "schema_version": 2,
-        "final_html_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        "final_html": str(source),
+        "schema_version": 3,
+        "final_html_sha256": _html_tree_checksum(site_dir, audited_documents),
+        "final_html": str(site_dir / "index.html"),
+        "audited_html": [str(document.relative_to(site_dir)).replace("\\", "/") for document in documents],
+        "audited_styles": [
+            str(document.relative_to(site_dir)).replace("\\", "/")
+            for document in audited_documents
+            if document.suffix.lower() == ".css"
+        ],
         "fixture_only": bool(assets) and all(item.get("source_kind") == "fixture_stock" for item in assets),
-        "production_media_blocked": bool(blocked),
-        "production_promotion_allowed": not blocked,
+        "production_media_blocked": bool(blocked or truthfulness_issues),
+        "production_promotion_allowed": not blocked and not truthfulness_issues,
         "blocked_selected_media": blocked,
         "used_asset_count": sum(item["rendered_uses"] for item in assets),
         "rendered_media_urls": sorted(rendered_urls),
+        "truthfulness_issues": truthfulness_issues,
         "assets": assets,
-        "rationale": "Only authorised business media delivered from Cloudinary may be promoted; fixture, stock, scraped, or unverified media is never production-safe.",
+        "rationale": "Only provenance-approved media may render; AI originals remain non-documentary, licensed stock needs licence evidence, and reference-only media never enters output.",
     }
 
 
@@ -154,9 +304,14 @@ def assert_production_promotion_allowed(*, studio_dir: Path, site_dir: Path) -> 
         labels = ", ".join(
             f"{item['asset_id']} ({item['source_kind']})" for item in current["blocked_selected_media"]
         )
-        raise StudioError("Production promotion blocked: selected fixture/stock/unverified media: " + labels)
+        truth = "; ".join(current.get("truthfulness_issues", []))
+        detail = ", ".join(filter(None, (labels, truth)))
+        raise StudioError("Production promotion blocked: selected or rendered media violates provenance: " + detail)
 
-    content = (site_dir / "index.html").read_text(encoding="utf-8").lower()
+    content = "\n".join(
+        document.read_text(encoding="utf-8").lower()
+        for document in _site_html_documents(site_dir)
+    )
     leaked = [text for text in CALIBRATION_ONLY_TEXT if text in content]
     if leaked:
         raise StudioError(
@@ -425,7 +580,10 @@ class CodexStudioRunner:
             },
         })
         self._write_json(input_dir / "business_brief.json", {"job_id": job_id, "instagram_url": research.instagram_url, "research": research.model_dump(), "strategy": strategy.model_dump(), "site_spec": spec.model_dump()})
-        self._write_json(input_dir / "media_manifest.json", {"media": media, "note": "Only authorised business media with Cloudinary secure URLs may be rendered."})
+        self._write_json(input_dir / "media_manifest.json", {
+            "media": media,
+            "note": "Render only provenance-approved media. AI originals require explicit safe claim-role attributes; reference_only media is forbidden.",
+        })
         self._write_json(input_dir / "prohibited_claims.json", {"prohibited_claims": prohibited, "missing_information": research.unknowns})
         self._write_json(input_dir / "previous_site_constraints.json", {"recent_fingerprints": [], "avoid": ["category templates", "generic narrow-column landing page", "palette-only concept variants"]})
         self._write_json(input_dir / "skill_guidance.json", {"source": ".agents/skills", "skills": self._skill_snapshot()})
@@ -508,6 +666,7 @@ class CodexStudioRunner:
             "central idea, composition, hero, density, media strategy, typography, CTA and signature element. "
             "Each runnable concept must also show a persistent navigation solution on scrollable pages, a purposeful footer with verified routes, and unclipped primary CTA text; these are functional requirements, not a shared visual shell. "
             "When brand_assets_manifest.json says logo.available=true, the exact checksum-bound official logo is mandatory; otherwise use a plain text business name and invent no mark. The verified palette is mandatory in every concept; references must not override it. "
+            "Every ai_generated_original image must keep its media-plan meaning and render with data-media-provenance='ai_generated_original' plus the exact safe data-media-claim-role from media_manifest.json. Never present generated imagery as staff, a real interior, company work, a case, before/after, review, certificate, award, document or result proof. Never render reference_only media. "
             "Write a concise concept.md beside each index.html."
         )
 
@@ -541,8 +700,8 @@ class CodexStudioRunner:
             f"prototype at {self._relative(run_dir / 'studio' / 'concepts' / chosen)}, implementation package at {self._relative(run_dir / 'studio' / 'input' / 'implementation_package.json')} and scope contract at {self._relative(run_dir / 'studio' / 'input' / 'scope_decision.json')}. Write a complete static responsive "
             f"HTML/CSS/JS site to the staging workspace {self._relative(run_dir / 'studio' / 'selected' / 'staging')}. Preserve its signature "
             "element and composition language. " + scope_rule +
-            "Render business imagery only with the exact authorised Cloudinary URLs from studio/input/media_manifest.json; "
-            "do not copy, download, proxy, transform, or reference local business-photo files. " + logo_rule + "Use the verified primary/secondary palette exactly in authored CSS. "
+            "Render imagery only with the exact provenance-approved Cloudinary URLs from studio/input/media_manifest.json; "
+            "do not copy, download, proxy, transform, or reference local business-photo files. Every ai_generated_original image must include data-media-provenance='ai_generated_original' and the exact data-media-claim-role from its manifest record. Generated imagery is atmospheric or illustrative, never documentary proof. Omit evidence sections when real cases, reviews, team or interior materials do not exist, and never render reference_only assets. " + logo_rule + "Use the verified primary/secondary palette exactly in authored CSS. "
             "Keep primary navigation available while scrollable pages move, offset sticky controls below it, and include a semantic footer with declared-IA navigation, a primary conversion action and verified social/contact routes only. Mark primary CTA anchors with data-site-cta='primary' and ensure translated text is not clipped in default, hover, focus or active states. Do not reuse one visual header/footer composition across businesses. "
             "Use verified facts only; do not invoke Jinja, Cloudflare or Telegram."
         )
@@ -928,52 +1087,67 @@ class CodexStudioRunner:
         A local copy of an otherwise authorised photo breaks the required
         Cloudinary provenance and prevents exact rendered-use reporting.
         """
-        source = folder / "index.html"
         manifest_path = studio / "input" / "media_manifest.json"
-        if not source.is_file() or not manifest_path.is_file():
+        if not manifest_path.is_file():
             raise StudioError("Authorised media validation requires final HTML and media manifest.")
+        documents = _site_html_documents(folder)
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, ValueError) as exc:
             raise StudioError("Authorised media validation could not read media manifest.") from exc
-        allowed = {str(item.get("url", "")) for item in manifest.get("media", [])}
-        logo_checksum = ""
-        brand_manifest_path = studio / "input" / "brand_assets_manifest.json"
-        if brand_manifest_path.is_file():
-            try:
-                brand_manifest = json.loads(brand_manifest_path.read_text(encoding="utf-8"))
-                logo = brand_manifest.get("logo", {})
-                if logo.get("available") is True:
-                    candidate = str(logo.get("processed_checksum", "")).lower()
-                    if re.fullmatch(r"[0-9a-f]{64}", candidate):
-                        logo_checksum = candidate
-            except (OSError, ValueError, TypeError):
-                logo_checksum = ""
-        html = source.read_text(encoding="utf-8")
-        rendered = re.findall(r"<(?:img|source|video)\b[^>]*\bsrc=[\"']([^\"']+)", html, flags=re.I)
+        allowed = {
+            str(item.get("url", ""))
+            for item in manifest.get("media", [])
+            if canonical_provenance_type(item) != MediaProvenanceType.REFERENCE_ONLY.value
+        }
+        logo_checksum = _brand_logo_checksum(studio)
         forbidden: list[str] = []
-        for url in rendered:
-            if url.startswith("data:") or url in allowed:
-                continue
-            # The Studio contract deliberately copies the exact official logo
-            # into the publishable bundle.  Permit only that checksum-bound
-            # local image; business photography must still use an authorised
-            # Cloudinary URL from media_manifest.json.
-            local = (folder / url.split("?", 1)[0].split("#", 1)[0]).resolve()
-            try:
-                local.relative_to(folder.resolve())
-            except ValueError:
-                forbidden.append(url)
-                continue
-            if (
-                logo_checksum
-                and local.is_file()
-                and hashlib.sha256(local.read_bytes()).hexdigest() == logo_checksum
-            ):
-                continue
-            forbidden.append(url)
+        policy_issues: list[str] = []
+        audited_sources = [
+            *documents,
+            *sorted(path for path in folder.rglob("*.css") if path.is_file()),
+        ]
+        for source in audited_sources:
+            html = source.read_text(encoding="utf-8")
+            forbidden.extend(
+                f"{source.relative_to(folder)}:{embed}"
+                for embed in sorted(_uninspectable_embeds(html))
+            )
+            forbidden.extend(
+                f"{source.relative_to(folder)}:{stylesheet}"
+                for stylesheet in sorted(_untrusted_external_stylesheets(html))
+            )
+            for url in sorted(_rendered_media_urls(html)):
+                if url in allowed:
+                    continue
+                if url.startswith(("http://", "https://", "data:")):
+                    forbidden.append(f"{source.relative_to(folder)}:{url}")
+                    continue
+                # The Studio contract deliberately copies the exact official logo
+                # into the publishable bundle. Permit only that checksum-bound
+                # local image; business photography must still use an authorised
+                # Cloudinary URL from media_manifest.json.
+                local = (source.parent / url.split("?", 1)[0].split("#", 1)[0]).resolve()
+                try:
+                    local.relative_to(folder.resolve())
+                except ValueError:
+                    forbidden.append(f"{source.relative_to(folder)}:{url}")
+                    continue
+                if (
+                    logo_checksum
+                    and local.is_file()
+                    and hashlib.sha256(local.read_bytes()).hexdigest() == logo_checksum
+                ):
+                    continue
+                forbidden.append(f"{source.relative_to(folder)}:{url}")
+            policy_issues.extend(
+                f"{source.relative_to(folder)}: {issue}"
+                for issue in rendered_media_policy_issues(manifest, html)
+            )
         if forbidden:
             raise StudioError("Static studio output renders media outside the authorised Cloudinary manifest: " + ", ".join(forbidden[:5]))
+        if policy_issues:
+            raise StudioError("Static studio output violates generated-media truthfulness: " + "; ".join(policy_issues))
 
     def _validate_scope_compliance(self, studio: Path, folder: Path, readiness: EvidenceAssessment) -> None:
         """Persist a checkable scope decision before any final screenshot approval."""

@@ -76,6 +76,16 @@ high. For full_commercial_site, design the complete evidence-backed commercial
 path: identity, services, proof, brand/about, process/trust, commercial
 decision, evidenced objection handling and final conversion. Insufficient
 content must remain a blocker, never a shorter site.
+
+Every media record has one canonical provenance_type. AI-generated originals
+may support atmosphere, service visualisation, objects, neutral lifestyle,
+abstract brand composition, texture or illustration. They must never be framed
+as real staff, named clinicians, the actual business interior, company work,
+cases, before/after results, reviews, certificates, awards, documents or proof
+of a specific outcome. Respect each asset's planned_section, claim_role and
+truthfulness_constraint. Omit evidence sections whose real materials are
+unavailable. `reference_only` media is analysis input and must never be placed
+in the website.
 """
 
 DESIGN_DIRECTOR_USER = """Business research:

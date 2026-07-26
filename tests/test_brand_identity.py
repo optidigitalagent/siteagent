@@ -50,7 +50,7 @@ class BrandIdentityTests(unittest.TestCase):
             "asset_url": (
                 "https://lookaside.fbsbx.com/elementpath/media/?media_id=1"
                 if platform
-                else "https://cdninstagram.com/t51.82787-19/avatar.jpg"
+                else "https://cdninstagram.com/t51.2885-19/avatar.jpg"
                 if avatar
                 else f"https://cdninstagram.com/t51.82787-15/{asset_id}.jpg"
             ),

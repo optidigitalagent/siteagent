@@ -15,6 +15,7 @@ from site_agent.job_queue import (
 )
 from site_agent.models import DeploymentResult
 from site_agent.preview import PreviewDeploymentResult
+from site_agent.workflow import checksum
 
 
 INSTAGRAM_URL = "https://www.instagram.com/example_business/"
@@ -80,6 +81,26 @@ class RecoveryQueueTests(unittest.TestCase):
             self.assertEqual(reclaimed.status, "running")
             self.assertEqual(reclaimed.telegram_notification_status, "not_started")
             self.assertTrue(any(event.startswith("preview_reclaimed:") for event in reclaimed.recovery_events))
+
+    def test_media_input_checkpoint_blocker_remains_recoverable(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            queue = TelegramJobQueue(Path(temp) / "jobs.json", git_sync=False)
+            job = queue.enqueue(INSTAGRAM_URL, chat_id=42)
+            queue.set_run_dir(job.id, r"runs\same-run")
+
+            failed = queue.fail(
+                job.id,
+                "media-input checkpoint blocked: no provable business media remained after all fallbacks",
+            )
+
+            self.assertEqual(failed.recovery_failure_code, "PREVIEW_RECOVERABLE_FAILURE")
+            self.assertTrue(failed.recovery_eligible)
+            selected = queue.next_recoverable_preview()
+            self.assertIsNotNone(selected)
+            self.assertEqual(selected.id, job.id)
+            reclaimed = queue.reclaim_failed_preview(job.id)
+            self.assertEqual(reclaimed.run_dir, r"runs\same-run")
+            self.assertEqual(reclaimed.status, "running")
 
     def test_acceptance_failure_reclaims_same_preview_after_artifact_revision(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -286,6 +307,7 @@ class RecoveryCliTests(unittest.TestCase):
             preview=True,
             run_id="job-1",
             run_path=Path("runs/job-1"),
+            real_business_media_only=False,
         )
         queue.mark_preview_ready.assert_called_once()
         queue.complete.assert_not_called()
@@ -344,6 +366,7 @@ class RecoveryCliTests(unittest.TestCase):
             preview=True,
             run_id="job-preview",
             run_path=Path(r"runs\job-preview"),
+            real_business_media_only=False,
         )
         queue.mark_preview_ready.assert_called_once()
         self.assertEqual(
@@ -391,6 +414,7 @@ class RecoveryCliTests(unittest.TestCase):
             preview=True,
             run_id="job-preview",
             run_path=Path(r"runs\job-preview"),
+            real_business_media_only=False,
         )
         queue.mark_preview_ready.assert_not_called()
         queue.reclaim_failed_preview.assert_not_called()
@@ -476,6 +500,7 @@ class RecoveryCliTests(unittest.TestCase):
                         "asset_id": asset_id,
                         "url": f"https://res.cloudinary.com/example/image/upload/{asset_id}.jpg",
                         "source_kind": "business_social",
+                        "provenance_type": "verified_official_business_asset",
                         "user_authorized_for_preview": True,
                         "allowed_for_customer_production": False,
                         "user_authorized": False,
@@ -487,6 +512,10 @@ class RecoveryCliTests(unittest.TestCase):
             (reports / "02_authorised_media_manifest.json").write_text(
                 json.dumps(source), encoding="utf-8"
             )
+            (reports / "acceptance_audit.provenance.json").write_text(
+                json.dumps({"media_records_sha256": checksum(source["media"])}),
+                encoding="utf-8",
+            )
             authorization = {
                 "job_id": "job-preview",
                 "run_id": "job-preview",
@@ -496,7 +525,8 @@ class RecoveryCliTests(unittest.TestCase):
             manifest = cli._materialize_production_manifest(run_dir, authorization)
 
             self.assertEqual(manifest["purpose"], "customer_production")
-            self.assertTrue(all(item["source_kind"] == "business" for item in manifest["media"]))
+            self.assertTrue(all(item["source_kind"] == "business_social" for item in manifest["media"]))
+            self.assertTrue(all(item["provenance_type"] == "verified_official_business_asset" for item in manifest["media"]))
             self.assertTrue(all(item["user_authorized"] for item in manifest["media"]))
             self.assertTrue(all(item["allowed_for_public_site"] for item in manifest["media"]))
             self.assertTrue(all(item["allowed_for_customer_production"] for item in manifest["media"]))
@@ -507,6 +537,14 @@ class RecoveryCliTests(unittest.TestCase):
                     run_dir,
                     {**authorization, "authorized_media_asset_ids": ["one"]},
                 )
+            changed = dict(source)
+            changed["media"] = [dict(item) for item in source["media"]]
+            changed["media"][0]["url"] = "https://res.cloudinary.com/example/image/upload/replaced.jpg"
+            (reports / "02_authorised_media_manifest.json").write_text(
+                json.dumps(changed), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(RuntimeError, "accepted preview provenance"):
+                cli._materialize_production_manifest(run_dir, authorization)
 
 
 if __name__ == "__main__":

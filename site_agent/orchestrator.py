@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import copy
+import json
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -28,9 +29,11 @@ from site_agent.design_quality import (
     record_fingerprint,
 )
 from site_agent.external_skills import LocalSkillRuntime
+from site_agent.generated_media import GeneratedMediaManager, merge_user_provided_business_assets
 from site_agent.json_io import write_json
 from site_agent.llm import LLMClient
 from site_agent.media import MediaInputBlocked, MediaPreparer, PreviewMediaIngestor, authorised_media_assets
+from site_agent.media_policy import MediaProvenanceType, canonical_provenance_type, manifest_policy_issues, normalize_manifest_provenance
 from site_agent.models import (
     AcceptanceAuditResult,
     CritiqueIssue,
@@ -55,7 +58,7 @@ class GenerationBlocked(RuntimeError):
     pass
 
 
-RESEARCH_PIPELINE_VERSION = "one-link-preview-v2-brand-provenance"
+RESEARCH_PIPELINE_VERSION = "one-link-preview-v3-generated-media-provenance"
 
 
 @dataclass
@@ -107,6 +110,7 @@ class SiteAgentOrchestrator:
         run_path: Path | None = None,
         calibration_only: bool = False,
         preview: bool = False,
+        real_business_media_only: bool = False,
     ) -> JobResult | CalibrationResult:
         """Run or resume one job without replacing valid prior checkpoints."""
         if production and preview:
@@ -136,6 +140,7 @@ class SiteAgentOrchestrator:
         if builder_mode not in {"codex_studio", "legacy_template"}:
             raise GenerationBlocked("Unsupported SITE_BUILDER. Use codex_studio or legacy_template explicitly.")
         package: dict | None = None
+        media_plan: dict | None = None
         if builder_mode == "codex_studio":
             try:
                 validate_role_providers()
@@ -214,15 +219,46 @@ class SiteAgentOrchestrator:
                     media_manifest = (intake or {}).get("media_manifest") or self._read_json(media_path)
                     if not media_manifest:
                         raise MediaInputBlocked("media-input checkpoint blocked: automatic preview manifest is missing")
-                    if not all(str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in media_manifest.get("media", [])):
-                        raise MediaInputBlocked("media-input checkpoint blocked: preview media was not prepared for Studio delivery")
+                    media_manifest = merge_user_provided_business_assets(run_dir, media_manifest)
+                    media_manifest, media_plan = GeneratedMediaManager().prepare(
+                        run_dir=run_dir,
+                        business_research=business,
+                        existing_manifest=media_manifest,
+                        real_business_media_only=real_business_media_only,
+                        job_id=job_id,
+                    )
+                    write_json(reports_dir / "media_plan.json", media_plan)
+                    issues = manifest_policy_issues(
+                        media_manifest,
+                        target="isolated_preview",
+                        require_media=True,
+                    )
+                    if issues:
+                        raise MediaInputBlocked("media-input checkpoint blocked: " + "; ".join(issues))
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
+                    checkpoints = ["media_plan_completed"]
+                    if media_manifest.get("generated_media_count"):
+                        checkpoints.append("generated_media_completed")
+                    self._checkpoint(reports_dir, *checkpoints)
                 elif media_manifest is None:
                     candidates = self.media_preparer.load_candidates(media_path)
                     media_manifest = self.media_preparer.prepare(candidates, run_dir / "prepared_media")
                     write_json(reports_dir / "02_authorised_media_manifest.json", media_manifest)
                 elif production:
                     write_json(reports_dir / "02_production_authorised_media_manifest.json", media_manifest)
+                    media_plan = self._read_json(reports_dir / "media_plan.json")
+                    generated_media_present = any(
+                        canonical_provenance_type(item) == MediaProvenanceType.AI_GENERATED_ORIGINAL.value
+                        for item in media_manifest.get("media", [])
+                        if isinstance(item, dict)
+                    )
+                    if generated_media_present and (
+                        not media_plan
+                        or checksum(media_plan) != media_manifest.get("media_plan_checksum")
+                    ):
+                        raise MediaInputBlocked(
+                            "media-input checkpoint blocked: production media plan does not match the accepted preview manifest"
+                        )
                 if not preview:
                     self.media_preparer.validate_manifest(media_manifest)
                 # Readiness is based on the actual authorised Cloudinary assets,
@@ -309,6 +345,7 @@ class SiteAgentOrchestrator:
                     references=references,
                     brand_identity=brand_identity,
                     brand_assets_manifest=brand_assets_manifest,
+                    media_plan=media_plan,
                     target="isolated_preview" if preview else "production",
                 )
                 write_json(reports_dir / "04_implementation_package.json", package)
@@ -796,6 +833,7 @@ class SiteAgentOrchestrator:
         screenshots: dict[str, str] = {}
         brand_fidelity_sha256 = ""
         brand_identity_sha256 = ""
+        media_records_sha256 = ""
         if studio_dir is not None:
             for name in ("desktop.png", "tablet.png", "mobile.png"):
                 path = studio_dir / "final_reviews" / name
@@ -803,10 +841,17 @@ class SiteAgentOrchestrator:
                     screenshots[f"studio/final_reviews/{name}"] = cls._file_checksum(path)
             brand_report = studio_dir / "brand_fidelity_report.json"
             brand_identity = studio_dir / "input" / "brand_identity.json"
+            media_manifest = studio_dir / "input" / "media_manifest.json"
             if brand_report.is_file():
                 brand_fidelity_sha256 = cls._file_checksum(brand_report)
             if brand_identity.is_file():
                 brand_identity_sha256 = cls._file_checksum(brand_identity)
+            if media_manifest.is_file():
+                try:
+                    media_payload = json.loads(media_manifest.read_text(encoding="utf-8"))
+                    media_records_sha256 = checksum(media_payload.get("media", []))
+                except (OSError, ValueError, AttributeError):
+                    media_records_sha256 = ""
         return {
             "site_sha256": cls._site_checksum(site_dir),
             "hash_scope": "html_css_js_tree",
@@ -814,6 +859,7 @@ class SiteAgentOrchestrator:
             "screenshots": screenshots,
             "brand_fidelity_sha256": brand_fidelity_sha256,
             "brand_identity_sha256": brand_identity_sha256,
+            "media_records_sha256": media_records_sha256,
             "delivery_target": delivery_target,
         }
 
@@ -857,6 +903,16 @@ class SiteAgentOrchestrator:
                 ):
                     return False
             elif delivery_target:
+                return False
+            media_manifest = studio_dir / "input" / "media_manifest.json"
+            try:
+                media_payload = json.loads(media_manifest.read_text(encoding="utf-8"))
+            except (OSError, ValueError, AttributeError):
+                return False
+            if (
+                not payload.get("media_records_sha256")
+                or payload.get("media_records_sha256") != checksum(media_payload.get("media", []))
+            ):
                 return False
             for name in ("desktop.png", "tablet.png", "mobile.png"):
                 key = f"studio/final_reviews/{name}"

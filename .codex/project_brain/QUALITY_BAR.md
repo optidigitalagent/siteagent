@@ -54,7 +54,20 @@ Semantic repetition counts even when wording changes.
 
 ## Media quality
 
-- Use real media intentionally.
+- Every asset retains exactly one canonical provenance type:
+  `user_provided_business_asset`, `verified_official_business_asset`,
+  `licensed_stock_asset`, `ai_generated_original`, or `reference_only`.
+- A user-provided logo is authorised business media. Missing real business
+  photos alone do not block an isolated preview; create a section-level media
+  plan and enough original generated visuals for the approved scope.
+- Use real media intentionally when available, and never render
+  `reference_only` media.
+- Generated originals may provide atmosphere, service visualization, object or
+  neutral lifestyle scenes, abstract brand composition, texture, decoration,
+  and illustration. They must never claim to be real staff, premises, work,
+  cases, reviews, certificates, awards, documents, clients, or result proof.
+- Omit or neutrally reframe evidence sections whose real evidence is absent;
+  record the limitation as a production warning instead of inventing proof.
 - Match visual claims to media; do not promise `night` with unrelated daylight
   imagery unless the concept explains the relationship.
 - Do not destroy useful imagery with excessive overlays.

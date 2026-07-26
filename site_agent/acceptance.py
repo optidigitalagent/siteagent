@@ -7,6 +7,7 @@ from pathlib import Path
 
 from site_agent.design_quality import QualityReport
 from site_agent.models import AcceptanceAuditResult, CritiqueReport
+from site_agent.media_policy import manifest_policy_issues, rendered_media_policy_issues
 from site_agent.product_director import ProductDirectorAuditor
 
 
@@ -106,19 +107,28 @@ class AcceptanceAuditor:
                         reasons.append("Studio implementation package lacks the checksum-bound official logo asset.")
                     if brand.get("brand_identity_checksum") != package.get("brand_identity", {}).get("brand_identity_checksum"):
                         reasons.append("Brand Fidelity report is stale or bound to a different brand identity package.")
-                    used = [item for item in manifest.get("media", []) if item.get("url")]
-                    if preview:
-                        invalid_media = any(
-                            item.get("source_kind") not in {"business", "business_social", "business_web"}
-                            or item.get("user_authorized_for_preview") is not True
-                            or item.get("allowed_for_customer_production") is not False
-                            or not str(item.get("url", "")).startswith("https://res.cloudinary.com/")
-                            for item in used
-                        )
-                        if invalid_media:
-                            reasons.append("Studio preview media lacks isolated-preview business-social provenance.")
-                    elif any(item.get("source_kind") != "business" or item.get("user_authorized") is not True or item.get("allowed_for_public_site") is not True or not str(item.get("url", "")).startswith("https://res.cloudinary.com/") for item in used):
-                        reasons.append("Studio media manifest contains media without authorised Cloudinary business provenance.")
+                    target = "isolated_preview" if preview else "customer_production"
+                    media_issues = manifest_policy_issues(manifest, target=target, require_media=True)
+                    if media_issues:
+                        reasons.append("Studio media provenance failed: " + "; ".join(media_issues))
+                    generated = [
+                        item for item in manifest.get("media", [])
+                        if item.get("provenance_type") == "ai_generated_original"
+                    ]
+                    if generated and not package.get("media_plan", {}).get("items"):
+                        reasons.append("Generated Studio media is missing its checksum-bound media plan.")
+                    if index_present:
+                        rendered_issues: list[str] = []
+                        for html_path in sorted(site_dir.rglob("*.html")):
+                            rendered_issues.extend(
+                                f"{html_path.relative_to(site_dir)}: {issue}"
+                                for issue in rendered_media_policy_issues(
+                                    manifest,
+                                    html_path.read_text(encoding="utf-8"),
+                                )
+                            )
+                        if rendered_issues:
+                            reasons.append("Rendered media truthfulness failed: " + "; ".join(rendered_issues))
                 except (OSError, ValueError, AttributeError):
                     reasons.append("Studio approval or commercial report is unreadable.")
                 artifacts.extend(["studio/provenance", "studio/concept-comparison", "studio/selection", "studio/full-screenshots", "studio/implementation-package", "studio/authorised-media", "studio/commercial-usefulness", "studio/product-director", "studio/brand-fidelity", "studio/language-fit", "studio/semantic-repetition", "studio/scope-decision", "studio/scope-compliance"])

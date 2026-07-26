@@ -106,7 +106,7 @@ class CreativeStudioTests(unittest.TestCase):
                 studio, site = self._write_provenance_workspace(
                     Path(temp), source_kind=source_kind, body='<img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg">'
                 )
-                with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
+                with self.assertRaisesRegex(StudioError, "violates provenance"):
                     assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
 
     def test_verified_business_media_permits_production_promotion(self) -> None:
@@ -116,6 +116,190 @@ class CreativeStudioTests(unittest.TestCase):
             )
             assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
 
+    def test_generated_media_on_secondary_page_requires_traceable_claim_role(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            url = "https://res.cloudinary.com/siteagent/image/upload/v1/generated.jpg"
+            manifest = {
+                "media": [{
+                    "asset_id": "generated",
+                    "url": url,
+                    "source_kind": "ai_generated",
+                    "provenance_type": "ai_generated_original",
+                    "generation_model": "test-image-model",
+                    "prompt_checksum": "prompt-sha",
+                    "original_checksum": "image-sha",
+                    "claim_role": "atmosphere",
+                    "portfolio_claim": False,
+                    "user_authorized_for_preview": True,
+                    "allowed_for_customer_production": True,
+                }]
+            }
+            (studio / "input" / "media_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            (site / "index.html").write_text("<main>Home</main>", encoding="utf-8")
+            (site / "services.html").write_text(f'<img src="{url}">', encoding="utf-8")
+            with self.assertRaisesRegex(StudioError, "services.html.*data-media-provenance"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
+    def test_inline_data_image_cannot_bypass_secondary_page_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text("<main>Home</main>", encoding="utf-8")
+            (site / "services.html").write_text(
+                '<img src="data:image/png;base64,AAAA">', encoding="utf-8"
+            )
+            with self.assertRaisesRegex(StudioError, "services.html:data:image/png"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+            report = _media_provenance_report(studio_dir=studio, site_dir=site)
+            self.assertTrue(report["production_media_blocked"])
+
+    def test_css_data_image_cannot_bypass_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<link rel="stylesheet" href="site.css"><main>Home</main>', encoding="utf-8"
+            )
+            (site / "site.css").write_text(
+                '.hero{background-image:url("data:image/png;base64,AAAA")}', encoding="utf-8"
+            )
+            with self.assertRaisesRegex(StudioError, "site.css:data:image/png"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+            report = _media_provenance_report(studio_dir=studio, site_dir=site)
+            self.assertTrue(report["production_media_blocked"])
+
+    def test_local_css_image_cannot_bypass_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            (site / "assets").mkdir(parents=True)
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<link rel="stylesheet" href="site.css"><main>Home</main>', encoding="utf-8"
+            )
+            (site / "site.css").write_text(
+                '.hero{background-image:url("assets/unlisted.jpg")}', encoding="utf-8"
+            )
+            (site / "assets" / "unlisted.jpg").write_bytes(b"unlisted")
+            with self.assertRaisesRegex(StudioError, "site.css:assets/unlisted.jpg"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+            report = _media_provenance_report(studio_dir=studio, site_dir=site)
+            self.assertTrue(report["production_media_blocked"])
+
+    def test_object_and_external_stylesheet_media_sinks_are_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<link rel="stylesheet" href="https://assets.example/theme.css">'
+                '<object data="assets/unlisted.svg"></object>',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(StudioError, "assets.example/theme.css|assets/unlisted.svg"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+            report = _media_provenance_report(studio_dir=studio, site_dir=site)
+            self.assertTrue(report["production_media_blocked"])
+
+    def test_google_fonts_stylesheet_is_not_treated_as_uninspectable_business_media(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest">'
+                '<main>Home</main>',
+                encoding="utf-8",
+            )
+            CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
+    def test_protocol_relative_stylesheet_and_image_set_are_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<link rel="stylesheet" href="//assets.example/theme.css"><main>Home</main>',
+                encoding="utf-8",
+            )
+            (site / "site.css").write_text(
+                '.hero{background-image:image-set("assets/one.webp" 1x,"https://images.example/two.webp" 2x)}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(StudioError, "assets.example/theme.css|assets/one.webp|images.example/two.webp"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
+    def test_input_image_sink_is_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<form><input type="image" src="https://unlisted.example/button.png"></form>',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(StudioError, "unlisted.example/button.png"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
+    def test_iframe_and_legacy_background_sinks_are_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            studio = root / "studio"
+            site = root / "site"
+            (studio / "input").mkdir(parents=True)
+            site.mkdir()
+            (studio / "input" / "media_manifest.json").write_text(
+                json.dumps({"media": []}), encoding="utf-8"
+            )
+            (site / "index.html").write_text(
+                '<iframe srcdoc="<img src=https://unlisted.example/inside.png>"></iframe>'
+                '<table background="assets/pattern.png"></table>',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(StudioError, "iframe:srcdoc|assets/pattern.png"):
+                CodexStudioRunner._validate_authorised_media_rendering(studio, site)
+
     def test_fixture_media_cannot_be_promoted_by_removing_its_provenance_warning(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             studio, site = self._write_provenance_workspace(
@@ -123,7 +307,7 @@ class CreativeStudioTests(unittest.TestCase):
                 source_kind="fixture_stock",
                 body='<main><img src="https://res.cloudinary.com/siteagent/image/upload/v1/image.jpg"><p>Customer-facing copy only.</p></main>',
             )
-            with self.assertRaisesRegex(StudioError, "selected fixture/stock/unverified media"):
+            with self.assertRaisesRegex(StudioError, "violates provenance"):
                 assert_production_promotion_allowed(studio_dir=studio, site_dir=site)
 
     def test_production_promotion_rejects_calibration_only_footer_text(self) -> None:

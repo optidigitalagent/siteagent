@@ -1,6 +1,41 @@
 # Next Action
 
-Active checkpoint: `SITE_REFINEMENT_FINAL_VALIDATION_COMPLETE`.
+Operational checkpoint: `GENERATED_MEDIA_POLICY_VERIFIED_READY_TO_COMMIT`.
+
+The exact job/run `fdbc8d77bc244eccb8590347640bb51d` remains recoverable at
+its saved media-input checkpoint. Do not enqueue a duplicate and do not repeat
+bounded public research unless a checksum or source-contract change makes that
+necessary.
+
+The canonical provenance, media plan, generated-media truthfulness, crash
+recovery and revised preview/candidate gates are implemented. Focused and full
+tests (395 passed, three skipped), compileall, dependency, diff and plugin
+integrity checks are green. All findings returned by independent reviews were
+fixed and regression-covered; the final clean repeat remains unavailable only
+because the external Codex reviewer reached its usage limit. Create the
+requested separate local commit without push. Then resume the exact same run
+from its recoverable checkpoint, create only an isolated noindex preview,
+complete browser and independent acceptance evidence, and report the preview
+URL plus generated-asset provenance. Customer production, custom-domain changes
+and the production Telegram notifier remain forbidden.
+
+Previous operational checkpoint:
+`TELEGRAM_PREVIEW_MEDIA_INPUT_BLOCKED_RECOVERABLE`.
+
+The latest normal `go` claimed the exact newly synced Telegram job and stopped
+before Studio generation because all bounded intake fallbacks produced zero
+provable renderable business media. The durable job remains `failed`, is now
+correctly marked `PREVIEW_RECOVERABLE_FAILURE`, and retains its exact run for
+later recovery. No preview or production deployment, URL field, custom-domain
+action or Telegram notification occurred.
+
+Do not enqueue a duplicate or ask for the submitted URL again. The next valid
+action is to rerun normal `go` only after the submitted business source or an
+authorised evidence provider exposes provable business media; recovery must
+reuse the same job/run and re-enter at the media-input checkpoint. Never bypass
+the blocker with stock, fixture, platform-owned or unbound media.
+
+Development checkpoint: `SITE_REFINEMENT_FINAL_VALIDATION_COMPLETE`.
 
 Final Validation Checkpoint C is complete locally. User and maintainer
 documentation, the checksum-aware validation handoff, independent review, and

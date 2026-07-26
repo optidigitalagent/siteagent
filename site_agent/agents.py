@@ -69,7 +69,11 @@ class DesignDirector:
         # an art-direction index, not raw checksums/crop diagnostics/repeated
         # catalog payload that can exceed model TPM before it can design.
         compact_media = [
-            {key: item.get(key) for key in ("asset_id", "url", "kind", "alt", "recommended_use", "orientation", "width", "height", "source_kind", "quality", "crop")}
+            {key: item.get(key) for key in (
+                "asset_id", "url", "kind", "alt", "recommended_use", "orientation",
+                "width", "height", "source_kind", "provenance_type", "quality", "crop",
+                "planned_section", "claim_role", "truthfulness_constraint", "portfolio_claim",
+            )}
             for item in media_manifest.get("media", [])
         ]
         compact_references = [

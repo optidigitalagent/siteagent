@@ -16,6 +16,7 @@ from site_agent.job_queue import (
 from site_agent.identifiers import stable_business_id
 from site_agent.json_io import write_json
 from site_agent.models import PublishResult
+from site_agent.media_policy import normalize_manifest_provenance
 from site_agent.orchestrator import SiteAgentOrchestrator
 from site_agent.publisher import LiveSiteVerifier
 from site_agent.preview import PreviewDeploymentResult, PreviewLiveVerifier
@@ -26,6 +27,7 @@ from site_agent.refinement import (
     load_refinement_request,
 )
 from site_agent.telegram_notify import TelegramNotifier
+from site_agent.workflow import checksum
 
 
 GO_ALIASES = {"go", "го"}
@@ -221,6 +223,7 @@ def _execute_preview_job(
             preview=True,
             run_id=getattr(job, "run_id", "") or job.id,
             run_path=run_dir,
+            real_business_media_only=bool(getattr(job, "real_business_media_only", False)),
         )
         publish = _preview_result_from_result(result)
         preview_url = publish.preview_url
@@ -586,6 +589,7 @@ def run_production_promotion(job_id: str, *, authorized: bool) -> None:
         preview=False,
         run_id=job.run_id or job.id,
         run_path=run_dir,
+        real_business_media_only=bool(job.real_business_media_only),
     )
     if not result.publish.is_verified_production:
         raise RuntimeError("Production publishing did not return a live-verified HTTPS deployment.")
@@ -621,10 +625,20 @@ def _materialize_production_manifest(run_dir: Path, authorization: dict) -> dict
         raise RuntimeError("Production authorization requires authorized_media_asset_ids.")
     preview_path = run_dir / "generation_reports" / "02_authorised_media_manifest.json"
     try:
-        preview_manifest = json.loads(preview_path.read_text(encoding="utf-8"))
+        preview_manifest = normalize_manifest_provenance(
+            json.loads(preview_path.read_text(encoding="utf-8"))
+        )
     except (OSError, ValueError) as exc:
         raise RuntimeError("Production promotion requires the accepted preview media manifest.") from exc
     source_media = [item for item in preview_manifest.get("media", []) if isinstance(item, dict)]
+    try:
+        acceptance_provenance = json.loads(
+            (run_dir / "generation_reports" / "acceptance_audit.provenance.json").read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("Production promotion requires checksum-bound accepted preview media.") from exc
+    if acceptance_provenance.get("media_records_sha256") != checksum(source_media):
+        raise RuntimeError("Production promotion media does not match the accepted preview provenance.")
     available_ids = {str(item.get("asset_id", "")) for item in source_media}
     if authorised_ids != available_ids:
         missing = sorted(available_ids - authorised_ids)
@@ -636,8 +650,10 @@ def _materialize_production_manifest(run_dir: Path, authorization: dict) -> dict
     production_media = []
     for source in source_media:
         item = dict(source)
+        # Production authorisation changes usage rights, never historical
+        # provenance. In particular, an AI original must not be laundered into
+        # verified business photography.
         item.update({
-            "source_kind": "business",
             "user_authorized": True,
             "allowed_for_public_site": True,
             "allowed_for_customer_production": True,

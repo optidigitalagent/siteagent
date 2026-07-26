@@ -69,7 +69,20 @@ rounded-card grids, decorative gradients, repeated dark CTA footers, generic
 luxury/editorial styling without brand evidence, and category-selected layouts.
 
 Use media deliberately. Do not destroy the only useful image with excessive
-overlays or make visual claims the media contradicts.
+overlays or make visual claims the media contradicts. Every asset must retain
+one canonical provenance type: `user_provided_business_asset`,
+`verified_official_business_asset`, `licensed_stock_asset`,
+`ai_generated_original`, or `reference_only`. Never render `reference_only`.
+
+Missing real business photos do not block an isolated preview. Follow the
+checksum-bound media plan and use original generated visuals for atmosphere,
+service visualization, object/lifestyle scenes, abstract compositions,
+textures, decoration, or illustration. Mark every rendered generated media
+element with `data-media-provenance="ai_generated_original"` and its approved
+`data-media-claim-role`. Never portray generated media as real staff, a named
+professional or owner, the actual premises or company work, a before/after
+case, review, certificate, award, document, client record, or result evidence.
+Omit or neutrally reframe an evidence section when real evidence is absent.
 
 References are principles to transform, not layouts to copy.
 
@@ -97,8 +110,9 @@ scroll-test the header, inspect the complete footer, and check primary CTA text
 geometry on desktop, tablet and mobile for every declared page.
 
 For isolated one-link previews, source public business facts from the bounded
-research ledger and keep exact numeric language exact. Preview-authorised
-business-social media is usable only when the manifest explicitly allows the
-preview and forbids customer production. Do not turn source/provenance notes
-into customer-facing copy; communicate the verified fact naturally and leave
-missing confirmations in the production-blocker artifact.
+research ledger and keep exact numeric language exact. Media is usable only
+when its canonical provenance and target rights allow it; a supplied logo is
+an authorised business asset, while unlicensed research imagery remains
+`reference_only`. Do not turn source/provenance notes into customer-facing
+copy; communicate the verified fact naturally and leave missing confirmations
+in the production-blocker artifact.
