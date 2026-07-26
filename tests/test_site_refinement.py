@@ -190,7 +190,7 @@ class FiveWidthInspector:
         for name, size in captures.items():
             Image.new("RGB", size, "white").save(artifacts_dir / name)
         (artifacts_dir / "observations.json").write_text(
-            json.dumps(observations), encoding="utf-8"
+            json.dumps({"url": url, **observations}), encoding="utf-8"
         )
         return gate, observations
 
@@ -847,6 +847,19 @@ class RefinementCandidateTests(unittest.TestCase):
             project.joinpath("index.html").write_text("changed after QA", encoding="utf-8")
             with self.assertRaises(RefinementError):
                 workflow.accept("stale")
+            invalidated = workflow.load("stale")
+            self.assertEqual(invalidated.status, RefinementStatus.IMPLEMENTING)
+            self.assertEqual(invalidated.candidate_iteration, -1)
+            report = json.loads((
+                workflow.session_dir("stale") / "iterations" / "000" /
+                "candidate_report.json"
+            ).read_text(encoding="utf-8"))
+            self.assertFalse(report["candidate_readiness"]["allowed"])
+            self.assertIn(
+                "stale browser evidence after source change.",
+                report["candidate_readiness"]["rejection_reasons"],
+            )
+            self.assertTrue(report["candidate_invalidation"]["new_browser_qa_required"])
 
     def test_acceptance_rejects_changed_browser_observations_or_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

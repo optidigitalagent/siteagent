@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error, sync_playwright
 
 from site_agent.models import CritiqueReport, ResearchBrief, SiteSpec, StrategyBrief, TechnicalGate
 from site_agent.design_quality import EvidenceAssessment, assess_studio_readiness
@@ -42,6 +42,7 @@ class TechnicalInspector:
         console_errors: list[str] = []
         failed_network_requests: list[str] = []
         observations: dict[str, str] = {}
+        actual_url = url
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -78,6 +79,7 @@ class TechnicalInspector:
                         page.wait_for_timeout(250)
                     else:
                         page.goto(url, wait_until="networkidle")
+                    actual_url = page.url
                     if self.viewport_profile == "refinement":
                         expected, final = urlparse(url), urlparse(page.url)
                         if (expected.scheme in {"http", "https"}
@@ -87,6 +89,7 @@ class TechnicalInspector:
                             raise ValueError("Refinement browser target redirected outside localhost.")
                     self._take_screenshot(page, artifacts_dir / filename)
                     metrics = self._collect_metrics(page)
+                    metrics["actualUrl"] = page.url
                     if self.viewport_profile == "refinement":
                         metrics["brokenLinks"] = list(dict.fromkeys(
                             metrics["brokenLinks"] + self._verify_link_destinations(
@@ -94,6 +97,7 @@ class TechnicalInspector:
                             )
                         ))
                         metrics["interactionChecks"] = self._exercise_interactions(page, guard)
+                        metrics["interactionActualUrl"] = page.url
                         self._take_screenshot(
                             page, artifacts_dir / f"interaction_{profile}.png"
                         )
@@ -131,6 +135,7 @@ class TechnicalInspector:
                     self._watch_network(reduced, failed_network_requests)
                     reduced.goto(url, wait_until="domcontentloaded", timeout=15000)
                     reduced.wait_for_timeout(250)
+                    actual_url = reduced.url
                     expected, final = urlparse(url), urlparse(reduced.url)
                     if (expected.scheme in {"http", "https"}
                             and expected.hostname in {"localhost", "127.0.0.1"}
@@ -148,6 +153,7 @@ class TechnicalInspector:
                           ).length
                         })"""
                     )
+                    reduced_metrics["actualUrl"] = reduced.url
                     reduced_guard["block_all"] = True
                     self._close_refinement_page(reduced, reduced_guard)
                     if reduced_guard["initial_issues"]:
@@ -222,7 +228,8 @@ class TechnicalInspector:
             gate.model_dump_json(indent=2), encoding="utf-8"
         )
         (artifacts_dir / "observations.json").write_text(
-            json.dumps({"url": url, **observations}, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps({"url": actual_url, **observations}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
         return gate, observations
 

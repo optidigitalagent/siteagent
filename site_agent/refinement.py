@@ -877,19 +877,369 @@ def _snapshot_valid(destination: Path) -> bool:
     return actual == {item["path"]: item["sha256"] for item in expected_files}
 
 
-_REQUIRED_BROWSER_SCREENSHOTS = {
-    "desktop.png": 1440,
-    "desktop_1024.png": 1024,
-    "tablet.png": 768,
-    "mobile.png": 390,
-    "mobile_360.png": 360,
-    "reduced_motion.png": 390,
-    "interaction_desktop_1440.png": 1440,
-    "interaction_desktop_1024.png": 1024,
-    "interaction_tablet_768.png": 768,
-    "interaction_mobile_390.png": 390,
-    "interaction_mobile_360.png": 360,
+_BROWSER_EVIDENCE_FILES = {
+    "desktop.png": ("normal", "desktop_1440", 1440, 1100),
+    "desktop_1024.png": ("normal", "desktop_1024", 1024, 900),
+    "tablet.png": ("normal", "tablet_768", 768, 1024),
+    "mobile.png": ("normal", "mobile_390", 390, 844),
+    "mobile_360.png": ("normal", "mobile_360", 360, 800),
+    "reduced_motion.png": ("reduced-motion", "reduced_motion", 390, 844),
+    "interaction_desktop_1440.png": ("interaction", "desktop_1440", 1440, 1100),
+    "interaction_desktop_1024.png": ("interaction", "desktop_1024", 1024, 900),
+    "interaction_tablet_768.png": ("interaction", "tablet_768", 768, 1024),
+    "interaction_mobile_390.png": ("interaction", "mobile_390", 390, 844),
+    "interaction_mobile_360.png": ("interaction", "mobile_360", 360, 800),
 }
+_REQUIRED_BROWSER_SCREENSHOTS = {
+    name: definition[2] for name, definition in _BROWSER_EVIDENCE_FILES.items()
+}
+_BROWSER_EVIDENCE_MANIFEST = "browser_evidence_manifest.json"
+
+
+def _route_label(index: int, target: str) -> str:
+    label_source = Path(urlparse(target).path).stem or "home"
+    return f"{index:02d}-{re.sub(r'[^A-Za-z0-9_-]+', '-', label_source)}"
+
+
+def _route_url_identity(value: str) -> tuple[str, str, str, str, str]:
+    parsed = urlparse(value)
+    scheme = parsed.scheme.casefold()
+    authority = parsed.netloc.casefold()
+    path = parsed.path.replace("\\", "/") or "/"
+    path = path.rstrip("/") or "/"
+    if scheme == "file" and os.name == "nt":
+        path = path.casefold()
+    return scheme, authority, path, parsed.query, parsed.fragment
+
+
+def _manifest_artifact_path(root: Path, relative: str) -> Path | None:
+    if root.exists() and _unsafe_project_link(root):
+        return None
+    candidate_relative = Path(str(relative))
+    if candidate_relative.is_absolute() or not candidate_relative.parts:
+        return None
+    if any(part in {"", ".", ".."} for part in candidate_relative.parts):
+        return None
+    root_resolved = root.resolve()
+    candidate = root / candidate_relative
+    current = root
+    for part in candidate_relative.parts:
+        current = current / part
+        if current.exists() and _unsafe_project_link(current):
+            return None
+    try:
+        resolved = candidate.resolve()
+    except OSError:
+        return None
+    if resolved != root_resolved and root_resolved not in resolved.parents:
+        return None
+    return resolved
+
+
+def _artifact_chain_has_link(path: Path, boundary: Path) -> bool:
+    try:
+        relative = path.relative_to(boundary)
+    except ValueError:
+        return True
+    current = boundary
+    if current.exists() and _unsafe_project_link(current):
+        return True
+    for part in relative.parts:
+        current = current / part
+        if current.exists() and _unsafe_project_link(current):
+            return True
+    return False
+
+
+def _png_dimensions(path: Path) -> tuple[int, int]:
+    with Image.open(path) as capture:
+        if capture.format != "PNG":
+            raise UnidentifiedImageError("Browser evidence is not a PNG.")
+        capture.verify()
+    with Image.open(path) as capture:
+        return capture.size
+
+
+def _write_browser_evidence_manifest(
+        browser_dir: Path, *, session_id: str, iteration: int,
+        source_tree_sha256: str, targets: list[str]) -> Path:
+    captured_at = _now()
+    entries: list[dict[str, Any]] = []
+    for index, target in enumerate(targets):
+        route_id = _route_label(index, target)
+        route_dir = browser_dir / route_id
+        observations_path = route_dir / "observations.json"
+        observations_sha256 = (
+            _file_sha(observations_path) if observations_path.is_file() else ""
+        )
+        try:
+            observations_document = json.loads(
+                observations_path.read_text(encoding="utf-8")
+            )
+        except (OSError, ValueError):
+            observations_document = {}
+        if not isinstance(observations_document, dict):
+            observations_document = {}
+        for filename, definition in _BROWSER_EVIDENCE_FILES.items():
+            evidence_type, profile, viewport_width, viewport_height = definition
+            profile_observation: dict[str, Any] = {}
+            try:
+                raw_profile = observations_document.get(profile, "")
+                parsed_profile = (
+                    json.loads(raw_profile) if isinstance(raw_profile, str)
+                    else raw_profile
+                )
+                if isinstance(parsed_profile, dict):
+                    profile_observation = parsed_profile
+            except (TypeError, ValueError, json.JSONDecodeError):
+                profile_observation = {}
+            actual_url_field = (
+                "interactionActualUrl" if evidence_type == "interaction"
+                else "actualUrl"
+            )
+            if str(profile_observation.get(actual_url_field, "")).strip():
+                actual_url = str(profile_observation[actual_url_field])
+                actual_url_source = "profile_observation"
+            elif str(observations_document.get("url", "")).strip():
+                actual_url = str(observations_document["url"])
+                actual_url_source = "route_observation"
+            else:
+                actual_url = target
+                actual_url_source = "requested_url_fallback"
+            screenshot = route_dir / filename
+            try:
+                png_width, png_height = _png_dimensions(screenshot)
+            except (OSError, UnidentifiedImageError):
+                png_width, png_height = 0, 0
+            entries.append({
+                "route_id": route_id,
+                "requested_url": target,
+                "actual_url": actual_url,
+                "actual_url_source": actual_url_source,
+                "viewport_width": viewport_width,
+                "viewport_height": viewport_height,
+                "evidence_type": evidence_type,
+                "screenshot_path": screenshot.relative_to(browser_dir).as_posix(),
+                "screenshot_sha256": _file_sha(screenshot) if screenshot.is_file() else "",
+                "png_width": png_width,
+                "png_height": png_height,
+                "observations_path": observations_path.relative_to(browser_dir).as_posix(),
+                "observations_sha256": observations_sha256,
+                "capture_timestamp": captured_at,
+            })
+    manifest = {
+        "schema_version": 1,
+        "session_id": session_id,
+        "iteration": iteration,
+        "source_tree_sha256": source_tree_sha256,
+        "captured_at": captured_at,
+        "entries": entries,
+    }
+    path = browser_dir / _BROWSER_EVIDENCE_MANIFEST
+    _atomic_json(path, manifest)
+    return path
+
+
+def _browser_evidence_rejection_reasons(
+        browser_dir: Path, *, artifact_root: Path, session_id: str,
+        iteration: int, source_tree_sha256: str) -> list[str]:
+    reasons: list[str] = []
+
+    expected_browser_dir = artifact_root / "browser_qa"
+    session_root = artifact_root.parents[1]
+    if (_artifact_chain_has_link(artifact_root, session_root)
+            or _artifact_chain_has_link(browser_dir, session_root)):
+        return [
+            "browser evidence symlink/junction escapes the current iteration artifact root."
+        ]
+    try:
+        if browser_dir.resolve() != expected_browser_dir.resolve():
+            return [
+                "browser evidence belongs outside the current session/iteration artifact root."
+            ]
+    except OSError:
+        return ["browser evidence belongs outside the current session/iteration artifact root."]
+
+    manifest_path = browser_dir / _BROWSER_EVIDENCE_MANIFEST
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ["browser evidence manifest is missing or invalid."]
+    if not isinstance(manifest, dict):
+        return ["browser evidence manifest is missing or invalid."]
+    if manifest.get("schema_version") != 1:
+        reasons.append("browser evidence manifest schema version is invalid.")
+    if manifest.get("session_id") != session_id:
+        reasons.append("browser evidence belongs to a different refinement session.")
+    if manifest.get("iteration") != iteration:
+        reasons.append("browser evidence belongs to a different iteration.")
+    if manifest.get("source_tree_sha256") != source_tree_sha256:
+        reasons.extend([
+            "browser evidence source tree mismatch.",
+            "stale browser evidence after source change.",
+        ])
+
+    try:
+        routes_document = json.loads(
+            (browser_dir / "routes.json").read_text(encoding="utf-8")
+        )
+        targets = (
+            routes_document.get("targets") or []
+            if isinstance(routes_document, dict) else []
+        )
+    except (OSError, ValueError):
+        targets = []
+    if not isinstance(targets, list):
+        targets = []
+    expected_routes = {
+        _route_label(index, target): target for index, target in enumerate(targets)
+        if isinstance(target, str) and target
+    }
+    if not expected_routes:
+        reasons.append("missing route/viewport browser evidence.")
+
+    entries = manifest.get("entries")
+    if not isinstance(entries, list):
+        return _unique(reasons + ["browser evidence manifest entries are invalid."])
+
+    seen_screenshots: set[str] = set()
+    seen_slots: set[tuple[str, str, int]] = set()
+    normal_widths: dict[str, set[int]] = {route: set() for route in expected_routes}
+    expected_files = {
+        (route_id, filename)
+        for route_id in expected_routes for filename in _BROWSER_EVIDENCE_FILES
+    }
+    recorded_files: set[tuple[str, str]] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            reasons.append("browser evidence manifest entries are invalid.")
+            continue
+        route_id = str(entry.get("route_id", ""))
+        requested_url = str(entry.get("requested_url", ""))
+        actual_url = str(entry.get("actual_url", ""))
+        actual_url_source = str(entry.get("actual_url_source", ""))
+        evidence_type = str(entry.get("evidence_type", ""))
+        try:
+            viewport_width = int(entry.get("viewport_width", 0))
+            viewport_height = int(entry.get("viewport_height", 0))
+            recorded_png_width = int(entry.get("png_width", 0))
+            recorded_png_height = int(entry.get("png_height", 0))
+        except (TypeError, ValueError):
+            viewport_width = viewport_height = recorded_png_width = recorded_png_height = 0
+        screenshot_relative = str(entry.get("screenshot_path", ""))
+        observations_relative = str(entry.get("observations_path", ""))
+        if ("baseline" in Path(screenshot_relative).parts
+                or ".." in Path(screenshot_relative).parts):
+            reasons.append(
+                "baseline or previous-iteration screenshot cannot satisfy candidate browser evidence."
+            )
+        screenshot = _manifest_artifact_path(browser_dir, screenshot_relative)
+        observations = _manifest_artifact_path(browser_dir, observations_relative)
+
+        if route_id not in expected_routes or expected_routes.get(route_id) != requested_url:
+            reasons.append("missing route/viewport browser evidence.")
+        if not actual_url:
+            reasons.append("browser evidence actual URL is missing.")
+        elif actual_url_source not in {"profile_observation", "route_observation"}:
+            reasons.append("browser evidence actual URL is missing.")
+        elif _route_url_identity(actual_url) != _route_url_identity(requested_url):
+            reasons.append("browser evidence belongs to a different route.")
+        screenshot_name = Path(screenshot_relative).name
+        definition = _BROWSER_EVIDENCE_FILES.get(screenshot_name)
+        observation_profile = ""
+        if definition is None:
+            reasons.append("browser evidence manifest references an unexpected screenshot.")
+        else:
+            expected_type, observation_profile, expected_width, expected_height = definition
+            if (evidence_type != expected_type or viewport_width != expected_width
+                    or viewport_height != expected_height):
+                reasons.append("viewport width mismatch in browser evidence.")
+            expected_relative = f"{route_id}/{screenshot_name}"
+            if screenshot_relative != expected_relative:
+                reasons.append("browser screenshot belongs to a different route or artifact root.")
+            recorded_files.add((route_id, screenshot_name))
+        if screenshot_relative in seen_screenshots:
+            reasons.append("duplicate screenshot reuse in browser evidence.")
+        seen_screenshots.add(screenshot_relative)
+        slot = (route_id, evidence_type, viewport_width)
+        if slot in seen_slots:
+            reasons.append("duplicate screenshot reuse in browser evidence.")
+        seen_slots.add(slot)
+        if evidence_type == "normal" and route_id in normal_widths:
+            normal_widths[route_id].add(viewport_width)
+
+        if screenshot is None or not screenshot.is_file():
+            reasons.append("browser screenshot is missing or outside the current iteration.")
+        else:
+            try:
+                actual_width, actual_height = _png_dimensions(screenshot)
+            except (OSError, UnidentifiedImageError):
+                reasons.append("invalid PNG in browser evidence.")
+            else:
+                if (actual_width != viewport_width or actual_width != recorded_png_width
+                        or actual_height != recorded_png_height or actual_height <= 0):
+                    reasons.append("viewport width mismatch in browser evidence.")
+            try:
+                screenshot_sha256 = _file_sha(screenshot)
+            except OSError:
+                reasons.append("browser screenshot is missing or outside the current iteration.")
+            else:
+                if screenshot_sha256 != entry.get("screenshot_sha256"):
+                    reasons.append("screenshot checksum mismatch in browser evidence.")
+
+        expected_observations = f"{route_id}/observations.json"
+        if observations_relative != expected_observations:
+            reasons.append("observations belong to a different route or iteration.")
+        if observations is None or not observations.is_file():
+            reasons.append("observations JSON is missing from current iteration.")
+        else:
+            try:
+                observations_sha256 = _file_sha(observations)
+            except OSError:
+                reasons.append("observations JSON is missing from current iteration.")
+            else:
+                if observations_sha256 != entry.get("observations_sha256"):
+                    reasons.append("observations checksum mismatch in browser evidence.")
+            try:
+                observations_document = json.loads(
+                    observations.read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError):
+                reasons.append("observations JSON is invalid.")
+            else:
+                if not isinstance(observations_document, dict):
+                    reasons.append("observations JSON is invalid.")
+                else:
+                    raw_profile = observations_document.get(observation_profile, "")
+                    try:
+                        profile_observation = (
+                            json.loads(raw_profile) if isinstance(raw_profile, str)
+                            else raw_profile
+                        )
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        profile_observation = {}
+                    actual_url_field = (
+                        "interactionActualUrl" if evidence_type == "interaction"
+                        else "actualUrl"
+                    )
+                    observed_url = str(
+                        (profile_observation.get(actual_url_field)
+                         if isinstance(profile_observation, dict) else "")
+                        or observations_document.get("url") or requested_url
+                    )
+                    if observed_url != actual_url:
+                        reasons.append(
+                            "browser evidence actual URL does not match observations."
+                        )
+        if not str(entry.get("capture_timestamp", "")).strip():
+            reasons.append("browser evidence capture timestamp is missing.")
+
+    if recorded_files != expected_files:
+        reasons.append("missing route/viewport browser evidence.")
+    if any(not set(TARGET_WIDTHS).issubset(widths)
+           for widths in normal_widths.values()):
+        reasons.append("missing route/viewport browser evidence.")
+    return _unique(reasons)
 
 
 def _browser_screenshot_matrix_valid(browser_dir: Path, route_count: int) -> bool:
@@ -998,7 +1348,14 @@ class SiteRefinementOrchestrator:
         if session.status is not RefinementStatus.CANDIDATE_READY:
             raise RefinementError("USER_ACCEPTED requires CANDIDATE_READY.")
         if _project_manifest(Path(session.project_path))["tree_sha256"] != session.candidate_tree_sha256:
-            raise RefinementError("Candidate project changed after QA; start another refinement iteration.")
+            reasons = [
+                "browser evidence source tree mismatch.",
+                "stale browser evidence after source change.",
+            ]
+            self._invalidate_candidate(session, reasons)
+            raise RefinementError(
+                "Candidate project changed after QA; new browser QA is required."
+            )
         requirement_sha = _brief_checksum(session)
         if requirement_sha != session.candidate_requirement_sha256:
             raise RefinementError("Candidate brief changed after QA; start another iteration.")
@@ -1018,6 +1375,17 @@ class SiteRefinementOrchestrator:
             raise RefinementError("Candidate recovery snapshot changed after QA.")
         self._validated_attachment_paths(session)
         iteration_dir = self.session_dir(session_id) / "iterations" / f"{session.candidate_iteration:03d}"
+        browser_evidence_reasons = _browser_evidence_rejection_reasons(
+            iteration_dir / "browser_qa", artifact_root=iteration_dir,
+            session_id=session.session_id, iteration=session.candidate_iteration,
+            source_tree_sha256=session.candidate_tree_sha256,
+        )
+        if browser_evidence_reasons:
+            self._invalidate_candidate(session, browser_evidence_reasons)
+            raise RefinementError(
+                "Candidate browser evidence is invalid: " +
+                "; ".join(browser_evidence_reasons)
+            )
         for relative, expected in {
             **{f"browser_qa/{name}": value for name, value in session.candidate_screenshot_sha256.items()},
             **session.candidate_artifact_sha256,
@@ -1029,6 +1397,55 @@ class SiteRefinementOrchestrator:
                          "explicit user acceptance")
         self._save(session)
         return session
+
+    def _invalidate_candidate(self, session: RefinementSession,
+                              reasons: list[str]) -> None:
+        reasons = _unique(reasons)
+        candidate_iteration = session.candidate_iteration
+        self._transition(
+            session, RefinementStatus.IMPLEMENTING,
+            "candidate browser evidence is stale; new browser QA is required",
+        )
+        invalidation = {
+            "at": _now(),
+            "reasons": reasons,
+            "new_browser_qa_required": True,
+        }
+        session.last_qa_result["candidate_invalidation"] = invalidation
+        iteration_dir = (
+            self.session_dir(session.session_id) / "iterations" /
+            f"{candidate_iteration:03d}"
+        )
+        report_path = iteration_dir / "candidate_report.json"
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            report = {}
+        report["candidate_readiness"] = {
+            "evaluated": True,
+            "allowed": False,
+            "rejection_reasons": reasons,
+        }
+        report["candidate_invalidation"] = invalidation
+        report["current_status"] = session.status.value
+        _atomic_json(report_path, report)
+        markdown_path = iteration_dir / "candidate_report.md"
+        if markdown_path.is_file():
+            markdown = markdown_path.read_text(encoding="utf-8")
+            markdown += "\n\n## Candidate invalidation\n\n"
+            markdown += "\n".join(f"- {reason}" for reason in reasons)
+            markdown += "\n- New browser QA is required.\n"
+            markdown_path.write_text(markdown, encoding="utf-8")
+        session.candidate_summary = ""
+        session.candidate_tree_sha256 = ""
+        session.candidate_requirement_sha256 = ""
+        session.candidate_screenshot_sha256 = {}
+        session.candidate_artifact_sha256 = {}
+        session.candidate_baseline_sha256 = ""
+        session.candidate_baseline_tree_sha256 = ""
+        session.candidate_snapshot_sha256 = ""
+        session.candidate_iteration = -1
+        self._save(session)
 
     def load(self, session_id: str) -> RefinementSession:
         path = self.session_dir(session_id) / "session.json"
@@ -1200,7 +1617,12 @@ class SiteRefinementOrchestrator:
                              "independent five-width browser inspection started")
             self._save(session)
             browser_dir = iteration_dir / "browser_qa"
-            gate, observations = self._inspect_targets(targets, browser_dir, project)
+            browser_source_tree_sha256 = _project_manifest(project)["tree_sha256"]
+            gate, observations = self._inspect_targets(
+                targets, browser_dir, project,
+                session_id=session.session_id, iteration=session.iteration,
+                source_tree_sha256=browser_source_tree_sha256,
+            )
             self._transition(session, RefinementStatus.VISUAL_QA,
                              "rendered screenshots captured")
             reference_images = [session_dir / item.stored_path for item in session.attachments
@@ -1239,7 +1661,7 @@ class SiteRefinementOrchestrator:
                 browser_dir=browser_dir, route_count=len(targets), snapshot_dir=snapshot,
                 rejection_reasons=candidate_rejection_reasons):
             session.candidate_summary = review.summary
-            session.candidate_tree_sha256 = _project_manifest(Path(session.project_path))["tree_sha256"]
+            session.candidate_tree_sha256 = browser_source_tree_sha256
             session.candidate_requirement_sha256 = _brief_checksum(session)
             session.candidate_screenshot_sha256 = {
                 path.relative_to(browser_dir).as_posix(): _file_sha(path)
@@ -1389,8 +1811,11 @@ class SiteRefinementOrchestrator:
             }
             if targets:
                 try:
+                    baseline_source_tree_sha256 = _project_manifest(project)["tree_sha256"]
                     gate, observations = self._inspect_targets(
-                        targets, baseline_dir / "browser", project
+                        targets, baseline_dir / "browser", project,
+                        session_id=session.session_id, iteration=session.iteration,
+                        source_tree_sha256=baseline_source_tree_sha256,
                     )
                     first_route = next(
                         (path for path in sorted((baseline_dir / "browser").iterdir())
@@ -1570,12 +1995,15 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         return list(dict.fromkeys(targets))
 
     def _inspect_targets(self, targets: list[str], browser_dir: Path,
-                         project_root: Path) -> tuple[TechnicalGate, dict[str, str]]:
+                         project_root: Path, *, session_id: str, iteration: int,
+                         source_tree_sha256: str) -> tuple[TechnicalGate, dict[str, str]]:
         gates, observations = [], {}
         for index, target in enumerate(targets):
-            parsed = urlparse(target)
-            label_source = Path(parsed.path).stem or "home"
-            label = f"{index:02d}-{re.sub(r'[^A-Za-z0-9_-]+', '-', label_source)}"
+            if _project_manifest(project_root)["tree_sha256"] != source_tree_sha256:
+                raise RefinementError(
+                    "Project source changed while browser evidence was being captured."
+                )
+            label = _route_label(index, target)
             if isinstance(self.inspector, TechnicalInspector):
                 gate, route_observations = self.inspector.inspect_url(
                     target, browser_dir / label, allowed_file_root=project_root
@@ -1587,9 +2015,17 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             gates.append(gate)
             observations.update({f"{label}:{key}": value
                                  for key, value in route_observations.items()})
+            if _project_manifest(project_root)["tree_sha256"] != source_tree_sha256:
+                raise RefinementError(
+                    "Project source changed while browser evidence was being captured."
+                )
         combined = _merge_technical_gates(gates)
         _atomic_json(browser_dir / "technical_gate.json", combined.model_dump(mode="json"))
         _atomic_json(browser_dir / "routes.json", {"targets": targets})
+        _write_browser_evidence_manifest(
+            browser_dir, session_id=session_id, iteration=iteration,
+            source_tree_sha256=source_tree_sha256, targets=targets,
+        )
         return combined, observations
 
     def _run_commands(self, session: RefinementSession,
@@ -1835,6 +2271,19 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             browser_dir is None
             or _browser_screenshot_matrix_valid(browser_dir, route_count)
         )
+        browser_evidence_reasons: list[str] = []
+        if browser_dir is not None:
+            artifact_root = (
+                self.session_dir(session.session_id) / "iterations" /
+                f"{session.iteration:03d}"
+            )
+            browser_evidence_reasons = _browser_evidence_rejection_reasons(
+                browser_dir, artifact_root=artifact_root,
+                session_id=session.session_id, iteration=session.iteration,
+                source_tree_sha256=_project_manifest(
+                    Path(session.project_path)
+                )["tree_sha256"],
+            )
         blocking_review = any(issue.severity in {"p0", "p1"} for issue in review.issues)
         commands_pass = bool(commands["build"].get("passed")) and all(
             item.get("passed") for item in commands["tests"]
@@ -1917,7 +2366,10 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
             (bool(implementation.changed_files),
              "No authored project change was recorded for this iteration."),
         )
-        reasons = [message for passed, message in checks if not passed]
+        reasons = _unique(
+            [message for passed, message in checks if not passed] +
+            browser_evidence_reasons
+        )
         if rejection_reasons is not None:
             rejection_reasons[:] = reasons
         return not reasons
@@ -1939,11 +2391,27 @@ Requirements: {json.dumps([item.text for item in session.active_requirements], e
         )
         candidate_readiness_evaluated = candidate_rejection_reasons is not None
         candidate_rejection_reasons = list(candidate_rejection_reasons or [])
+        browser_manifest_path = iteration_dir / "browser_qa" / _BROWSER_EVIDENCE_MANIFEST
+        browser_manifest: dict[str, Any] = {}
+        if browser_manifest_path.is_file():
+            try:
+                browser_manifest = json.loads(
+                    browser_manifest_path.read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError):
+                browser_manifest = {}
         payload = {
             "what_changed": implementation.changed_files,
             "what_verified": {
                 "target_widths": list(TARGET_WIDTHS),
                 "browser_gate": gate.model_dump(mode="json") if gate else None,
+                "browser_evidence_manifest": (
+                    f"browser_qa/{_BROWSER_EVIDENCE_MANIFEST}"
+                    if browser_manifest_path.is_file() else ""
+                ),
+                "browser_source_tree_sha256": browser_manifest.get(
+                    "source_tree_sha256", ""
+                ),
                 "commands": commands,
             },
             "requirements_comparison": {
