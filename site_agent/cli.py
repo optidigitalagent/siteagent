@@ -4,6 +4,7 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from site_agent.config import settings
 from site_agent.job_queue import (
@@ -28,6 +29,27 @@ from site_agent.telegram_notify import TelegramNotifier
 
 
 GO_ALIASES = {"go", "го"}
+
+
+def _is_supported_direct_url(value: str) -> bool:
+    """Return whether the existing one-link flow can accept this CLI value."""
+    candidate = value.strip()
+    if not candidate or any(character.isspace() for character in candidate):
+        return False
+    try:
+        parsed = urlsplit(candidate)
+        if (
+            parsed.scheme.lower() not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            return False
+        # Accessing ``port`` rejects malformed authorities such as ``:invalid``.
+        parsed.port
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 def _refinement_request_from_args(args: argparse.Namespace) -> RefinementRequest:
@@ -754,8 +776,12 @@ def main() -> None:
         if not args.session_id:
             parser.error("refinement-accept requires --session-id")
         run_refinement_accept(args.session_id)
-    else:
+    elif _is_supported_direct_url(args.command_or_url):
         run_instagram_url(args.command_or_url)
+    else:
+        parser.error(
+            "unknown command or unsupported URL: " + args.command_or_url
+        )
 
 
 if __name__ == "__main__":

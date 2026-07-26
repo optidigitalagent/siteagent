@@ -1,15 +1,19 @@
 ﻿from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-load_dotenv()
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+ENV_FILE = REPOSITORY_ROOT / ".env"
+
+
+load_dotenv(dotenv_path=ENV_FILE)
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
     llm_provider: str = Field(default="codex", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
@@ -98,6 +102,12 @@ class Settings(BaseSettings):
     design_directions_count: int = Field(default=3, alias="DESIGN_DIRECTIONS_COUNT")
     quality_history_limit: int = Field(default=10, alias="QUALITY_HISTORY_LIMIT")
     accessibility_standard: str = Field(default="WCAG_2_2_AA", alias="ACCESSIBILITY_STANDARD")
+
+    @field_validator("runs_dir", mode="after")
+    @classmethod
+    def _resolve_runs_dir(cls, value: Path) -> Path:
+        path = value if value.is_absolute() else REPOSITORY_ROOT / value
+        return path.resolve()
 
 
 settings = Settings()
