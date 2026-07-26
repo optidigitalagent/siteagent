@@ -354,6 +354,43 @@ class GeneratedMediaPolicyTests(unittest.TestCase):
                 [item["original_checksum"] for item in second["media"]],
             )
 
+    def test_fresh_zero_intake_restores_a_complete_same_run_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            run_dir = Path(temp)
+            manager, planner, generator = _manager()
+            first, first_plan = manager.prepare(
+                run_dir=run_dir,
+                business_research=_business_research(),
+                existing_manifest=_base_manifest(),
+                real_business_media_only=False,
+                job_id="recoverable-run",
+            )
+            checkpoint_path = run_dir / "generated_media" / "manifest.json"
+            checkpoint = __import__("json").loads(checkpoint_path.read_text(encoding="utf-8"))
+            checkpoint["media"] = checkpoint["media"][:2]
+            checkpoint["generated_count"] = 2
+            checkpoint["status"] = "in_progress"
+            checkpoint_path.write_text(__import__("json").dumps(checkpoint), encoding="utf-8")
+
+            recovered, recovered_plan = manager.prepare(
+                run_dir=run_dir,
+                business_research=_business_research(),
+                existing_manifest=_base_manifest(),
+                real_business_media_only=False,
+                job_id="recoverable-run",
+            )
+
+            self.assertEqual(generator.calls, 5)
+            self.assertEqual(planner.calls, 1)
+            self.assertEqual(first_plan, recovered_plan)
+            self.assertEqual(
+                [item["original_checksum"] for item in first["media"]],
+                [item["original_checksum"] for item in recovered["media"]],
+            )
+            restored = __import__("json").loads(checkpoint_path.read_text(encoding="utf-8"))
+            self.assertEqual(restored["status"], "completed")
+            self.assertEqual(len(restored["media"]), 5)
+
     def test_partial_generation_checkpoint_reuses_uploaded_assets_after_failure(self) -> None:
         class FailOnceGenerator(FakeGenerator):
             def generate(self, item: MediaPlanItem, output_path: Path):

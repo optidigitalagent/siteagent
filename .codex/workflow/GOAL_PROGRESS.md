@@ -844,3 +844,15 @@ Live end-to-end verification requires local runtime credentials:
   queue recovery. Focused verification passed 36 tests; the complete suite then
   passed 397 tests in 202.995 seconds with three expected skips. The exact run
   remains unpublished and recoverable.
+- Live recovery then generated and uploaded five originals, but a later resume
+  exposed a second recovery defect: a fresh zero-media intake could hide the
+  complete accepted run manifest, change the plan checksum, shrink the
+  generated checkpoint to `in_progress`, and request paid images again. The
+  manager now selects the most complete policy-valid manifest already bound to
+  the same run, restores the five-item generated checkpoint, and reuses the
+  checksum-matched saved plan. Partial checkpoints remain on the generator's
+  internal resume path and never become intake. A fresh regression reproduces
+  zero-intake recovery after deliberate checkpoint shrinkage. Focused checks
+  passed 37 tests; the full suite passed 398 tests in 229.392 seconds with three
+  expected skips. The live checkpoint was repaired to `completed` with five
+  assets and a matching media-plan checksum without calling the image provider.

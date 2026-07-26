@@ -248,6 +248,11 @@ class GeneratedMediaManager:
         job_id: str,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         normalized = normalize_manifest_provenance(existing_manifest)
+        normalized = self._recover_same_run_manifest(
+            run_dir=run_dir,
+            manifest=normalized,
+            job_id=job_id,
+        )
         normalized = self._upload_user_provided_visuals(
             run_dir=run_dir,
             manifest=normalized,
@@ -260,7 +265,12 @@ class GeneratedMediaManager:
             and self.uploader._is_own_cloudinary_url(str(item.get("url", "")))
         ]
         if len(existing_renderable) >= 5:
-            return normalized, self._existing_media_plan(business_research, normalized, real_business_media_only)
+            plan = self._saved_media_plan(run_dir, normalized)
+            if plan is None:
+                plan = self._existing_media_plan(business_research, normalized, real_business_media_only)
+                normalized["media_plan_checksum"] = checksum(plan)
+            write_json(run_dir / "media_input" / "manifest.json", normalized)
+            return normalized, plan
         if real_business_media_only:
             raise MediaInputBlocked(
                 "media-input checkpoint blocked: real_business_media_only=true and no real business photos are available"
@@ -323,6 +333,111 @@ class GeneratedMediaManager:
             raise MediaInputBlocked("media generation policy blocked: " + "; ".join(issues))
         write_json(run_dir / "media_input" / "manifest.json", merged)
         return merged, plan.model_dump()
+
+    def _recover_same_run_manifest(
+        self,
+        *,
+        run_dir: Path,
+        manifest: dict[str, Any],
+        job_id: str,
+    ) -> dict[str, Any]:
+        """Reuse the most complete policy-valid manifest already bound to this run."""
+        candidates = [normalize_manifest_provenance(manifest)]
+        generated_checkpoint_path = run_dir / "generated_media" / "manifest.json"
+        for path in (
+            run_dir / "media_input" / "manifest.json",
+            run_dir / "generation_reports" / "02_authorised_media_manifest.json",
+            run_dir / "studio" / "input" / "media_manifest.json",
+            generated_checkpoint_path,
+        ):
+            try:
+                value = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if not isinstance(value, dict):
+                continue
+            if path == generated_checkpoint_path and (
+                value.get("status") != "completed"
+                or int(value.get("generated_count", 0) or 0) < 5
+            ):
+                # Partial checkpoints are consumed later by
+                # _load_generated_manifest/_generate_plan_assets. Treating
+                # them as existing intake would change the saved plan input.
+                continue
+            candidate = normalize_manifest_provenance(value)
+            if manifest_policy_issues(candidate, target="isolated_preview"):
+                continue
+            generated = [
+                item for item in candidate.get("media", [])
+                if isinstance(item, dict)
+                and canonical_provenance_type(item) == MediaProvenanceType.AI_GENERATED_ORIGINAL.value
+            ]
+            if any(
+                not self.uploader._is_own_cloudinary_url(str(item.get("url", "")))
+                or (
+                    item.get("cloudinary_public_id")
+                    and not str(item["cloudinary_public_id"]).startswith(f"siteagent-generated/{job_id}/")
+                )
+                for item in generated
+            ):
+                continue
+            candidates.append(candidate)
+
+        def score(candidate: dict[str, Any]) -> int:
+            return sum(
+                item.get("source_role") not in {
+                    "profile_avatar", "official_profile_avatar", "user_provided_logo",
+                }
+                and asset_is_renderable(item, target="isolated_preview")
+                and self.uploader._is_own_cloudinary_url(str(item.get("url", "")))
+                for item in candidate.get("media", [])
+                if isinstance(item, dict)
+            )
+
+        recovered = max(candidates, key=score)
+        known = {
+            str(item.get("url", ""))
+            for item in recovered.get("media", [])
+            if isinstance(item, dict)
+        }
+        extras = [
+            item for item in manifest.get("media", [])
+            if isinstance(item, dict) and str(item.get("url", "")) not in known
+        ]
+        if extras:
+            recovered = normalize_manifest_provenance({
+                **recovered,
+                "media": [*recovered.get("media", []), *extras],
+            })
+
+        generated = [
+            item for item in recovered.get("media", [])
+            if isinstance(item, dict)
+            and canonical_provenance_type(item) == MediaProvenanceType.AI_GENERATED_ORIGINAL.value
+        ]
+        plan_checksum = str(recovered.get("media_plan_checksum", ""))
+        if generated and plan_checksum:
+            write_json(
+                run_dir / "generated_media" / "manifest.json",
+                self._generated_checkpoint(
+                    plan_checksum=plan_checksum,
+                    media=generated,
+                    status="completed",
+                ),
+            )
+        return recovered
+
+    @staticmethod
+    def _saved_media_plan(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any] | None:
+        expected = str(manifest.get("media_plan_checksum", ""))
+        if not expected:
+            return None
+        path = run_dir / "generation_reports" / "media_plan.json"
+        try:
+            plan = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        return plan if isinstance(plan, dict) and checksum(plan) == expected else None
 
     @staticmethod
     def _load_plan(path: Path, input_checksum: str) -> MediaPlan | None:
