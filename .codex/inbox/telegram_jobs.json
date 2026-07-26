@@ -157,9 +157,9 @@
     "instagram_url": "https://www.instagram.com/hereta_dental?igsh=MTE4eDZmMmVycnltOQ==",
     "chat_id": 5674963513,
     "user_id": 5674963513,
-    "status": "running",
+    "status": "failed",
     "received_at": "2026-07-26T12:01:44.187019+00:00",
-    "updated_at": "2026-07-26T15:04:50.520465+00:00",
+    "updated_at": "2026-07-26T15:05:49.692820+00:00",
     "site_url": "",
     "repo_url": "",
     "preview_url": "",
@@ -168,7 +168,7 @@
     "preview_branch": "",
     "requested_product_type": "full_commercial_site",
     "real_business_media_only": false,
-    "error": "",
+    "error": "media generation is unavailable: image service request failed",
     "run_dir": "C:\\Users\\Admin\\siteagent\\runs\\fdbc8d77bc244eccb8590347640bb51d",
     "checkpoints": {},
     "telegram_notification_status": "not_started",
@@ -186,8 +186,8 @@
     "recovery_events": [
       "preview_reclaimed:2026-07-26T15:04:50.520465+00:00:media-input checkpoint blocked: no provable business media remained after all fallbacks"
     ],
-    "recovery_eligible": true,
-    "recovery_failure_code": "PREVIEW_RECOVERABLE_FAILURE",
+    "recovery_eligible": false,
+    "recovery_failure_code": "UNCLASSIFIED_FAILURE",
     "workflow_lane": "preview",
     "production_authorization": {}
   }
